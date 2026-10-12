@@ -1,7 +1,7 @@
-// Track registry: id -> song definition.
+// Track registry: id -> song definition. Sets load independently.
 import title from './title.js';
-import set1 from './set1.js';
-import set2 from './set2.js';
-import set3 from './set3.js';
 
-export const TRACKS = { title, ...set1, ...set2, ...set3 };
+const sets = await Promise.all(['set1', 'set2', 'set3'].map((n) => import(`./${n}.js`)
+  .then((m) => m.default || {})
+  .catch((e) => { console.error('Track set failed:', n, e); return {}; })));
+export const TRACKS = Object.assign({ title }, ...sets);

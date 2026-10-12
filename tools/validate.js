@@ -10,7 +10,7 @@
 // Reachability uses the REAL movement code (src/world/movement.js): it simulates Bead with many
 // input scripts (walks, jumps of different heights, wall jumps, dashes, double jumps, glides, hooks,
 // comet rolls, swims) and records which doors / tiles can be reached from each entry door.
-import { ROOMS, START_ROOM, AREAS } from '../src/data/world.js';
+import { ROOMS, START_ROOM, AREAS, LOAD_ERRORS } from '../src/data/world.js';
 import { Room } from '../src/world/room.js';
 import { makeBead, stepBead } from '../src/world/movement.js';
 import { TILE, PHYS, DT } from '../src/core/constants.js';
@@ -29,7 +29,7 @@ const onlyRoom = opt('--room');
 const worldOnly = args.includes('--world');
 const abOverride = opt('--ab');
 
-const ENTITY_TYPES = new Set(['enemy', 'boss', 'spindle', 'lever', 'gate', 'lore', 'npc', 'item', 'beadling', 'tangle', 'pot', 'ferry', 'deco', 'trigger']);
+const ENTITY_TYPES = new Set(['enemy', 'boss', 'spindle', 'lever', 'gate', 'lore', 'npc', 'item', 'beadling', 'tangle', 'pot', 'ferry', 'deco', 'trigger', 'statue', 'pantheon']);
 
 let errors = 0, warnings = 0;
 const err = (m) => { errors++; console.log('  \x1b[31mERROR\x1b[0m ' + m); };
@@ -496,6 +496,7 @@ let defs = Object.values(ROOMS);
 if (onlyArea) defs = defs.filter((d) => d.area === onlyArea);
 if (onlyRoom) defs = defs.filter((d) => d.id === onlyRoom);
 const t0 = Date.now();
+for (const e of LOAD_ERRORS) err('FILE FAILED TO LOAD: ' + e);
 if (!worldOnly) {
   console.log(`== Static checks (${defs.length} rooms) ==`);
   for (const d of defs) staticCheck(d);

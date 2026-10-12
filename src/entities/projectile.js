@@ -69,8 +69,8 @@ export class Projectile extends Entity {
       const box = this.rect();
       for (const e of g.entities) {
         if (!e.isEnemy || e.dead || !e.hittable) continue;
-        const hb = e.hurtbox ? e.hurtbox() : e.rect();
-        if (!overlap(box, hb)) continue;
+        const hbs = e.hurtboxes ? e.hurtboxes() : [e.hurtbox ? e.hurtbox() : e.rect()];
+        if (!hbs.some((r) => r && overlap(box, r))) continue;
         const n = this.hitMap.get(e) || 0;
         const last = this.lastHitT && this.lastHitT.get(e);
         if (n >= (this.o.multi || 1)) continue;

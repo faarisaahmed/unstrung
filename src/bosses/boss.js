@@ -20,6 +20,9 @@ import { BOSS_INFO } from '../data/bossinfo.js';
 import { spawnGlints } from '../entities/pickups.js';
 import { moveX, moveY } from '../world/movement.js';
 
+// Bosses may define their own minion enemies: registerMinion({ id, name, hp, behavior, art, ... })
+export function registerMinion(def) { ENEMIES[def.id] = Object.assign({ glints: 0, area: 'boss' }, def); return def.id; }
+
 export class Boss extends Entity {
   // cfg: { id, name, title, hp, size:[w,h], music, air?, reward?:{item,id}, glints, gravity, contact }
   constructor(game, tx, ty, spec, cfg0) {

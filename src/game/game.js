@@ -42,8 +42,9 @@ export class Game {
     this.paused = false;
     const startRoom = save.room && ROOMS[save.room] ? save.room : START_ROOM;
     let entry = save.spindle && save.spindle.room === startRoom ? { marker: save.spindle.marker } : { spawn: true };
+    if (startRoom === '__arena') entry = { spawn: true };
     if (debugDoor) entry = { door: debugDoor };
-    else if (startRoom !== START_ROOM && !save.spindle) {
+    else if (startRoom !== START_ROOM && startRoom !== '__arena' && !save.spindle) {
       const r = ROOMS[startRoom];
       const firstDoor = (r.tiles.join('').match(/[0-9]/) || [])[0];
       const hasSpindle = Object.values(r.legend || {}).some((l) => l.e === 'spindle');
@@ -425,8 +426,9 @@ export class Game {
       if (e.dead) continue;
       // player attack -> entity
       if (ab && e.hittable && e.lastSwing !== p.swing) {
-        const box = e.hurtbox ? e.hurtbox() : e.rect();
-        if (box && overlap(ab, box)) {
+        const hbs = e.hurtboxes ? e.hurtboxes() : [e.hurtbox ? e.hurtbox() : e.rect()];
+        const box = hbs.find((r) => r && overlap(ab, r));
+        if (box) {
           e.lastSwing = p.swing;
           const dir = p.attackDir === 'side' ? b.facing : 0;
           const res = e.onBonk ? e.onBonk(this.stats.damage, dir, p) : null;
@@ -443,9 +445,10 @@ export class Game {
         }
       }
       // ram damage while comet rolling
-      if (b.mode === 'comet' && e.isEnemy && e.hittable && overlap(p.rect(), e.hurtbox ? e.hurtbox() : e.rect()) && (e.ramT || 0) <= 0) {
+      if ((b.mode === 'comet' || (b.mode === 'dash' && this.stats.flags.dashRam)) && e.isEnemy && e.hittable && (e.ramT || 0) <= 0 &&
+          (e.hurtboxes ? e.hurtboxes() : [e.hurtbox ? e.hurtbox() : e.rect()]).some((r) => r && overlap(p.rect(), r))) {
         e.ramT = 0.3;
-        e.hurt(this.stats.damage * 2, b.cometDir, 'comet');
+        e.hurt(this.stats.damage * (b.mode === 'comet' ? 2 : 1), b.mode === 'comet' ? b.cometDir : b.dashDir, 'comet');
       }
       // entity -> player
       if (e.harmful && p.invuln <= 0) {
