@@ -320,18 +320,22 @@ function drawWisp(ctx, npc, t) {
 
 function drawTwinseer(ctx, npc, t) {
   local(ctx, npc, () => {
-    ctx.beginPath(); ctx.moveTo(-18, 0); ctx.quadraticCurveTo(-22, -34, 0, -40); ctx.quadraticCurveTo(22, -34, 18, 0); ctx.closePath();
-    fillInk(ctx, '#e9c6d8');
-    ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.beginPath(); ctx.moveTo(-10, -4); ctx.lineTo(-4, -34); ctx.lineTo(0, -34); ctx.lineTo(-5, -4); ctx.fill();
+    glow(ctx, 0, -40, 30, '#ffd8f0', 0.3);
+    // prism cloak
+    ctx.beginPath(); ctx.moveTo(-18, 0); ctx.quadraticCurveTo(-20, -30, -10, -40); ctx.lineTo(10, -40); ctx.quadraticCurveTo(20, -30, 18, 0); ctx.closePath();
+    fillInk(ctx, '#e3bcd2');
+    ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.beginPath(); ctx.moveTo(-10, -4); ctx.lineTo(-5, -36); ctx.lineTo(-1, -36); ctx.lineTo(-5, -4); ctx.fill();
+    ctx.fillStyle = 'rgba(120,80,140,0.3)'; ctx.beginPath(); ctx.moveTo(4, -4); ctx.lineTo(7, -36); ctx.lineTo(11, -36); ctx.lineTo(12, -4); ctx.fill();
+    // hood
+    ctx.beginPath(); ctx.arc(0, -46, 13, Math.PI * 0.85, Math.PI * 2.15); ctx.lineTo(10, -38); ctx.lineTo(-10, -38); ctx.closePath(); fillInk(ctx, '#b88aa8');
+    // one head, two faces: one looks back, one looks ahead
     for (const s of [-1, 1]) {
-      const x = s * 8, y = -46 + Math.sin(t * 1.5 + s) * 1.2;
-      ctx.save(); ctx.translate(x, y); ctx.rotate(s * 0.25);
-      ctx.beginPath(); ctx.ellipse(0, 0, 7.5, 9.5, 0, 0, TAU); fillInk(ctx, s < 0 ? '#f8f0f4' : '#dfe6f8');
+      const x = s * 5.5, y = -45 + Math.sin(t * 1.5 + s) * 0.8;
+      ctx.beginPath(); ctx.ellipse(x, y, 5.5, 7, s * 0.2, 0, TAU); fillInk(ctx, s < 0 ? '#f8f0f4' : '#dfe6f8', 1.4);
       ctx.fillStyle = INK;
-      ctx.beginPath(); ctx.ellipse(-2.6, -1, 1.7, 3, 0, 0, TAU); ctx.ellipse(2.6, -1, 1.7, 3, 0, 0, TAU); ctx.fill();
-      ctx.restore();
+      ctx.beginPath(); ctx.ellipse(x + s * 1.6, y - 0.5, 1.2, 2.2, 0, 0, TAU); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(x - s * 1.4, y - 0.5, 1.0, 2.0, 0, 0, TAU); ctx.fill();
     }
-    glow(ctx, 0, -40, 26, '#ffd8f0', 0.3);
   });
 }
 

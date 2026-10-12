@@ -1352,9 +1352,12 @@ export class Reflection extends Boss {
           ctx.beginPath(); ctx.moveTo(exx - er * 0.7, ey); ctx.quadraticCurveTo(exx, ey + er * 0.5, exx + er * 0.7, ey); ctx.stroke();
         } else {
           const hot = this.cue > 0 || this.charging;
-          eye(ctx, exx, ey, er * 0.9, hot ? '#ffffff' : '#c8f6ff', true, 'slit');
+          eye(ctx, exx, ey, er * 0.7, hot ? '#ffffff' : '#bff4ff', true);
+          ctx.fillStyle = hot ? '#ffffff' : '#d8fbff';
+          ctx.beginPath(); ctx.ellipse(exx, ey, er * 0.82, er * 1.25, 0, 0, TAU); ctx.fill();
+          // its glint sits low and on the wrong side: a mirror of Bead's
           ctx.fillStyle = '#141019';
-          ctx.beginPath(); ctx.arc(exx + er * 0.25, ey + er * 0.45, er * 0.28, 0, TAU); ctx.fill();
+          ctx.beginPath(); ctx.arc(exx + er * 0.25, ey + er * 0.5, er * 0.3, 0, TAU); ctx.fill();
         }
       }
     }

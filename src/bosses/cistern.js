@@ -843,7 +843,7 @@ registerMinion({
 
 export class BrineMatron extends Boss {
   constructor(game, tx, ty, spec) {
-    super(game, tx, ty, spec, { id: 'brinematron', size: [160, 128], music: 'boss_mid', glints: 180, introTime: 2.6 });
+    super(game, tx, ty, spec, { id: 'brinematron', size: [176, 140], music: 'boss_mid', glints: 180, introTime: 2.6 });
     if (this.dead) return;
     this.baseSpeed = this.speedMul;
     this.withdrawn = 1; this.withdrawTo = 1;
@@ -897,7 +897,7 @@ export class BrineMatron extends Boss {
     }
   }
 
-  mouth() { return { x: this.cx + this.facing * (62 + this.rear * 6), y: this.y + this.h - 54 - this.rear * 22 }; }
+  mouth() { return { x: this.cx + this.facing * (62 + this.rear * 6) * 1.15, y: this.y + this.h - (54 + this.rear * 22) * 1.15 }; }
 
   bodyBox() { return { x: this.x + 12, y: this.y + 12, w: this.w - 24, h: this.h - 12 }; }
   hitboxes() {
@@ -1002,7 +1002,7 @@ export class BrineMatron extends Boss {
     this.clawTo = 0;
     yield 0.6;
   }
-  clawPos() { return { x: this.cx + this.facing * (100 - this.claw * 10), y: this.groundY - 40 - Math.max(0, this.claw) * 90 }; }
+  clawPos() { return { x: this.cx + this.facing * (100 - this.claw * 10) * 1.15, y: this.groundY - (40 + Math.max(0, this.claw) * 90) * 1.15 }; }
 
   // 3. Tidal wave: water swells at a wall, then a curling wave sweeps the floor (jump it).
   *tide() {
@@ -1058,24 +1058,34 @@ export class BrineMatron extends Boss {
     yield 0.5;
     if (this.phase >= 2) {
       const rolls = this.phase >= 3 ? 2 : 1;
-      for (let r = 0; r < rolls; r++) {
-        this.facePlayer();
-        // rattle in place: the roll is coming
-        let t = 0;
-        while (t < 0.45 / this.speedMul) { t += this.dt; this.spin = Math.sin(t * 40) * 0.12; yield; }
-        this.rolling = true; this.rollV = this.facing * 520;
-        this.sfx('dash');
-        const res = yield* this.dashTo(this.facing, 500 + 60 * (this.phase - 2));
-        this.rolling = false; this.rollV = 0;
-        if (res === 'wall') {
+      // bounding roll: the shell hops wall to wall (run under it mid-hop)
+      this.facePlayer();
+      let t = 0;
+      while (t < 0.5 / this.speedMul) { t += this.dt; this.spin = Math.sin(t * 40) * 0.12; yield; }
+      let dir = this.facing, walls = 0, hops = 0;
+      this.rolling = true;
+      while (walls < rolls && hops < 14) {
+        hops++;
+        this.rollV = dir * 560;
+        const A = this.arena;
+        const want = this.cx + dir * 270;
+        const tx = clamp(want, A.x + this.w / 2, A.x + A.w - this.w / 2);
+        this.sfx('leap');
+        yield* this.leapTo(tx, 150, 0.56);
+        this.shake(4, 0.15); this.sfx('land', 1);
+        this.fx.burst(this.cx, this.groundY, 10, { color: '#d8f6ff', speed: 220, angle: -Math.PI / 2, spread: 2.6, size: 2.5, life: 0.4 });
+        if (tx !== want) {
+          walls++; dir = -dir;
           this.shake(9, 0.35); this.sfx('slam');
-          this.fx.burst(this.facing > 0 ? this.x + this.w : this.x, this.cy, 14, { color: '#d8cbb0', speed: 260, size: 3, life: 0.5 });
+          this.fx.burst(dir < 0 ? this.x + this.w : this.x, this.cy, 14, { color: '#d8cbb0', speed: 260, size: 3, life: 0.5 });
           if (this.phase >= 3) this.dropBarnacles(3);
         }
-        yield 0.35;
       }
+      this.rolling = false; this.rollV = 0;
+      yield 0.35;
     }
     // spray from the aperture while armoured
+    this.facePlayer();
     const dur = 2.4;
     let t = 0, k = 0;
     while (t < dur) {
@@ -1124,7 +1134,7 @@ export class BrineMatron extends Boss {
     const out = 1 - this.withdrawn;
     ctx.save();
     ctx.translate(bx, by);
-    ctx.scale(f, 1);
+    ctx.scale(f * 1.15, 1.15);
     ctx.lineJoin = 'round'; ctx.lineCap = 'round';
     if (!white) { ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(0, 0, 90, 8, 0, 0, TAU); ctx.fill(); }
     // walking legs (behind the shell)

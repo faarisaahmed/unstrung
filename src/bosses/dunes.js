@@ -154,7 +154,7 @@ const LK = { hi: '#f4eee4', mid: '#cfc6b8', lo: '#968aa2', cape: '#8c2a3e', cape
 
 export class LintKing extends Boss {
   constructor(game, tx, ty, spec) {
-    super(game, tx, ty, spec, { id: 'lintking', size: [116, 112], music: 'boss_optional', glints: 220, introTime: 2.4 });
+    super(game, tx, ty, spec, { id: 'lintking', size: [124, 120], music: 'boss_optional', glints: 220, introTime: 2.4 });
     if (this.dead) return;
     this.puff = 0; this.sq = 0; this.curl = 0; this.rollAng = 0;
     this.arm = 0; this.sneezeK = 0; this.panic = false; this.crownOn = true; this.crown = null;
@@ -169,7 +169,7 @@ export class LintKing extends Boss {
     }
   }
 
-  bodyR() { return 50 * (1 + 0.45 * this.puff); }
+  bodyR() { return 55 * (1 + 0.45 * this.puff); }
 
   onStart() { this.facePlayer(); }
   introUpdate(dt, t) {
@@ -534,6 +534,21 @@ export class LintKing extends Boss {
       ctx.strokeStyle = 'rgba(120,108,130,0.5)'; ctx.lineWidth = 1.2;
       for (let i = 0; i < 7; i++) { const a = i * 0.9; ctx.beginPath(); ctx.arc(Math.cos(a) * rx * 0.55, Math.sin(a) * ry * 0.55, R * 0.18, a, a + 2.2); ctx.stroke(); }
       ctx.restore();
+      // royal sash with a safety-pin medal
+      if (up > 0.5) {
+        ctx.save(); ctx.beginPath(); scallop(ctx, cx, cy, rx * 0.97, ry * 0.97, 20, 0.2, this.rollAng); ctx.clip();
+        ctx.beginPath();
+        ctx.moveTo(cx - f * rx * 0.75, cy - ry * 0.75); ctx.lineTo(cx - f * rx * 0.45, cy - ry * 0.95);
+        ctx.lineTo(cx + f * rx * 0.85, cy + ry * 0.75); ctx.lineTo(cx + f * rx * 0.5, cy + ry * 0.95); ctx.closePath();
+        ctx.fillStyle = LK.cape; ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 2.5; ctx.stroke();
+        ctx.strokeStyle = LK.gold; ctx.lineWidth = 1.5; ctx.setLineDash([3, 3]);
+        ctx.beginPath(); ctx.moveTo(cx - f * rx * 0.6, cy - ry * 0.85); ctx.lineTo(cx + f * rx * 0.68, cy + ry * 0.85); ctx.stroke(); ctx.setLineDash([]);
+        ctx.restore();
+        const mx = cx - f * rx * 0.05, my = cy + ry * 0.5;
+        ctx.strokeStyle = LK.silver; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(mx, my - 12, 4, 9, 0.3, 0, TAU); ctx.stroke();
+        ctx.beginPath(); ctx.arc(mx + 2, my + 2, 9, 0, TAU); fillInk(ctx, LK.gold, false, 2.5);
+        ctx.fillStyle = '#fff6c8'; star4(ctx, mx + 2, my + 2, 5, 0.4); ctx.fill();
+      }
     }
     ctx.restore();
     // face + arm
@@ -1052,8 +1067,8 @@ export class GlintHoarder extends Boss {
     ctx.restore();
     // forearm + claw (front)
     const cl = this.claw;
-    const ax = cx + f * (54 + cl * 34), ay = by - 30 - (cl < 0 ? 20 : 0);
-    ctx.beginPath(); ctx.moveTo(cx + f * 30, by - 40); ctx.quadraticCurveTo(cx + f * 46, ay - 10, ax, ay);
+    const ax = cx + f * (84 + cl * 36), ay = by - 14 - (cl < 0 ? 26 : 0) - (cl > 0 ? 10 : 0);
+    ctx.beginPath(); ctx.moveTo(cx + f * 48, by - 36); ctx.quadraticCurveTo(cx + f * 62, ay - 14, ax, ay);
     ctx.strokeStyle = col(white, INK); ctx.lineWidth = 15; ctx.stroke(); ctx.strokeStyle = col(white, GH.skinHi); ctx.lineWidth = 9; ctx.stroke();
     for (let c = -1; c <= 1; c++) {
       ctx.beginPath(); ctx.moveTo(ax, ay + c * 5); ctx.quadraticCurveTo(ax + f * 14, ay + c * 7 - 4, ax + f * 20, ay + c * 8 + 4); ctx.lineTo(ax + f * 6, ay + c * 5 + 3); ctx.closePath();
