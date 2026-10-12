@@ -1,0 +1,1 @@
+{"name":"unstrung","version":"0.1.0","type":"module","private":true,"scripts":{"dev":"node tools/serve.js 8080"},"devDependencies":{"puppeteer-core":"^23.11.1"}}

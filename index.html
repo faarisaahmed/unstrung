@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UNSTRUNG</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Ccircle cx=%2716%27 cy=%2716%27 r=%2713%27 fill=%27%23f4eedf%27 stroke=%27%2316141c%27 stroke-width=%273%27/%3E%3Cellipse cx=%2712%27 cy=%2715%27 rx=%272.5%27 ry=%274%27 fill=%27%2316141c%27/%3E%3Cellipse cx=%2720%27 cy=%2715%27 rx=%272.5%27 ry=%274%27 fill=%27%2316141c%27/%3E%3C/svg%3E">
+<style>
+  html, body { margin: 0; height: 100%; background: #07080c; overflow: hidden; }
+  body { display: flex; align-items: center; justify-content: center; }
+  canvas { display: block; image-rendering: auto; }
+  #boot { color: #d8d4c6; font: 18px Georgia, serif; letter-spacing: 0.3em; text-align: center; }
+</style>
+</head>
+<body>
+<div id="boot">UNSTRUNG<br><small style="letter-spacing:0.1em;opacity:.6">under construction — refresh as the game is built</small></div>
+<script type="module">
+  import('./src/main.js').catch((e) => {
+    document.getElementById('boot').innerHTML += '<br><br><small style="opacity:.5">engine not ready yet</small>';
+    console.warn(e);
+  });
+</script>
+</body>
+</html>
