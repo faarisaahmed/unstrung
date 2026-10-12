@@ -161,6 +161,16 @@ export class HUD {
       ctx.font = `14px ${FONT}`; ctx.textAlign = 'right'; ctx.textBaseline = 'top'; ctx.fillStyle = 'rgba(239,232,214,0.7)';
       ctx.fillText(`${h}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`, VIEW_W - 16, 14);
     }
+    if (g.player && g.player.dead && !g.echo) {
+      g.deathT = (g.deathT || 0) + 1 / 60;
+      const k = Math.min(1, Math.max(0, (g.deathT - 0.4) / 0.6));
+      ctx.globalAlpha = k;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = `30px ${FONT}`; ctx.fillStyle = '#efe6cf';
+      ctx.fillText(sv.brittle ? 'The thread has snapped.' : 'Unravelled', VIEW_W / 2, VIEW_H / 2 - 10);
+      if (!sv.brittle && sv.tangle && sv.tangle.glints) { ctx.font = `15px ${FONT}`; ctx.fillStyle = '#b8a8a0'; ctx.fillText('Your glints are caught in a Tangle where you fell.', VIEW_W / 2, VIEW_H / 2 + 26); }
+      ctx.globalAlpha = 1;
+    } else if (g.player) g.deathT = 0;
     if (g.dialogue) g.dialogue.draw(ctx);
   }
 }

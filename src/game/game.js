@@ -586,7 +586,7 @@ export class Game {
         const boxes = e.hitboxes ? e.hitboxes() : [e.rect()];
         for (const box of boxes) {
           if (box && overlap(hb, box)) {
-            p.hurt(e.damage || 1, e.cx);
+            p.hurt(e.damage || 1, e.isBoss && box !== boxes[0] ? box.x + box.w / 2 : e.cx);
             if (e.onHitPlayer) e.onHitPlayer(p);
             break;
           }

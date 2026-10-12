@@ -659,6 +659,9 @@ export const PAINTERS = {
   },
 };
 
+// Register a new creature body painter (used by boss minions etc.)
+export function registerPainter(name, fn) { PAINTERS[name] = fn; }
+
 // Draw an enemy through its painter with hurt flash + facing + scale
 export function drawCreature(ctx, e, t) {
   const A = e.art;

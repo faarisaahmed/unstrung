@@ -534,11 +534,20 @@ export class PrismWarden extends Boss {
         ctx.globalCompositeOperation = 'source-over';
       }
       // arched pane
-      ctx.beginPath();
-      ctx.moveTo(x - W / 2, top + H); ctx.lineTo(x - W / 2, top + W / 2); ctx.arc(x, top + W / 2, W / 2, Math.PI, TAU); ctx.lineTo(x + W / 2, top + H); ctx.closePath();
+      const arch = () => {
+        ctx.beginPath();
+        ctx.moveTo(x - W / 2, top + H); ctx.lineTo(x - W / 2, top + W / 2); ctx.arc(x, top + W / 2, W / 2, Math.PI, TAU); ctx.lineTo(x + W / 2, top + H); ctx.closePath();
+      };
+      arch();
       const sg = ctx.createLinearGradient(x - W / 2, top, x + W / 2, top + H);
-      sg.addColorStop(0, 'rgba(70,50,85,0.85)'); sg.addColorStop(0.5, 'rgba(120,95,140,0.75)'); sg.addColorStop(1, 'rgba(50,35,62,0.9)');
+      sg.addColorStop(0, 'rgba(225,205,240,0.75)'); sg.addColorStop(0.45, 'rgba(140,110,165,0.7)'); sg.addColorStop(1, 'rgba(60,42,75,0.9)');
       ctx.fillStyle = sg; ctx.fill();
+      // a faint, wrong reflection of Bead's world: soft vertical streaks
+      ctx.save(); ctx.clip();
+      ctx.strokeStyle = 'rgba(255,240,252,0.18)'; ctx.lineWidth = 3;
+      for (let i = 0; i < 4; i++) { const sx = x - W / 2 + 10 + i * (W - 20) / 3; ctx.beginPath(); ctx.moveTo(sx, top + H); ctx.lineTo(sx + 14, top); ctx.stroke(); }
+      ctx.restore();
+      arch();
       // reflected sheen sweeping across
       ctx.save(); ctx.clip();
       const sw = ((t * 0.35 + x * 0.001) % 1.6) - 0.3;
@@ -546,6 +555,7 @@ export class PrismWarden extends Boss {
       ctx.beginPath(); ctx.moveTo(x - W / 2 + sw * W * 2, top); ctx.lineTo(x - W / 2 + sw * W * 2 + 18, top); ctx.lineTo(x - W / 2 + sw * W * 2 - 40, top + H); ctx.lineTo(x - W / 2 + sw * W * 2 - 58, top + H); ctx.fill();
       if (m.glow > 0) { ctx.fillStyle = `rgba(255,240,252,${Math.min(0.8, m.glow * 0.6)})`; ctx.fillRect(x - W / 2, top, W, H); }
       ctx.restore();
+      arch();
       ctx.strokeStyle = INK; ctx.lineWidth = 5; ctx.stroke();
       ctx.strokeStyle = '#c792c9'; ctx.lineWidth = 2; ctx.stroke();
       // crystal crown on the frame

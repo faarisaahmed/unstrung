@@ -72,7 +72,10 @@ export class Boss extends Entity {
   // ---------- lifecycle ----------
   findGround() {
     const room = this.game.room;
-    for (let y = this.y + this.h; y < room.pxH; y += 4) if (room.rectBlocked(this.cx - 2, y, 4, 2)) return y;
+    // scan down from the boss's centre (or from just above the floor if the centre is inside rock)
+    let y = Math.min(this.cy, room.pxH - TILE * 2);
+    while (y > 0 && room.rectBlocked(this.cx - 2, y, 4, 2)) y -= TILE / 2;
+    for (; y < room.pxH; y += 2) if (room.rectBlocked(this.cx - 2, y, 4, 2)) return Math.floor(y / TILE) * TILE;
     return room.pxH - TILE;
   }
 

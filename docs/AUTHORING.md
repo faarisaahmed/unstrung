@@ -51,7 +51,7 @@ export default [
 | `G` | cracked floor, broken only by **Lead Heart** (ground pound) |
 | `C` | crystal block, broken only by **Comet Roll** |
 | `M` | magnetic copper surface: with **Lodestone**, Bead sticks to it and rolls along walls and ceilings |
-| `H` | half-block (top half solid). A 1-tile-tall gap under a row of `H` is a crawlspace only **Pinhole** (shrunk Bead) fits through. |
+| `H` | half-block (top half solid). Put a row of `H` **directly on the floor** (the floor tile right below it): the 16 px gap under the H half is a crawlspace only **Pinhole** (shrunk Bead) fits through. |
 | `O` | grapple hook ring for **Spool Line** (non-solid). Range is about 6 tiles. |
 | `W` | updraft column: carries Bead upward while gliding with **Dandelion** |
 | `I` | ice: solid, slippery, and you can't wall-cling to it |
@@ -98,7 +98,7 @@ export default [
 |---|---|---|
 | `enemy` | `id`, optional `facing`, `params` overrides, `hpMul` | place on the floor tile **just above the ground** (ground enemies). Flyers can float anywhere. |
 | `boss` | `id` (from `src/data/bossinfo.js`), optional `arena:{x,y,w,h}` (px), `trigger:{x,y,w,h}` (px) | the fight starts when Bead walks into the arena |
-| `gate` | `h` (tiles tall, default 3), `w` (default 1), and one of: `arena:true` (closes during a boss fight), `flag:'name'` (opens when a lever sets that flag; use `flag:'boss_<id>'` to open after a boss dies), `item:'lantern'` (opens if the player has that key item), `beads:6` (needs Great Beads) | the marker is the gate's top-left tile. Leave the gate's cells empty in the grid. |
+| `gate` | `h` (tiles tall, default 3), `w` (default 1), and one of: `arena:true` (closes during a boss fight), `flag:'name'` (opens when a lever sets that flag; use `flag:'boss_<id>'` to open after a boss dies), `item:'lantern'` (opens if the player has that key item), `ability:'unravel'` (opens once Bead has that ability), `beads:6` (needs Great Beads) | the marker is the gate's top-left tile. Leave the gate's cells empty in the grid. |
 | `lever` | `flag` | hit it to set the flag. Pair it with a `gate` in the same or another room (classic one-way shortcut). |
 | `spindle` | – | bench: rest, save, heal, swap Knots. Place one every 4–6 rooms, always one 1–2 rooms before a boss. |
 | `item` | `item`: `shellFrag`, `vesselFrag`, `knot` (+`id`), `notch`, `ore`, `ability` (+`id`), `greatBead` (+`id`), `key` (+`id`), `map` (+`id`=area id, `name`), `glints` (+`value`); optional `needs:[abilities]` | floating pickup. Use `needs` when it is behind a later ability (backtracking reward). |
@@ -206,6 +206,8 @@ Common art params: `c1` (main), `c2` (accent), `c3` (mask/detail), `eye` (eye co
 `wing: 'moth'|'bat'|'fly'` (moth), `stinger` (fly), `eyes` (spider count), `weapon: 'nail'|'spear'|'shield'`
 and `horns: 0` (knight), `teeth` and `lure` (fish), `n` (crystal count), `teeth`/`spin` (gear).
 Sizes drive the drawing, so a `[60,50]` knight is a big brute.
+
+New bodies can be added with `registerPainter(name, fn)` from `src/art/creatures.js`.
 
 Make every enemy **visually distinct** within its area: different body, palette, size, or features.
 Use the area palette (see `src/art/palettes.js`) with one strong accent color.

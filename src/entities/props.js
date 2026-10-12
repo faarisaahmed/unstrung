@@ -120,6 +120,7 @@ export class Gate extends Entity {
     this.z = 1;
     if (spec.item && game.save.items[spec.item]) this.open = true, this.openK = 1, this.solid.active = false;
     if (spec.beads && game.save.greatBeads >= spec.beads) this.open = true, this.openK = 1, this.solid.active = false;
+    if (spec.ability && game.save.abilities[spec.ability]) this.open = true, this.openK = 1, this.solid.active = false;
   }
   onFlag(flag) { if (flag === this.flag) this.setOpen(true); }
   onArena(locked) { if (this.spec.arena) this.setOpen(!locked); }

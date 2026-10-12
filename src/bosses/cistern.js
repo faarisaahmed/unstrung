@@ -545,7 +545,7 @@ export class Gullet extends Boss {
     const A = this.arena, p = this.player;
     const s = p.cx < this.mx ? 1 : -1;
     const wx = s < 0 ? A.x + 34 : A.x + A.w - 34;
-    const top = A.y + 64;
+    const top = Math.max(A.y + 64, this.W - 380);
     yield* this.submergeTo(wx);
     this.ripple(wx, 0.6, 1.3);
     this.sfx('rustle');

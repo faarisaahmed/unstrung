@@ -100,6 +100,7 @@ function buildRoom(def, ab, openFlags, items) {
     else if (s.flag && openFlags.has(s.flag)) open = true;
     else if (s.item && items.has(s.item)) open = true;
     else if (s.beads && [...items].filter((i) => i.startsWith('greatBead_')).length >= s.beads) open = true;
+    else if (s.ability && ab[s.ability]) open = true;
     if (!open) room.dynamicSolids.push({ x: m.tx * TILE, y: m.ty * TILE, w: (s.w || 1) * TILE, h: (s.h || 3) * TILE, active: true, gate: s });
   }
   return room;
@@ -439,7 +440,10 @@ function worldSim() {
   const log = [];
   const cache = new Map();
   const analysis = (def, entry) => {
-    const key = def.id + '|' + entry + '|' + Object.keys(ab).sort().join(',') + '|' + [...flags].sort().join(',') + '|' + [...items].sort().join(',');
+    const gates = Object.values(def.legend || {}).filter((l) => l && l.e === 'gate');
+    const relF = gates.filter((g) => g.flag && flags.has(g.flag)).map((g) => g.flag).join(',');
+    const relI = gates.filter((g) => (g.item && items.has(g.item)) || g.beads).map((g) => g.item || 'b' + [...items].filter((i) => i.startsWith('greatBead_')).length).join(',');
+    const key = def.id + '|' + entry + '|' + Object.keys(ab).sort().join(',') + '|' + relF + '|' + relI;
     if (cache.has(key)) return cache.get(key);
     let res = analyzeRoom(def, ab, [entry], flags, items);
     // levers inside the room open gates in the same pass
