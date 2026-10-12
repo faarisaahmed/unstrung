@@ -36,7 +36,8 @@ r.put(5, 23, 'q').put(25, 23, 'v').put(45, 23, 'z')
 r.put(12, 23, 'b').put(32, 23, 't').put(52, 23, 'u').put(42, 23, 's').put(58, 23, 'L')
 r.put(20, 23, 'p').put(67, 23, 'p')
 r.put(84, 10, 'k')
-r.door('left', 20, 4, '1').door('right', 20, 4, '2').door('right', 3, 4, '3')
+r.put(88, 3, '=====')
+r.door('left', 20, 4, '1').door('right', 20, 4, '2').door('top', 90, 3, '3')
 rooms.append(r.js(legend={
     'q': dict(e='deco', kind='house', w=5, h=5, door=True, sign="Bobbin's", color='#2a2230'),
     'v': dict(e='deco', kind='house', w=6, h=6, door=True, sign='Tinsmith', color='#262233', roof='#40303a'),
@@ -55,6 +56,7 @@ rooms.append(r.js(legend={
 r = Room('town_spire', 40, 64, area=T, name='The Old Spire', req=['sap', 'dash', 'glide', 'comet'])
 r.rect(1, 5, 38, 58)
 r.fill(1, 59, 38, 62)
+r.rect(18, 59, 20, 62)
 for (y, x0, x1) in [(55, 6, 13), (51, 16, 23), (47, 26, 33), (43, 16, 23), (39, 6, 13), (35, 15, 22),
                     (31, 25, 32), (27, 15, 22), (23, 5, 12), (19, 14, 21), (15, 24, 31), (11, 14, 21), (8, 12, 19)]:
     r.row(y, x0, x1, '=')
@@ -64,7 +66,7 @@ r.fill(20, 1, 21, 3, 'C')                        # crystal seal (Comet Roll smas
 r.put(28, 30, 'j')
 r.put(8, 38, 'L')
 r.put(18, 18, 'f')
-r.door('left', 55, 4, '1').door('top', 25, 3, '8')
+r.door('bottom', 18, 3, '1').door('top', 25, 3, '8')
 rooms.append(r.js(legend={
     'j': dict(e='beadling'),
     'L': dict(e='lore', id='town_2'),

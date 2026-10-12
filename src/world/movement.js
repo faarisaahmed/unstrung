@@ -248,7 +248,7 @@ export function stepBead(b, inp, room, ab, dt, ev) {
   } else {
     b.vy += PHYS.gravity * dt;
     let maxFall = PHYS.maxFall;
-    if (ab.glide && !b.small && inp.jump && b.vy > 0 && !b.grounded) {
+    if (ab.glide && !b.small && inp.jump && !b.grounded && (b.vy > 0 || (inUpdraft && !b.jumping))) {
       b.gliding = true;
       maxFall = PHYS.glideFall * (ab.glideMul || 1);
     }

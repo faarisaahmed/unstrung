@@ -162,11 +162,11 @@ rooms.append(r.js(legend={
 # ---------------------------------------------------------------- 7b. The secret way up (to the Dunes)
 r = Room('fray_secret', 34, 30, name='Lint Chimney', req=['sap', 'dash', 'glide', 'dbljump', 'shrink'])
 r.rect(1, 1, 32, 26)
-r.rect(16, 27, 17, 28)
+r.rect(28, 27, 29, 28)
 r.row(26, 4, 10, '^'); r.row(26, 22, 28, '^')
 r.fill(8, 19, 13, 20); r.fill(20, 13, 25, 14); r.fill(6, 7, 11, 8)
 r.put(23, 12, 'k')
-r.door('bottom', 16, 2, '1').door('top', 15, 3, '8')
+r.door('bottom', 28, 2, '1').door('top', 15, 3, '8')
 rooms.append(r.js(legend={
     'k': dict(e='item', item='knot', id='wanderer'),
 }, doors={'1': 'fray_07:3', '8': 'dunes_entry:9'}))

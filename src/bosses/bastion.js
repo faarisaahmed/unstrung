@@ -972,7 +972,19 @@ export class AutomatonChoir extends Boss {
     this.shake(5, 0.6);
   }
 
-  onDeath() { this.beams.length = 0; this.staff.length = 0; for (const s of this.singers) { s.mouth = 0; s.extTo = 0; } }
+  onDeath() {
+    this.beams.length = 0; this.staff.length = 0;
+    for (const s of this.singers) {
+      s.mouth = 0; s.extTo = 0;
+      if (s.alive) {
+        s.alive = false; s.crack = 1;
+        this.fx.burst(s.x, s.y - 30, 24, { color: '#f0e6d0', speed: 340, size: 3.5, life: 0.8, shape: 'shard' });
+        this.fx.burst(s.x, s.y - 30, 16, { color: '#ffd28a', speed: 300, size: 2, life: 0.6, glow: true });
+      }
+    }
+    // the last chord, unresolved
+    [50, 57, 62, 65].forEach((m) => playNote(this.game, m, 'choir', 2.2, 0.08));
+  }
 
   glyph(x, y, col) { this.glyphs.push({ x, y, vx: this.rand(-20, 20), vy: -this.rand(40, 70), life: 1.4, max: 1.4, col, rot: this.rand(-0.3, 0.3), kind: Math.random() < 0.5 ? 1 : 2 }); }
 

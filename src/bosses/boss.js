@@ -231,11 +231,12 @@ export class Boss extends Entity {
       return;
     }
     g.save.flags[this.flagKey] = 1;
+    g.app.audio && g.app.audio.playMusic('victory', { fade: 0.05, fadeOut: 0.3 });
     spawnGlints(g, this.cx, this.cy, this.cfg.glints ?? 120);
     const area = g.room.def.area;
     setTimeout(() => {
       if (g.room && g.room.def.area === area) g.app.audio && g.app.audio.playMusic(g.room.def.music || area, { fade: 3 });
-    }, 2500);
+    }, 6500);
     if (this.cfg.reward) {
       const rw = this.cfg.reward;
       // rewards can be a list

@@ -122,7 +122,23 @@ export class HUD {
     }
 
     // --- item banner ---
-    if (g.message) {
+    if (g.message && g.message.hint) {
+      const m = g.message;
+      const k = m.t < 0.3 ? m.t / 0.3 : m.t > m.dur - 0.5 ? Math.max(0, (m.dur - m.t) / 0.5) : 1;
+      ctx.globalAlpha = k;
+      const lines = m.desc ? m.desc.split('\n') : [];
+      const bh = 44 + lines.length * 20;
+      const by = VIEW_H - 70 - bh;
+      const grd = ctx.createLinearGradient(0, by, 0, by + bh);
+      grd.addColorStop(0, 'rgba(6,6,10,0)'); grd.addColorStop(0.25, 'rgba(6,6,10,0.7)'); grd.addColorStop(0.75, 'rgba(6,6,10,0.7)'); grd.addColorStop(1, 'rgba(6,6,10,0)');
+      ctx.fillStyle = grd; ctx.fillRect(VIEW_W / 2 - 330, by, 660, bh);
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = `22px ${FONT}`; ctx.fillStyle = '#fff6e0';
+      ctx.fillText(m.title, VIEW_W / 2, by + 24);
+      ctx.font = `15px ${FONT}`; ctx.fillStyle = '#cfc8b5';
+      lines.forEach((l, i) => ctx.fillText(l, VIEW_W / 2, by + 48 + i * 20));
+      ctx.globalAlpha = 1;
+    } else if (g.message) {
       const m = g.message;
       const k = m.t < 0.3 ? m.t / 0.3 : m.t > m.dur - 0.5 ? Math.max(0, (m.dur - m.t) / 0.5) : 1;
       ctx.globalAlpha = k;
@@ -140,6 +156,11 @@ export class HUD {
       ctx.globalAlpha = 1;
     }
 
+    if (g.app.options && g.app.options.timer) {
+      const tt = sv.playTime, h = Math.floor(tt / 3600), mm = Math.floor((tt % 3600) / 60), ss = Math.floor(tt % 60);
+      ctx.font = `14px ${FONT}`; ctx.textAlign = 'right'; ctx.textBaseline = 'top'; ctx.fillStyle = 'rgba(239,232,214,0.7)';
+      ctx.fillText(`${h}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`, VIEW_W - 16, 14);
+    }
     if (g.dialogue) g.dialogue.draw(ctx);
   }
 }

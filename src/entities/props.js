@@ -531,7 +531,7 @@ export class Trigger extends Entity {
     const g = this.game, s = this.spec;
     if (s.flag) g.save.flags[s.flag] = 1;
     if (s.text) g.dialogue = new Dialogue(g, Array.isArray(s.text) ? s.text : [s.text], { speaker: s.speaker, style: s.style });
-    if (s.hint) g.message = { title: s.hint, desc: s.desc || '', t: 0, dur: s.dur || 3.5 };
+    if (s.hint) g.message = { title: s.hint, desc: s.desc || '', t: 0, dur: s.dur || 4.5, hint: true };
     if (!s.repeat) this.dead = true;
   }
 }

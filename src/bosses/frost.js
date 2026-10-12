@@ -28,6 +28,35 @@ function limb(ctx, pts, white, c, lw) {
   ctx.strokeStyle = col(white, INK); ctx.lineWidth = lw + 4; ctx.stroke();
   ctx.strokeStyle = col(white, c); ctx.lineWidth = lw; ctx.stroke();
 }
+// smooth tapered branch through points (Catmull-Rom), filled with an ink outline
+function branch(ctx, pts, w0, w1, fill, white, lw = 2.5) {
+  const sm = [];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(pts.length - 1, i + 2)];
+    for (let k = 0; k < 5; k++) {
+      const u = k / 5, u2 = u * u, u3 = u2 * u;
+      sm.push([
+        0.5 * (2 * p1[0] + (-p0[0] + p2[0]) * u + (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * u2 + (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * u3),
+        0.5 * (2 * p1[1] + (-p0[1] + p2[1]) * u + (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * u2 + (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * u3),
+      ]);
+    }
+  }
+  sm.push(pts[pts.length - 1]);
+  const L = [], R = [];
+  for (let i = 0; i < sm.length; i++) {
+    const a = sm[Math.max(0, i - 1)], b = sm[Math.min(sm.length - 1, i + 1)];
+    let nx = -(b[1] - a[1]), ny = b[0] - a[0];
+    const d = Math.hypot(nx, ny) || 1; nx /= d; ny /= d;
+    const w = (w0 + (w1 - w0) * (i / (sm.length - 1))) / 2;
+    L.push([sm[i][0] + nx * w, sm[i][1] + ny * w]); R.push([sm[i][0] - nx * w, sm[i][1] - ny * w]);
+  }
+  ctx.beginPath(); ctx.moveTo(L[0][0], L[0][1]);
+  for (const q of L) ctx.lineTo(q[0], q[1]);
+  for (let i = R.length - 1; i >= 0; i--) ctx.lineTo(R[i][0], R[i][1]);
+  ctx.closePath();
+  fillInk(ctx, fill, white, lw);
+  return sm;
+}
 const approach = (v, t, k) => v + (t - v) * k;
 // seeded jitter so hand-drawn cracks stay put between frames
 function srand(seed) { let s = seed >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
@@ -185,7 +214,7 @@ export class Rimehorn extends Boss {
     return { x: this.cx + x * this.facing, y: this.y + this.h + y };
   }
   mouth() { return this.toWorld(160, -150); }
-  antlerTip() { return this.toWorld(70, -330); }
+  antlerTip() { return this.toWorld(50, -380); }
   idle(dt) { this.animate(dt); }
   introUpdate(dt, t) {
     this.animate(dt);
@@ -609,10 +638,10 @@ export class Rimehorn extends Boss {
       for (let i = 0; i <= 12; i++) { const x = -80 + i * 12.5; ctx.lineTo(x, -70 - (i % 2) * 7 + Math.sin(a * 2 + i) * 1.5); }
       ctx.lineTo(66, -84); ctx.closePath(); ctx.fill();
       // fur strokes
-      ctx.strokeStyle = '#3a5468'; ctx.lineWidth = 1.6;
-      for (let i = 0; i < 9; i++) {
-        const x = -76 + i * 16, y = -132 + Math.abs(i - 4) * 2;
-        ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x - 6, y + 12, x - 2, y + 26); ctx.stroke();
+      ctx.strokeStyle = '#3a5468'; ctx.lineWidth = 1.5;
+      for (let i = 0; i < 14; i++) {
+        const x = -80 + ((i * 47) % 150), y = -126 + ((i * 29) % 44);
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x - 5, y + 5, x - 4, y + 11); ctx.stroke();
       }
       // frost along the spine
       ctx.strokeStyle = 'rgba(220,245,255,0.7)'; ctx.lineWidth = 3;
@@ -645,24 +674,23 @@ export class Rimehorn extends Boss {
     if (P.tuck > 0.05) { fx = hx + (hind ? -26 : 26) * P.tuck + (fx - hx) * (1 - P.tuck); fy = fy * (1 - P.tuck) - 54 * P.tuck; }
     fy -= P.crouch * 0; // crouch bends the knees instead (the whole body is lowered)
     const c = near ? RH.fur : RH.furDark;
-    const lw = near ? 9 : 7;
-    let k1, k2;
+    const cr = P.crouch;
+    let pts;
     if (hind) {
-      k1 = [hx + 12, (hy + fy) * 0.62 - 6 + P.crouch * 10];
-      k2 = [fx - 16, fy - 36 + P.crouch * 6];
+      pts = [[hx, hy + 6], [hx + 14 + cr * 8, -62 + cr * 10], [hx - 12 + (fx - hx) * 0.3, -34 + fy * 0.5 + cr * 4], [fx - 2, fy - 12], [fx, fy - 2]];
+      branch(ctx, pts, near ? 34 : 28, 8, c, white, 2.8);
     } else {
-      k1 = [hx + 4, (hy + fy) * 0.55 + 2];
-      k2 = [fx - 2, fy - 30 + P.crouch * 4];
+      pts = [[hx, hy + 6], [hx + 4 + (fx - hx) * 0.3, -58 + fy * 0.4 + cr * 8], [hx + 2 + (fx - hx) * 0.7, -32 + fy * 0.7 + cr * 4], [fx, fy - 12], [fx, fy - 2]];
+      branch(ctx, pts, near ? 26 : 22, 8, c, white, 2.8);
     }
-    // thigh mass
-    ctx.beginPath(); ctx.ellipse(hx, hy + 14, hind ? 26 : 20, 30, hind ? -0.3 : 0.2, 0, TAU);
-    fillInk(ctx, c, white, 3);
-    limb(ctx, [[hx, hy + 22], k1, k2, [fx, fy - 6]], white, c, lw);
     // hoof
     ctx.beginPath(); ctx.moveTo(fx - 8, fy); ctx.lineTo(fx - 6, fy - 12); ctx.lineTo(fx + 7, fy - 12); ctx.lineTo(fx + 10, fy);
     ctx.closePath(); fillInk(ctx, RH.hoof, white, 2.2);
     // frost fetlock tuft
-    if (!white) { ctx.fillStyle = RH.mane; ctx.beginPath(); ctx.moveTo(k2[0] - 7, k2[1] + 4); ctx.lineTo(k2[0] + 8, k2[1] + 2); ctx.lineTo(k2[0] + 2, k2[1] + 14); ctx.closePath(); ctx.fill(); }
+    if (!white) {
+      ctx.fillStyle = RH.mane; ctx.strokeStyle = INK; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(fx - 7, fy - 14); ctx.lineTo(fx + 6, fy - 16); ctx.lineTo(fx + 2, fy - 8); ctx.lineTo(fx - 2, fy - 11); ctx.lineTo(fx - 6, fy - 6); ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
   }
 
   drawHead(ctx, white, t, a) {
@@ -670,25 +698,39 @@ export class Rimehorn extends Boss {
     ctx.save();
     ctx.translate(58, -128); ctx.rotate(P.head * 0.62 + Math.sin(a * 1.2) * 0.02); ctx.translate(-58, 128);
     this.drawAntler(ctx, white, a, false);
-    // neck with mane
+    // neck: a thick shaggy column rising to the skull
     ctx.beginPath();
-    ctx.moveTo(30, -140); ctx.bezierCurveTo(56, -176, 82, -196, 104, -196);
-    ctx.lineTo(126, -168);
-    ctx.bezierCurveTo(108, -150, 92, -120, 84, -92);
-    ctx.lineTo(52, -96);
+    ctx.moveTo(24, -140);
+    ctx.bezierCurveTo(40, -174, 70, -200, 102, -202);
+    ctx.lineTo(128, -168);
+    ctx.bezierCurveTo(110, -148, 96, -118, 88, -88);
+    ctx.lineTo(48, -98);
     ctx.closePath();
     fillInk(ctx, RH.fur, white, 3);
+    // shaggy fringe on the nape
+    ctx.beginPath();
+    for (let i = 0; i <= 6; i++) {
+      const u = i / 6;
+      const x = 32 + u * 62, y = -150 - u * 46 + (u * u) * -4;
+      ctx.lineTo(x - 6 - (i % 2) * 8, y - (i % 2) * 10 + Math.sin(a * 2 + i) * 1.5);
+    }
+    ctx.lineTo(100, -190); ctx.lineTo(40, -138); ctx.closePath();
+    fillInk(ctx, RH.furDark, white, 2);
     // frost mane: a ragged white ruff down the throat
     ctx.beginPath();
-    ctx.moveTo(116, -160);
-    for (let i = 0; i <= 10; i++) {
-      const u = i / 10;
-      const x = 116 - u * 50 + (i % 2) * 12 + Math.sin(a * 2.5 + i) * 2;
-      const y = -160 + u * 80 + (i % 2) * 6;
+    ctx.moveTo(120, -162);
+    for (let i = 0; i <= 11; i++) {
+      const u = i / 11;
+      const x = 120 - u * 60 + (i % 2) * 14 + Math.sin(a * 2.5 + i) * 2;
+      const y = -162 + u * 86 + (i % 2) * 5;
       ctx.lineTo(x, y);
     }
-    ctx.lineTo(56, -92); ctx.quadraticCurveTo(84, -120, 104, -156); ctx.closePath();
+    ctx.lineTo(52, -88); ctx.quadraticCurveTo(84, -120, 106, -158); ctx.closePath();
     fillInk(ctx, RH.mane, white, 2.5);
+    if (!white) {
+      ctx.strokeStyle = '#9fb8c4'; ctx.lineWidth = 1.2;
+      for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.moveTo(100 - i * 12, -150 + i * 18); ctx.lineTo(108 - i * 12, -140 + i * 18); ctx.stroke(); }
+    }
     // ear
     ctx.beginPath(); ctx.moveTo(98, -194); ctx.quadraticCurveTo(76, -214 + Math.sin(a * 4) * 3, 72, -204); ctx.quadraticCurveTo(84, -196, 96, -186);
     fillInk(ctx, RH.fur, white, 2.2);
@@ -722,35 +764,35 @@ export class Rimehorn extends Boss {
   // antlers: branching beams of ice-bone, with icicles hanging off the tines
   drawAntler(ctx, white, a, near) {
     ctx.save();
-    if (!near) { ctx.translate(-14, -4); ctx.scale(0.92, 0.96); }
-    const base = [104, -198];
-    // [points of the main beam], tines branch from beam indices
-    const beam = [base, [96, -236], [78, -276], [70, -312], [58, -336]];
+    ctx.translate(106, -196); ctx.scale(1.3, 1.3); ctx.translate(-106, 196);
+    if (!near) { ctx.translate(-16, -2); ctx.scale(0.9, 0.95); }
+    const beam = [[106, -196], [98, -232], [84, -270], [76, -304], [60, -338]];
     const tines = [
-      [1, [128, -252], [138, -270]],
-      [2, [110, -300], [118, -326]],
-      [2, [52, -292], [36, -306]],
-      [3, [90, -346], [96, -364]],
-      [3, [40, -326], [24, -340]],
-      [0, [130, -214], [146, -222]],
+      [[104, -212], [124, -226], [146, -230], 7],
+      [[98, -240], [118, -262], [132, -286], 7],
+      [[86, -266], [64, -280], [44, -296], 6],
+      [[80, -296], [96, -322], [100, -350], 6],
+      [[70, -318], [48, -330], [30, -340], 5],
+      [[62, -334], [64, -352], [74, -366], 4],
     ];
     const c = near ? RH.antler : '#7fa9bd';
-    const tw = near ? 1 : 0.85;
-    const draw = (pts, lw) => limb(ctx, pts, white, c, lw);
-    draw(beam, 9 * tw);
-    for (const [i, m, e] of tines) draw([beam[i], m, e], 6 * tw);
+    for (const [p0, p1, p2, w] of tines) branch(ctx, [p0, p1, p2], w * 1.6, 2, c, white, 2.2);
+    branch(ctx, beam, 15, 4, c, white, 2.6);
+    // burr ring where antler meets skull
+    ctx.beginPath(); ctx.ellipse(106, -196, 10, 5, -0.3, 0, TAU); fillInk(ctx, '#d0e6ee', white, 2);
     if (!white) {
-      // highlights and glowing tips
-      ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(beam[0][0] - 2, beam[0][1]); for (let i = 1; i < beam.length; i++) ctx.lineTo(beam[i][0] - 2, beam[i][1]); ctx.stroke();
-      const g = 0.25 + this.antlerGlow * 0.5 + (this.tele > 0 ? 0.3 : 0);
-      for (const [, , e] of tines) glow(ctx, e[0], e[1], 16 + this.antlerGlow * 10, '150,230,255', g * (near ? 1 : 0.6));
-      glow(ctx, beam[4][0], beam[4][1], 20, '150,230,255', g);
-      // icicles hanging off tines
+      ctx.strokeStyle = 'rgba(255,255,255,0.75)'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(101, -206); ctx.quadraticCurveTo(90, -262, 70, -320); ctx.stroke();
+      const g = 0.22 + this.antlerGlow * 0.5 + (this.tele > 0 ? 0.3 : 0);
+      for (const [, , e] of tines) glow(ctx, e[0], e[1], 14 + this.antlerGlow * 12, '150,230,255', g * (near ? 1 : 0.6));
+      glow(ctx, 60, -338, 22, '150,230,255', g);
       if (near) {
-        for (const [i, m] of tines) {
-          const L = 10 + ((i * 13) % 3) * 5 + Math.sin(a * 2 + i) * 1;
-          ctx.beginPath(); ctx.moveTo(m[0] - 3, m[1] + 2); ctx.lineTo(m[0] + 3, m[1] + 2); ctx.lineTo(m[0], m[1] + 2 + L); ctx.closePath();
+        // frost crystals at the tips and icicles hanging off the tines
+        for (const [, m, e] of tines) {
+          ctx.fillStyle = '#f2fbff';
+          ctx.beginPath(); ctx.moveTo(e[0] - 3, e[1]); ctx.lineTo(e[0], e[1] - 7); ctx.lineTo(e[0] + 3, e[1]); ctx.lineTo(e[0], e[1] + 3); ctx.closePath(); ctx.fill();
+          const L = 9 + ((m[0] * 13) % 3) * 4;
+          ctx.beginPath(); ctx.moveTo(m[0] - 3, m[1] + 3); ctx.lineTo(m[0] + 3, m[1] + 3); ctx.lineTo(m[0], m[1] + 3 + L + Math.sin(a * 2 + m[0]) * 1); ctx.closePath();
           ctx.fillStyle = '#e6f8ff'; ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 1.2; ctx.stroke();
         }
       }

@@ -786,28 +786,6 @@ export class Hush extends Boss {
   }
 
   drawExtra(ctx, t) {
-    // marks
-    for (const m of this.marks) {
-      const k = m.t / m.dur;
-      ctx.save();
-      if (m.kind === 'feather') {
-        glow(ctx, m.x, m.y + 6, 14 + 10 * k, 'rgba(230,220,255,0.9)', 0.4 + 0.5 * k);
-        ctx.strokeStyle = `rgba(230,220,255,${0.15 + 0.2 * k})`; ctx.lineWidth = 2; ctx.setLineDash([4, 10]);
-        ctx.beginPath(); ctx.moveTo(m.x, m.y + 10); ctx.lineTo(m.x, this.G); ctx.stroke();
-      } else if (m.kind === 'dive') {
-        ctx.fillStyle = `rgba(8,6,14,${0.3 + 0.4 * k})`;
-        ctx.beginPath(); ctx.ellipse(m.x, m.y - 2, 36, 7, 0, 0, TAU); ctx.fill();
-      }
-      ctx.restore();
-    }
-    // the swoop's path, ghosted ahead of her while her eyes open
-    if (this.path && this.path.t === 0) {
-      const P = this.path;
-      ctx.save();
-      ctx.strokeStyle = 'rgba(220,210,250,0.28)'; ctx.lineWidth = 3; ctx.setLineDash([3, 12]);
-      ctx.beginPath(); ctx.moveTo(P.x0 + this.w / 2, P.y0 + this.h / 2); ctx.quadraticCurveTo(P.cx + this.w / 2, P.cy + this.h / 2, P.x2 + this.w / 2, P.y2 + this.h / 2); ctx.stroke();
-      ctx.restore();
-    }
     // the silent screech: the wood goes dark around Bead
     if (this.dim > 0.01) {
       const cam = this.game.camera, p = this.player;
@@ -820,6 +798,30 @@ export class Hush extends Boss {
       if (this.mode !== 'dying') this.drawEyes(ctx, t, Math.max(0.6, this.alpha) * this.dim);
     } else if (this.alpha < 0.5 && this.mode !== 'dying') {
       this.drawEyes(ctx, t, this.mode === 'dormant' ? this.eyeVis : Math.max(0.25, this.eyeFlash > 0 ? 1 : 0.25));
+    }
+    // marks (drawn above the dark so every tell stays readable)
+    for (const m of this.marks) {
+      const k = m.t / m.dur;
+      ctx.save();
+      if (m.kind === 'feather') {
+        glow(ctx, m.x, m.y + 6, 14 + 10 * k, 'rgba(230,220,255,0.9)', 0.4 + 0.5 * k);
+        ctx.strokeStyle = `rgba(230,220,255,${0.15 + 0.2 * k})`; ctx.lineWidth = 2; ctx.setLineDash([4, 10]);
+        ctx.beginPath(); ctx.moveTo(m.x, m.y + 10); ctx.lineTo(m.x, this.G); ctx.stroke();
+      } else if (m.kind === 'dive') {
+        ctx.fillStyle = `rgba(8,6,14,${0.3 + 0.4 * k})`;
+        ctx.beginPath(); ctx.ellipse(m.x, m.y - 2, 36, 7, 0, 0, TAU); ctx.fill();
+        ctx.strokeStyle = `rgba(230,220,255,${0.3 + 0.5 * k})`; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.ellipse(m.x, m.y - 2, 46 - 12 * k, 9 - 2 * k, 0, 0, TAU); ctx.stroke();
+      }
+      ctx.restore();
+    }
+    // the swoop's path, ghosted ahead of her while her eyes open
+    if (this.path && this.path.t === 0) {
+      const P = this.path;
+      ctx.save();
+      ctx.strokeStyle = 'rgba(220,210,250,0.28)'; ctx.lineWidth = 3; ctx.setLineDash([3, 12]);
+      ctx.beginPath(); ctx.moveTo(P.x0 + this.w / 2, P.y0 + this.h / 2); ctx.quadraticCurveTo(P.cx + this.w / 2, P.cy + this.h / 2, P.x2 + this.w / 2, P.y2 + this.h / 2); ctx.stroke();
+      ctx.restore();
     }
   }
 
@@ -899,7 +901,8 @@ export class Hush extends Boss {
     const hx = 6, hy = -24;
     // ear tufts
     for (const s of [-1, 1]) {
-      ctx.beginPath(); ctx.moveTo(hx + s * 16, hy - 22); ctx.quadraticCurveTo(hx + s * 26, hy - 44 + Math.sin(t * 2 + s) * 2, hx + s * 30, hy - 46); ctx.quadraticCurveTo(hx + s * 22, hy - 30, hx + s * 6, hy - 26); ctx.closePath();
+      const tw = Math.sin(t * 2 + s) * 2;
+      ctx.beginPath(); ctx.moveTo(hx + s * 26, hy - 14); ctx.quadraticCurveTo(hx + s * 32, hy - 34, hx + s * 30 + tw, hy - 50); ctx.quadraticCurveTo(hx + s * 18, hy - 36, hx + s * 6, hy - 26); ctx.closePath();
       fs(ctx, white, plum, 2.5);
     }
     ctx.beginPath(); ctx.ellipse(hx, hy, 34, 30, 0, 0, TAU);

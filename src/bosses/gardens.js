@@ -771,7 +771,7 @@ export class Glassmoths extends Boss {
   }
   *pillars() {
     const L = this.light;
-    this.station(L, this.player.cx + this.rand(-120, 120), this.arena.y + 90, 2.5);
+    this.station(L, this.player.cx + this.rand(-120, 120), Math.max(this.arena.y + 90, this.groundY - 370), 2.5);
     L.tele = 0.8; this.sfx('charge');
     const waves = Math.min(3, this.phase);
     this.pushPillars(waves);
@@ -873,7 +873,7 @@ export class Glassmoths extends Boss {
   // ---- BOTH (phase 3): pillars fall while the shadow dashes
   *eclipse() {
     const L = this.light;
-    this.station(L, this.midX, this.arena.y + 90, 3);
+    this.station(L, this.midX, Math.max(this.arena.y + 90, this.groundY - 370), 3);
     L.tele = 0.8; this.sfx('charge');
     this.pushPillars(2);
     yield* this.dash();

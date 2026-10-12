@@ -992,7 +992,7 @@ export class Galeharrow extends Boss {
     yield* this.flyTo(this.sideX(side), this.homeY - 20, 0.7);
     this.facing = dir;
     this.spread = 1; this.tele = 0.7; this.sfx('screech');
-    this.gust = { dir, str: 205 + this.phase * 25, t: 0, tele: 0.75, dur: 2.6 + this.phase * 0.3, flipAt: this.phase >= 3 ? 0.75 + 1.4 : 0 };
+    this.gust = { dir, str: 170 + this.phase * 30, t: 0, tele: 0.75, dur: 2.6 + this.phase * 0.3, flipAt: this.phase >= 3 ? 0.75 + 1.4 : 0 };
     yield 0.75;
     this.flapRate = 16;
     const n = 3 + this.phase;
