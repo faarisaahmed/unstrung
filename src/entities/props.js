@@ -113,14 +113,16 @@ export class Gate extends Entity {
     super(game, tx * TILE, ty * TILE, w, h);
     this.spec = spec;
     this.flag = spec.flag;
-    this.open = this.flag ? !!game.save.flags[this.flag] : false;
+    this.open = spec.arena ? !game.arenaLock : this.flag ? !!game.save.flags[this.flag] : false;
     this.openK = this.open ? 1 : 0;
     this.solid = { x: this.x, y: this.y, w: this.w, h: this.h, active: !this.open };
     game.room.dynamicSolids.push(this.solid);
     this.z = 1;
     if (spec.item && game.save.items[spec.item]) this.open = true, this.openK = 1, this.solid.active = false;
+    if (spec.beads && game.save.greatBeads >= spec.beads) this.open = true, this.openK = 1, this.solid.active = false;
   }
   onFlag(flag) { if (flag === this.flag) this.setOpen(true); }
+  onArena(locked) { if (this.spec.arena) this.setOpen(!locked); }
   setOpen(v) {
     if (this.open === v) return;
     this.open = v;
@@ -134,7 +136,7 @@ export class Gate extends Entity {
         this.setOpen(true); this.game.save.flags[this.flag || ('gate_' + this.spec.item)] = 1;
       }
     }
-    if (!this.open && this.flag && this.game.save.flags[this.flag]) this.setOpen(true);
+    if (!this.open && this.flag && !this.spec.arena && this.game.save.flags[this.flag]) this.setOpen(true);
     this.openK += ((this.open ? 1 : 0) - this.openK) * Math.min(1, dt * 5);
     this.solid.active = this.openK < 0.6;
     if (!this.open && this.solid.active) {

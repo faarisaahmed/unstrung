@@ -111,6 +111,7 @@ export class Projectile extends Entity {
 }
 
 const PROJ_ART = {
+  none() {},
   orb(ctx, p, t) {
     const c = p.o.color || '#ff8a7a';
     for (let i = 0; i < p.trail.length; i++) {

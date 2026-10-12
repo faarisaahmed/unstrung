@@ -19,7 +19,7 @@ import { HUD } from '../ui/hud.js';
 const terrainCache = new Map();
 
 export class Game {
-  constructor(app, save) {
+  constructor(app, save, debugDoor) {
     this.app = app;
     this.input = app.input;
     this.save = save;
@@ -40,7 +40,16 @@ export class Game {
     this.dialogue = null;      // active dialogue
     this.revealed = new Set();
     this.paused = false;
-    this.enterRoomAt(save.room || START_ROOM, save.spindle ? { marker: save.spindle.marker } : { spawn: true });
+    const startRoom = save.room && ROOMS[save.room] ? save.room : START_ROOM;
+    let entry = save.spindle && save.spindle.room === startRoom ? { marker: save.spindle.marker } : { spawn: true };
+    if (debugDoor) entry = { door: debugDoor };
+    else if (startRoom !== START_ROOM && !save.spindle) {
+      const r = ROOMS[startRoom];
+      const firstDoor = (r.tiles.join('').match(/[0-9]/) || [])[0];
+      const hasSpindle = Object.values(r.legend || {}).some((l) => l.e === 'spindle');
+      entry = hasSpindle ? { marker: Object.keys(r.legend).find((k) => r.legend[k].e === 'spindle') } : firstDoor ? { door: firstDoor } : { spawn: true };
+    }
+    this.enterRoomAt(startRoom, entry);
   }
 
   refreshStats() {
@@ -308,6 +317,8 @@ export class Game {
     this.sfx('rest');
   }
 
+  writeSave() { writeSave(this.save); }
+
   hitstop(t) { this.hitstopT = Math.max(this.hitstopT, t); }
   flash(color, t) { this.flashColor = color; this.flashT = t; this.flashMax = t; }
 
@@ -463,6 +474,12 @@ export class Game {
 
     ctx.save();
     ctx.translate(-cx, -cy);
+    // rock beyond the room edges (small rooms / camera clamping)
+    ctx.fillStyle = this.style.rock;
+    if (cx < 0) ctx.fillRect(cx, cy, -cx, VIEW_H);
+    if (cy < 0) ctx.fillRect(cx, cy, VIEW_W, -cy);
+    if (cx + VIEW_W > room.pxW) ctx.fillRect(room.pxW, cy, cx + VIEW_W - room.pxW, VIEW_H);
+    if (cy + VIEW_H > room.pxH) ctx.fillRect(cx, room.pxH, VIEW_W, cy + VIEW_H - room.pxH);
     // behind-terrain entities (e.g., background props)
     for (const e of this.entities) if (e.layer === 'back') e.draw(ctx, this.time);
     ctx.drawImage(this.terrain.canvas, cx, cy, VIEW_W, VIEW_H, cx, cy, VIEW_W, VIEW_H);

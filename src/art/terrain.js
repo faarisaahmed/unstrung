@@ -14,11 +14,12 @@ export function extractLoops(room) {
   const edges = [];
   const W = room.w, H = room.h;
   const chAt = (x, y) => {
+    if (x < -1 || y < -1 || x > W || y > H) return '#';
     const c = room.charAt(x, y);
     return COVER[c] ? c : ' ';
   };
-  for (let y = -1; y <= H; y++) {
-    for (let x = -1; x <= W; x++) {
+  for (let y = -2; y <= H + 1; y++) {
+    for (let x = -2; x <= W + 1; x++) {
       const c = chAt(x, y);
       const cv = cov(c);
       if (!cv) continue;

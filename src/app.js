@@ -3,6 +3,7 @@ import { Game } from './game/game.js';
 import { newSave, loadSave, writeSave } from './game/save.js';
 import { ENEMIES } from './data/enemies/index.js';
 import { PAINTERS } from './art/creatures.js';
+import { Audio } from './audio/index.js';
 
 export class App {
   constructor(input, canvas) {
@@ -10,14 +11,24 @@ export class App {
     this.canvas = canvas;
     this.enemyDefs = ENEMIES;
     this.painters = PAINTERS;
-    this.audio = null;
+    this.audio = new Audio();
     this.overlay = null;
     this.scene = null;
-    this.startGame(newSave(0));
+    // Debug: ?room=<id>&ab=sap,dash|all&door=<id>
+    const q = new URLSearchParams(location.search);
+    const save = newSave(0);
+    if (q.get('room')) {
+      save.room = q.get('room');
+      const ab = q.get('ab');
+      const ALL = ['sap', 'dash', 'shard', 'glide', 'magnet', 'shell', 'pound', 'comet', 'dbljump', 'shrink', 'hook', 'unravel', 'lantern', 'howl'];
+      if (ab) for (const a of (ab === 'all' ? ALL : ab.split(','))) save.abilities[a] = true;
+      this.debugDoor = q.get('door');
+    }
+    this.startGame(save);
   }
 
   startGame(save) {
-    this.game = new Game(this, save);
+    this.game = new Game(this, save, this.debugDoor);
     this.scene = this.game;
   }
 

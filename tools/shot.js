@@ -39,5 +39,6 @@ if (keys) {
   await new Promise((r) => setTimeout(r, 300));
 }
 await page.screenshot({ path: out });
-console.log(errors.length ? errors.join('\n') : 'no errors');
+const uniq = [...new Set(errors)];
+console.log(uniq.length ? uniq.slice(0, 30).join('\n') + (uniq.length > 30 ? `\n...(${uniq.length} unique)` : '') : 'no errors');
 await browser.close();

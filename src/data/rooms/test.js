@@ -35,7 +35,7 @@ export default [
   },
   {
     id: 'test_b', area: 'hollows',
-    legend: { m: { e: 'enemy', id: 'lintmite' } },
+    legend: { m: { e: 'enemy', id: 'lintmite' }, K: { e: 'boss', id: 'gnarlknot' }, a: { e: 'gate', arena: true, h: 3 } },
     doors: { 1: 'test_a:1' },
     tiles: [
       '##################################################',
@@ -47,8 +47,8 @@ export default [
       '#                ##########          BBB         #',
       '#                                    BBB         #',
       '#        /####\\                   #######        #',
-      '1       /######\\         m                       #',
-      '1      /########\\                                #',
+      '1a      /######\\                         K       #',
+      '1       /########\\                               #',
       '1     /##########\\                               #',
       '##################################################',
     ],

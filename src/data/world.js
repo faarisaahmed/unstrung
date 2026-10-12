@@ -1,4 +1,23 @@
 // World registry: areas + every room def, keyed by id.
+import fray from './rooms/fray.js';
+import town from './rooms/town.js';
+import hollows from './rooms/hollows.js';
+import gardens from './rooms/gardens.js';
+import catacombs from './rooms/catacombs.js';
+import hushwood from './rooms/hushwood.js';
+import bastion from './rooms/bastion.js';
+import cistern from './rooms/cistern.js';
+import kilns from './rooms/kilns.js';
+import mirror from './rooms/mirror.js';
+import bellfry from './rooms/bellfry.js';
+import archive from './rooms/archive.js';
+import warrens from './rooms/warrens.js';
+import frost from './rooms/frost.js';
+import loom from './rooms/loom.js';
+import cradle from './rooms/cradle.js';
+import unwoven from './rooms/unwoven.js';
+import dunes from './rooms/dunes.js';
+import echoes from './rooms/echoes.js';
 import test from './rooms/test.js';
 
 export const AREAS = {
@@ -23,7 +42,8 @@ export const AREAS = {
   echoes: { name: 'Hall of Echoes', sub: 'They answer', music: 'echoes' },
 };
 
-const ALL = [...test];
+const ALL = [...fray, ...town, ...hollows, ...gardens, ...catacombs, ...hushwood, ...bastion, ...cistern, ...kilns, ...mirror, ...bellfry, ...archive, ...warrens, ...frost, ...loom, ...cradle, ...unwoven, ...dunes, ...echoes, ...test];
 
 export const ROOMS = Object.fromEntries(ALL.map((r) => [r.id, r]));
-export const START_ROOM = 'test_a';
+// The game starts in the Fray. (Falls back to the engine test room until the Fray exists.)
+export const START_ROOM = ROOMS.fray_cradle ? 'fray_cradle' : 'test_a';
