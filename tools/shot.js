@@ -21,7 +21,7 @@ await page.setViewport({ width: 960, height: 540, deviceScaleFactor: 1 });
 const errors = [];
 page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') errors.push(`[${m.type()}] ${m.text()}`); });
 page.on('pageerror', (e) => errors.push('[pageerror] ' + e.message));
-await page.goto(url, { waitUntil: 'load' });
+await page.goto(url, { waitUntil: 'load', timeout: 120000 });
 await new Promise((r) => setTimeout(r, wait));
 if (evalJs) {
   try { const r = await page.evaluate(evalJs); if (r !== undefined) console.log('eval:', JSON.stringify(r)); }
@@ -35,6 +35,7 @@ if (keys) {
     for (const c of combo) await page.keyboard.down(c);
     await new Promise((r) => setTimeout(r, Number(ms) || 100));
     for (const c of combo.reverse()) await page.keyboard.up(c);
+    await new Promise((r) => setTimeout(r, 60));
   }
   await new Promise((r) => setTimeout(r, 300));
 }

@@ -111,9 +111,9 @@ export function resetAir(b, ab) {
 }
 
 // Find a grapple hook in range with clear line of sight.
-export function findHook(b, room, exclude) {
+export function findHook(b, room, exclude, mul = 1) {
   const cx = b.x + b.w / 2, cy = b.y + b.h / 2;
-  const r = PHYS.hookRange;
+  const r = PHYS.hookRange * mul;
   const tx0 = Math.floor((cx - r) / TILE), tx1 = Math.floor((cx + r) / TILE);
   const ty0 = Math.floor((cy - r) / TILE), ty1 = Math.floor((cy + r) / TILE);
   let best = null, bestScore = Infinity;
@@ -190,7 +190,7 @@ export function stepBead(b, inp, room, ab, dt, ev) {
   const wallIsIce = b.wall !== 0 && wallHas(b, room, b.wall, isIce);
 
   // horizontal
-  let top = b.small ? PHYS.smallRunSpeed : PHYS.runSpeed;
+  let top = (b.small ? PHYS.smallRunSpeed : PHYS.runSpeed) * (ab.speedMul || 1);
   if (b.inWater) top *= PHYS.waterRunMul;
   if (b.grounded && b.onSlope && inp.x && sign(inp.x) === -b.onSlope) top *= PHYS.slopeBoost; // downhill
   const target = inp.x * top;
@@ -250,7 +250,7 @@ export function stepBead(b, inp, room, ab, dt, ev) {
     let maxFall = PHYS.maxFall;
     if (ab.glide && !b.small && inp.jump && b.vy > 0 && !b.grounded) {
       b.gliding = true;
-      maxFall = PHYS.glideFall;
+      maxFall = PHYS.glideFall * (ab.glideMul || 1);
     }
     if (b.gliding && inUpdraft) {
       b.vy = approach(b.vy, -PHYS.updraft, 4200 * dt);
@@ -265,7 +265,7 @@ export function stepBead(b, inp, room, ab, dt, ev) {
   // abilities
   if (inp.abilityP) {
     if (!b.grounded && !b.inWater) {
-      const hook = ab.hook && !b.small ? findHook(b, room) : null;
+      const hook = ab.hook && !b.small ? findHook(b, room, null, ab.hookMul || 1) : null;
       if (hook) {
         b.mode = 'hook'; b.hook = hook; ev.push({ type: 'hook', hook });
         return;
@@ -291,7 +291,7 @@ export function stepBead(b, inp, room, ab, dt, ev) {
       b.dashDir = b.clinging ? -b.wall : (inp.x || b.facing);
       b.facing = b.dashDir;
       if (!b.grounded && !b.inWater) b.airDashes--;
-      b.dashCd = PHYS.dashCooldown;
+      b.dashCd = PHYS.dashCooldown * (ab.dashCdMul || 1);
       b.vy = 0; b.jumping = false;
       ev.push({ type: 'dash', dir: b.dashDir });
       return;
@@ -479,7 +479,7 @@ function stepHang(b, inp, room, ab, dt, ev) {
     return;
   }
   if (inp.abilityP) {
-    const next = findHook(b, room, b.hook);
+    const next = findHook(b, room, b.hook, ab.hookMul || 1);
     if (next) { b.hook = next; b.mode = 'hook'; ev.push({ type: 'hook', hook: next }); return; }
   }
   if (inp.dashP && ab.dash) {

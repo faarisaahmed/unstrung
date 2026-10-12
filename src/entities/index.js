@@ -2,7 +2,7 @@
 import { Enemy } from './enemy.js';
 import { Projectile } from './projectile.js';
 import { Glint, ItemPickup, spawnGlints } from './pickups.js';
-import { Spindle, Lever, Gate, LoreTablet, NPC, Beadling, Tangle, Pot, Ferry, Deco, Trigger } from './props.js';
+import { Spindle, Lever, Gate, LoreTablet, NPC, Beadling, Tangle, Pot, Ferry, Deco, Trigger, Statue, PantheonDoor } from './props.js';
 import { ENEMIES } from '../data/enemies/index.js';
 import { BOSSES } from '../bosses/index.js';
 import { TILE } from '../core/constants.js';
@@ -38,6 +38,8 @@ export function spawnEntity(game, m) {
     case 'ferry': return new Ferry(game, m.tx, m.ty, s);
     case 'deco': return new Deco(game, m.tx, m.ty, s);
     case 'trigger': return new Trigger(game, m.tx, m.ty, s);
+    case 'statue': return new Statue(game, m.tx, m.ty, s);
+    case 'pantheon': return new PantheonDoor(game, m.tx, m.ty, s);
     default:
       console.warn('Unknown entity type', s.e, 'in', game.room.id);
       return null;

@@ -30,40 +30,95 @@ function offsetFor(A, da, B, db) {
   }
 }
 
+// Two-level layout: each area is laid out internally from its first room, then whole areas are
+// placed relative to each other through their connector doors and pushed apart if they overlap.
 export function computeLayout(ROOMS, startId, overrides = {}) {
-  const pos = {};
   const issues = [];
-  const queue = [];
-  const place = (id, x, y) => { pos[id] = { x, y }; queue.push(id); };
-  place(startId, 0, 0);
-  const seeds = Object.keys(ROOMS);
-  let seedIdx = 0;
-  for (;;) {
-    while (queue.length) {
-      const id = queue.shift();
+  const byArea = {};
+  for (const def of Object.values(ROOMS)) {
+    if (def.id.startsWith('__') || def.id.startsWith('test_')) continue;
+    (byArea[def.area] = byArea[def.area] || []).push(def.id);
+  }
+  // 1) local layouts
+  const local = {};       // id -> {x,y} within its area
+  const comps = {};       // id -> component index within area (disconnected chunks)
+  for (const [area, ids] of Object.entries(byArea)) {
+    let comp = 0;
+    let shiftX = 0;
+    for (const seed of ids) {
+      if (local[seed]) continue;
+      const queue = [seed];
+      local[seed] = { x: shiftX, y: 0 };
+      comps[seed] = comp;
+      let maxX = shiftX;
+      while (queue.length) {
+        const id = queue.shift();
+        const A = roomInfo(ROOMS[id]);
+        maxX = Math.max(maxX, local[id].x + A.w);
+        for (const d of Object.values(A.doors)) {
+          const L = parseLink(d.link);
+          if (!L || !ROOMS[L.room] || ROOMS[L.room].area !== area) continue;
+          const B = roomInfo(ROOMS[L.room]);
+          const db = B.doors[L.door];
+          if (!db) continue;
+          const off = offsetFor(A, d, B, db);
+          const bx = local[id].x + off.x, by = local[id].y + off.y;
+          if (!local[L.room]) { local[L.room] = { x: bx, y: by }; comps[L.room] = comp; queue.push(L.room); }
+          else if (local[L.room].x !== bx || local[L.room].y !== by) issues.push({ type: 'mismatch', a: id, door: d.id, b: L.room, dx: local[L.room].x - bx, dy: local[L.room].y - by });
+        }
+      }
+      comp++;
+      shiftX = maxX + 20;
+    }
+  }
+  // 2) place areas through cross-area links
+  const areaOff = {};
+  const startArea = ROOMS[startId] ? ROOMS[startId].area : Object.keys(byArea)[0];
+  const placed = [];
+  const rectsOf = (area, off) => byArea[area].map((id) => {
+    const r = roomInfo(ROOMS[id]);
+    return { x: local[id].x + off.x, y: local[id].y + off.y, w: r.w, h: r.h };
+  });
+  const collides = (rects) => placed.some((pr) => rects.some((a) => pr.some((b) =>
+    a.x < b.x + b.w - 1 && a.x + a.w > b.x + 1 && a.y < b.y + b.h - 1 && a.y + a.h > b.y + 1)));
+  if (byArea[startArea]) { areaOff[startArea] = { x: 0, y: 0 }; placed.push(rectsOf(startArea, areaOff[startArea])); }
+  const aq = [startArea];
+  const pushDir = { right: [1, 0], left: [-1, 0], bottom: [0, 1], top: [0, -1] };
+  while (aq.length) {
+    const area = aq.shift();
+    for (const id of byArea[area] || []) {
       const A = roomInfo(ROOMS[id]);
       for (const d of Object.values(A.doors)) {
         const L = parseLink(d.link);
         if (!L || !ROOMS[L.room]) continue;
+        const bArea = ROOMS[L.room].area;
+        if (bArea === area || areaOff[bArea] || !byArea[bArea]) continue;
         const B = roomInfo(ROOMS[L.room]);
         const db = B.doors[L.door];
         if (!db) continue;
         const off = offsetFor(A, d, B, db);
-        const bx = pos[id].x + off.x, by = pos[id].y + off.y;
-        if (!pos[L.room]) place(L.room, bx, by);
-        else if (pos[L.room].x !== bx || pos[L.room].y !== by) {
-          issues.push({ type: 'mismatch', a: id, door: d.id, b: L.room, dx: pos[L.room].x - bx, dy: pos[L.room].y - by });
-        }
+        const ax = local[id].x + areaOff[area].x, ay = local[id].y + areaOff[area].y;
+        let o = { x: ax + off.x - local[L.room].x, y: ay + off.y - local[L.room].y };
+        const [dx, dy] = pushDir[d.edge] || [1, 0];
+        let guard = 0;
+        while (collides(rectsOf(bArea, o)) && guard++ < 400) { o = { x: o.x + dx * 8, y: o.y + dy * 8 }; }
+        areaOff[bArea] = o;
+        placed.push(rectsOf(bArea, o));
+        aq.push(bArea);
       }
     }
-    // disconnected rooms: place them far away in a column so the map still draws them
-    while (seedIdx < seeds.length && pos[seeds[seedIdx]]) seedIdx++;
-    if (seedIdx >= seeds.length) break;
-    const id = seeds[seedIdx];
-    const maxX = Math.max(0, ...Object.values(pos).map((p) => p.x)) + 400;
-    place(id, maxX, 0);
-    issues.push({ type: 'disconnected', a: id });
   }
+  // areas not connected to the start: park them to the right
+  let parkX = Math.max(0, ...placed.flat().map((r) => r.x + r.w)) + 60;
+  for (const area of Object.keys(byArea)) {
+    if (areaOff[area]) continue;
+    areaOff[area] = { x: parkX, y: 0 };
+    const rs = rectsOf(area, areaOff[area]);
+    parkX = Math.max(...rs.map((r) => r.x + r.w)) + 60;
+    issues.push({ type: 'disconnected', a: area });
+  }
+  const pos = {};
+  for (const [area, ids] of Object.entries(byArea)) for (const id of ids) pos[id] = { x: local[id].x + areaOff[area].x, y: local[id].y + areaOff[area].y };
   for (const [id, o] of Object.entries(overrides)) if (pos[id]) { pos[id].x += o.x; pos[id].y += o.y; }
   return { pos, issues };
 }

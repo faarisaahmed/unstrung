@@ -15,6 +15,8 @@ import { drawAmbient, Ambient } from '../art/ambient.js';
 import { spawnEntity, spawnGlints, Projectile } from '../entities/index.js';
 import { ROOMS, AREAS, START_ROOM } from '../data/world.js';
 import { HUD } from '../ui/hud.js';
+import { BOSS_INFO } from '../data/bossinfo.js';
+import { Dialogue } from '../ui/dialogue.js';
 
 const terrainCache = new Map();
 
@@ -40,6 +42,7 @@ export class Game {
     this.dialogue = null;      // active dialogue
     this.revealed = new Set();
     this.paused = false;
+    this.bossInfo = BOSS_INFO;
     const startRoom = save.room && ROOMS[save.room] ? save.room : START_ROOM;
     let entry = save.spindle && save.spindle.room === startRoom ? { marker: save.spindle.marker } : { spawn: true };
     if (startRoom === '__arena') entry = { spawn: true };
@@ -115,8 +118,9 @@ export class Game {
     if (entry.spawn) {
       const s = room.spawn || { tx: 2, ty: room.h - 3 };
       px = s.tx * TILE + 4; py = s.ty * TILE + TILE - PHYS.h;
-    } else if (entry.marker) {
-      const m = room.markers.find((mm) => mm.ch === entry.marker) || room.markers.find((mm) => mm.spec && mm.spec.e === 'spindle');
+    } else if (entry.marker || entry.markerType) {
+      const m = (entry.markerType && room.markers.find((mm) => mm.spec && mm.spec.e === entry.markerType)) ||
+        room.markers.find((mm) => mm.ch === entry.marker) || room.markers.find((mm) => mm.spec && mm.spec.e === 'spindle');
       const s = m || room.spawn || { tx: 2, ty: room.h - 3 };
       px = s.tx * TILE + 4; py = s.ty * TILE + TILE - PHYS.h;
     } else if (entry.door) {
@@ -246,9 +250,12 @@ export class Game {
     const s = this.stats;
     if (kind === 'shard') {
       const up = this.save.abilities.shardUp;
-      this.entities.push(new Projectile(this, p.cx + p.b.facing * 10, p.cy, p.b.facing * 820, 0, {
-        friendly: true, dmg: (up ? 30 : 15) * s.spellMul, pierce: true, art: 'shard', life: 1.2, r: up ? 14 : 10,
-      }));
+      const angs = s.flags.tripleShard ? [-0.16, 0, 0.16] : [0];
+      for (const a of angs) {
+        this.entities.push(new Projectile(this, p.cx + p.b.facing * 10, p.cy, Math.cos(a) * p.b.facing * 820, Math.sin(a) * 820, {
+          friendly: true, dmg: (up ? 30 : 15) * s.spellMul * (angs.length > 1 ? 0.6 : 1), pierce: true, art: 'shard', life: 1.2, r: up ? 14 : 10,
+        }));
+      }
       p.b.vx -= p.b.facing * 120;
       this.sfx('shard');
     } else if (kind === 'howl') {
@@ -263,6 +270,103 @@ export class Game {
       this.camera.shake(4, 0.2);
       this.sfx('unravel');
     }
+  }
+
+  // Rollmaster techniques: friendly hit-zones that follow Bead
+  technique(kind, p) {
+    const s = this.stats, d = p.bonkDamage();
+    if (kind === 'spin') {
+      this.entities.push(new Projectile(this, p.cx, p.cy, 0, 0, { friendly: true, dmg: d * 2.5, multi: 1, art: 'unravel', life: 0.3, r: 0, box: { w: 130, h: 80, oy: -40 }, follow: p }));
+      p.art.impulse(1.3, 0.8);
+      this.sfx('slash'); this.camera.shake(3, 0.15);
+    } else if (kind === 'rebound') {
+      const f = p.b.facing;
+      this.entities.push(new Projectile(this, p.cx, p.cy, 0, 0, { friendly: true, dmg: d * 2, multi: 1, art: 'none', life: 0.18, r: 0, box: { w: 110, h: 44, ox: f * 60, oy: -22 }, follow: p }));
+      this.fx.slash(p.cx + f * 60, p.cy, f > 0 ? 0 : Math.PI, 110, 'rgba(255,240,210,0.95)', 0.2);
+      p.b.vx = -f * 380; p.b.vy = -420;
+      this.sfx('thrust');
+    } else if (kind === 'cyclone') {
+      this.entities.push(new Projectile(this, p.cx, p.cy, 0, 0, { friendly: true, dmg: d * 1.2, multi: 4, art: 'unravel', life: 0.55, r: 0, box: { w: 110, h: 110, oy: -70 }, follow: p }));
+      p.b.vy = -640; p.b.mode = 'normal';
+      this.sfx('howl'); this.camera.shake(3, 0.2);
+    }
+  }
+
+  briarBurst(p) {
+    this.add(new Projectile(this, p.cx, p.cy, 0, 0, { friendly: true, dmg: 12, multi: 1, art: 'unravel', life: 0.35, r: 0, box: { w: 150, h: 150, oy: -75 }, follow: p }));
+  }
+
+  // Passive knot effects that tick every frame
+  updateKnots(dt) {
+    const p = this.player, fl = this.stats.flags, sv = this.save, b = p.b;
+    if (fl.regen) {
+      const still = b.grounded && Math.abs(b.vx) < 1 && p.attackT < 0 && sv.hp < sv.maxHp && !this.enemiesNear(p.cx, p.cy, 200);
+      this.regenT = still ? (this.regenT || 0) + dt : 0;
+      if (this.regenT > 10) { this.regenT = 0; sv.hp++; this.sfx('mend'); this.fx.ring(p.cx, p.cy, 6, 34, 0.4, '#fff3d6', 3); }
+    }
+    if (fl.orbitals) {
+      p.orbitals = p.orbitals || [0, 1, 2].map((i) => ({ a: i * 2.094, x: p.cx, y: p.cy, hit: new Map() }));
+      for (const o of p.orbitals) {
+        o.a += dt * 3;
+        o.x = p.cx + Math.cos(o.a) * 42; o.y = p.cy + Math.sin(o.a) * 30;
+        for (const e of this.entities) {
+          if (!e.isEnemy || e.dead || !e.hittable) continue;
+          const hb = e.hurtbox ? e.hurtbox() : e.rect();
+          if (o.x > hb.x && o.x < hb.x + hb.w && o.y > hb.y && o.y < hb.y + hb.h) {
+            const last = o.hit.get(e) || 0;
+            if (this.time - last > 0.6) { o.hit.set(e, this.time); e.hurt(4, Math.sign(e.cx - p.cx) || 1, 'spell'); }
+          }
+        }
+      }
+    } else p.orbitals = null;
+  }
+
+  // ---------------- Hall of Echoes: rematches and pantheons in a generated arena
+  startEcho(queue, opts) {
+    this.echo = { queue, opts, returnRoom: this.room.id, returnPos: { x: this.player.b.x, y: this.player.b.y }, hp: this.save.hp };
+    this.startFade(() => this.loadEchoArena(), 2);
+  }
+
+  loadEchoArena() {
+    const id = this.echo.queue[0];
+    const W = 60, H = 22, rows = [];
+    for (let y = 0; y < H; y++) {
+      let r = '';
+      for (let x = 0; x < W; x++) r += (x === 0 || x === W - 1 || y === 0 || y >= H - 2) ? '#' : ' ';
+      rows.push(r);
+    }
+    const put = (x, y, str) => { rows[y] = rows[y].slice(0, x) + str + rows[y].slice(x + str.length); };
+    put(10, H - 7, '======'); put(W - 16, H - 7, '======'); put(26, H - 11, '========');
+    put(6, H - 3, '@'); put(W - 12, H - 3, 'K');
+    ROOMS.__echo = { id: '__echo', area: 'echoes', name: 'Echo', tiles: rows, legend: { K: { e: 'boss', id, echo: true } }, doors: {}, music: 'echoes' };
+    this.save.hp = this.save.maxHp; this.save.thread = this.save.maxThread;
+    this.enterRoomAt('__echo', { spawn: true });
+  }
+
+  onEchoWin(boss) {
+    const e = this.echo;
+    if (!e) return;
+    e.queue.shift();
+    setTimeout(() => {
+      if (!this.echo) return;
+      if (e.queue.length) { this.startFade(() => this.loadEchoArena(), 1.5); return; }
+      if (e.opts.kind === 'pantheon') {
+        this.save.flags['pantheon' + e.opts.id + '_clear'] = 1;
+        this.message = { title: 'Pantheon Cleared', desc: 'The echoes fall quiet.', t: 0, dur: 4 };
+      }
+      this.leaveEcho();
+    }, 2600);
+  }
+
+  leaveEcho() {
+    const e = this.echo;
+    this.echo = null;
+    this.startFade(() => {
+      this.save.hp = this.save.maxHp;
+      this.player.dead = false;
+      this.enterRoomAt(e.returnRoom, { pos: e.returnPos });
+      writeSave(this.save);
+    }, 2);
   }
 
   onHazard() {
@@ -280,6 +384,12 @@ export class Game {
   onPlayerDeath() {
     const p = this.player, sv = this.save;
     p.dead = true;
+    if (this.echo) {   // dying to an Echo costs nothing
+      this.sfx('death');
+      this.fx.burst(p.cx, p.cy, 30, { color: '#f1e9d2', speed: 340, size: 4, life: 1.2, g: 200 });
+      setTimeout(() => this.leaveEcho(), 1500);
+      return;
+    }
     sv.deaths++;
     this.sfx('death');
     this.fx.burst(p.cx, p.cy, 30, { color: '#f1e9d2', speed: 340, size: 4, life: 1.2, g: 200 });
@@ -362,8 +472,16 @@ export class Game {
 
     const p = this.player;
     p.locked = !!(this.dialogue || this.cutscene || this.fadeCb || p.pendingHazard || (this.message && this.message.lock));
+    // menus
+    if (!this.dialogue && !this.cutscene && !p.dead && !this.fadeCb && !(this.message && this.message.lock)) {
+      const inp = this.input;
+      if (inp.pressed('pause')) { inp.eatAll(); this.app.openPause(); return; }
+      if (inp.pressed('map')) { inp.eatAll(); this.app.openMap(); return; }
+      if (inp.pressed('inventory')) { inp.eatAll(); this.app.openInventory(); return; }
+    }
     if (!p.dead) p.update(dt);
 
+    this.updateKnots(dt);
     // entities
     for (const e of this.entities) if (!e.dead) e.update(dt);
     this.resolveCombat();
@@ -384,8 +502,17 @@ export class Game {
     const lookY = (p.b.grounded && this.input.down('down') && Math.abs(p.b.vx) < 5 && p.b.mode === 'normal') ? 120 :
       (p.b.grounded && this.input.down('up') && Math.abs(p.b.vx) < 5 && p.mending <= 0) ? -120 : 0;
     this.camera.follow({ x: p.cx, y: p.cy }, this.room, dt, p.b.facing, p.b.vy, lookY);
+    if (this.app.options && !this.app.options.shake) { this.camera.ox = 0; this.camera.oy = 0; }
     this.fx.update(dt);
     this.ambient.update(dt, this.camera, this.style);
+  }
+
+  // Entities inside an unrevealed fake-wall (`*`) region stay hidden
+  hiddenBySecret(e) {
+    const room = this.room;
+    const tx = Math.floor(e.cx / TILE), ty = Math.floor(e.cy / TILE);
+    if (!room.inBounds(tx, ty) || room.grid[ty][tx] !== '*') return false;
+    return !this.revealedHere.has(tx + ',' + ty);
   }
 
   revealFake(tx, ty) {
@@ -431,7 +558,11 @@ export class Game {
         if (box) {
           e.lastSwing = p.swing;
           const dir = p.attackDir === 'side' ? b.facing : 0;
-          const res = e.onBonk ? e.onBonk(this.stats.damage, dir, p) : null;
+          const res = e.onBonk ? e.onBonk(p.bonkDamage(), dir, p) : null;
+          if (res !== false && e.isEnemy && !e.isBoss) {
+            if (this.stats.flags.burn) e.burnT = 3;
+            if (this.stats.flags.chill) e.chillT = 2.5;
+          }
           if (res !== false) {
             p.onAttackHit(e);
             if (e.isEnemy) {
@@ -480,7 +611,7 @@ export class Game {
     // rock beyond the room edges (small rooms / camera clamping)
     ctx.fillStyle = this.style.rock;
     if (cx < 0) ctx.fillRect(cx, cy, -cx, VIEW_H);
-    if (cy < 0) ctx.fillRect(cx, cy, VIEW_W, -cy);
+    if (cy < 0 && !room.def.sky) ctx.fillRect(cx, cy, VIEW_W, -cy);
     if (cx + VIEW_W > room.pxW) ctx.fillRect(room.pxW, cy, cx + VIEW_W - room.pxW, VIEW_H);
     if (cy + VIEW_H > room.pxH) ctx.fillRect(cx, room.pxH, VIEW_W, cy + VIEW_H - room.pxH);
     // behind-terrain entities (e.g., background props)
@@ -488,7 +619,7 @@ export class Game {
     ctx.drawImage(this.terrain.canvas, cx, cy, VIEW_W, VIEW_H, cx, cy, VIEW_W, VIEW_H);
     drawDynamicTiles(ctx, room, cx, cy, this.time, this.style, this.player);
     this.fx.draw(ctx, false);
-    const sorted = this.entities.filter((e) => e.layer !== 'back' && e.layer !== 'front').sort((a, b) => (a.z || 0) - (b.z || 0));
+    const sorted = this.entities.filter((e) => e.layer !== 'back' && e.layer !== 'front' && !this.hiddenBySecret(e)).sort((a, b) => (a.z || 0) - (b.z || 0));
     for (const e of sorted) e.draw(ctx, this.time);
     if (!this.player.dead) this.player.draw(ctx, this.time);
     for (const e of this.entities) if (e.layer === 'front') e.draw(ctx, this.time);
@@ -526,7 +657,7 @@ export class Game {
     d.fillRect(0, 0, VIEW_W, VIEW_H);
     d.globalCompositeOperation = 'destination-out';
     const lights = [];
-    const lr = this.save.abilities.lantern ? 230 : 70;
+    const lr = (this.save.abilities.lantern ? 230 : 70) + (this.stats.flags.firefly ? 110 : 0);
     lights.push({ x: this.player.cx - cx, y: this.player.cy - cy, r: lr + Math.sin(this.time * 3) * 4 });
     for (const e of this.entities) if (e.light && !e.dead) lights.push({ x: e.cx - cx, y: e.cy - cy, r: e.light });
     for (const l of lights) {

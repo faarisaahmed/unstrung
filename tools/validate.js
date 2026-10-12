@@ -47,6 +47,10 @@ function staticCheck(def) {
   if (room.w < 30) err(`${id}: width ${room.w} < 30 (min one screen)`);
   if (room.h < 17) err(`${id}: height ${room.h} < 17 (min one screen)`);
   if (room.w > 160 || room.h > 100) warn(`${id}: very large room ${room.w}x${room.h}`);
+  // legend keys must not be tile characters (those are parsed as tiles, never as entities)
+  for (const k of Object.keys(def.legend || {})) {
+    if (TILE_CHARS.has(k)) err(`${id}: legend key '${k}' is a TILE character and will be ignored. Use another letter (reserved: B G C M H O W I and digits/symbols)`);
+  }
   // legend
   for (const m of room.markers) {
     if (!m.spec) { err(`${id}: char '${m.ch}' at ${m.tx},${m.ty} has no legend entry`); continue; }
@@ -180,6 +184,7 @@ function analyzeRoom(def, ab, entries, openFlags = new Set(), items = new Set())
     const doors = new Set();
     const queue = [];
     let deaths = 0;
+    let curNode = null;
     const markTile = (b) => {
       const tx = Math.floor((b.x + b.w / 2) / TILE), ty = Math.floor((b.y + b.h / 2) / TILE);
       tiles.add(tx + ty * W);
@@ -194,7 +199,9 @@ function analyzeRoom(def, ab, entries, openFlags = new Set(), items = new Set())
       const key = k + (b.small ? 's' : '') + (k === 'cling' ? b.wall : '') + ':' + tx + ',' + ty;
       if (visitedNodes.has(key)) return;
       visitedNodes.add(key);
-      queue.push({ kind: k, b: clone(b) });
+      const nb2 = clone(b);
+      if (process.env.DEBUG_DOORS) nb2.__parent = curNode;
+      queue.push({ kind: k, b: nb2 });
     };
     // run one script; returns end state
     const run = (b0, script, maxF = 200, opts = {}) => {
@@ -205,11 +212,26 @@ function analyzeRoom(def, ab, entries, openFlags = new Set(), items = new Set())
         const i = script(f, b);
         ev.length = 0;
         const ox = b.x, oy = b.y;
+        // pogo: a skilled player down-Bonks spikes just below while falling
+        if (b.vy > 120 && b.mode === 'normal' && !b.grounded &&
+            room.rectHasChar(b.x + b.w / 2 - 17, b.y + b.h, 34, 30, (ch) => ch === '^')) {
+          b.vy = -PHYS.pogoVel; b.jumping = false; b.airDashes = 1; b.airJumps = ab.dbljump ? 1 : 0;
+        }
         stepBead(b, i, room, ab, DT, ev);
         markTile(b);
         if (hazardAt(room, b, ab)) { deaths++; return null; }
         const ex = exitDoor(room, b);
-        if (ex) { if (ex !== 'void') doors.add(ex); return null; }
+        if (ex) {
+          if (ex !== 'void') {
+            if (process.env.DEBUG_DOORS && !doors.has(ex)) {
+              const chain = [];
+              for (let n = b0; n; n = n.__parent) chain.push(`(${(n.x / TILE).toFixed(1)},${(n.y / TILE).toFixed(1)} ${n.mode}${n.clinging ? ' cling' : ''}${n.grounded ? ' g' : ''})`);
+              console.log(`    [trace] ${def.id} entry ${entry} -> door ${ex}: ${chain.reverse().join(' -> ')} -> exit (${(b.x / TILE).toFixed(1)},${(b.y / TILE).toFixed(1)}) f${f}`);
+            }
+            doors.add(ex);
+          }
+          return null;
+        }
         if (opts.walk) {
           if (b.grounded) {
             const ctx = Math.floor((b.x + b.w / 2) / TILE);
@@ -272,6 +294,7 @@ function analyzeRoom(def, ab, entries, openFlags = new Set(), items = new Set())
     let iter = 0;
     while (queue.length && iter++ < 4000) {
       const { kind, b: nb } = queue.shift();
+      curNode = nb;
       const small = nb.small;
       if (kind === 'ground' || kind === 'water') {
         for (const d of [-1, 1]) run(nb, () => Object.assign({}, NOIN, { x: d }), 260, { walk: true });

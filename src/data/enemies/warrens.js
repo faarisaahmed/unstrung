@@ -1,2 +1,92 @@
-// Enemies of area 'warrens'. See docs/AUTHORING.md
-export default [];
+// Enemies of area 'warrens' (Rotgut Warrens). See docs/AUTHORING.md
+// Palette: wet black chitin, bile green and rot yellow, with one sickly accent per creature
+// (acid lime, egg cream, stinger amber, bruise violet). Everything here belongs to the Brood.
+export default [
+  {
+    id: 'warrens_gnat', name: 'Broodgnat', area: 'warrens', hp: 40, dmg: 1, glints: 6,
+    size: [22, 20], behavior: 'swarm', params: { speed: 190, accel: 680 },
+    art: { body: 'fly', c1: '#2a3410', c2: '#c7e04a', eye: '#e8ff88', glow: true, centered: true, stinger: true },
+    journal: 'Hatched by the hundred, named by nobody. A single Broodgnat is a nuisance; the Warrens never send a single one.',
+    kills: 30,
+  },
+  {
+    id: 'warrens_wasp', name: 'Rotwing Drone', area: 'warrens', hp: 50, dmg: 1, glints: 9,
+    size: [34, 32], behavior: 'flyer', params: { speed: 165, accel: 420, sight: 420, bob: 6 },
+    art: { body: 'wasp', c1: '#3d4413', c2: '#e2c43a', c3: '#11140a', eye: '#f4ff9a', glow: true, centered: true },
+    journal: 'The workers of the hive carry food down and refuse up, and anything round and soft counts as food. They never tire, because the Broodmother never lets them.',
+    kills: 25,
+  },
+  {
+    id: 'warrens_needler', name: 'Needle Drone', area: 'warrens', hp: 56, dmg: 1, glints: 11,
+    size: [38, 34], behavior: 'flyshooter', params: { speed: 120, keep: 230, interval: 2.0, projSpeed: 330, count: 3, spread: 0.22, color: '#e8ff88', projArt: 'needle' },
+    art: { body: 'wasp', c1: '#1b1f0a', c2: '#9fd13a', c3: '#f2f0c0', eye: '#ffffff', glow: true, centered: true, scale: 1.1 },
+    journal: 'A drone grown long in the abdomen, all stinger and spite. It keeps its distance and fires barbs it regrows by morning.',
+    kills: 20,
+  },
+  {
+    id: 'warrens_dropper', name: 'Webdrop', area: 'warrens', hp: 46, dmg: 1, glints: 8,
+    size: [32, 26], behavior: 'dropper', params: { range: 60, speed: 85 },
+    art: { body: 'spider', c1: '#14180a', c2: '#c7e04a', c3: '#5a6b1e', eye: '#f2ff9a', glow: true, eyes: 6 },
+    journal: 'It waits in the webbing overhead with all six eyes shut, listening for something that rolls. Look up in the Warrens. Look up often.',
+    kills: 25,
+  },
+  {
+    id: 'warrens_creeper', name: 'Tunnel Creeper', area: 'warrens', hp: 44, dmg: 1, glints: 8,
+    size: [30, 26], behavior: 'wallcrawler', params: { speed: 80 },
+    art: { body: 'spider', c1: '#3b2a3f', c2: '#a7d94a', c3: '#1a1020', eye: '#e8ff88', eyes: 4 },
+    journal: 'Creepers stitch the tunnels shut with silk and walk the walls to check their work. Up, down and sideways are all the same to them.',
+    kills: 25,
+  },
+  {
+    id: 'warrens_borer', name: 'Gutborer', area: 'warrens', hp: 62, dmg: 2, glints: 12,
+    size: [32, 54], behavior: 'burrower', params: { sight: 260, speed: 170, up: 1.0 },
+    art: { body: 'worm', c1: '#4e3b1a', c2: '#d8e86a', c3: '#efe2b0', eye: '#ffffff', glow: true },
+    journal: 'The tunnels of the Warrens were not dug; they were eaten. The Gutborers are still eating, and they can taste footsteps through the floor.',
+    kills: 15,
+  },
+  {
+    id: 'warrens_spitter', name: 'Bile Spitter', area: 'warrens', hp: 54, dmg: 1, glints: 10,
+    size: [38, 34], behavior: 'thrower', params: { interval: 2.1, speed: 430, gravity: 1100, count: 2, color: '#b6e83a', projArt: 'glob' },
+    art: { body: 'slug', c1: '#4f6a14', c2: '#c7e04a', c3: '#e8f6a0', eye: '#11140a', shell: false },
+    journal: 'A swollen nurse-grub that stores the hive\'s digestive acid in its own body. It lobs it at intruders with the patience of something that has never been hungry.',
+    kills: 20,
+  },
+  {
+    id: 'warrens_stalker', name: 'Burrow Stalker', area: 'warrens', hp: 78, dmg: 2, glints: 18,
+    size: [44, 40], behavior: 'stalker', params: { speed: 190, jump: 760 },
+    art: { body: 'mantis', c1: '#1e2410', c2: '#c7e04a', c3: '#e5e0b8', eye: '#ff6a3a', glow: true },
+    journal: 'The hive\'s hunters follow a scent through the dark until the scent stops moving. If you hear the clicking behind you, it is already too late to walk.',
+    kills: 12,
+  },
+  {
+    id: 'warrens_eggmimic', name: 'False Clutch', area: 'warrens', hp: 58, dmg: 2, glints: 14,
+    size: [34, 38], behavior: 'mimic', params: { wake: 96, vx: 230, vy: 620 },
+    art: { body: 'jelly', c1: '#e7e0b0', c2: '#9ab83a', c3: '#4a5a14', eye: '#11140a' },
+    journal: 'Not every egg in the Warrens holds something waiting to be born. Some hold something waiting for you.',
+    kills: 12,
+  },
+  {
+    id: 'warrens_armorgrub', name: 'Plated Larva', area: 'warrens', hp: 90, dmg: 1, glints: 16,
+    size: [58, 32], behavior: 'crawler', params: { speed: 36 },
+    art: { body: 'grub', c1: '#2a2f14', c2: '#c7e04a', c3: '#d9d0a0', eye: '#e8ff88', mask: true, segs: 6, spikes: true },
+    weight: 4,
+    journal: 'Fed on chitin until it became mostly chitin. It cannot be bothered to notice you; it simply grows, and anything in its path becomes part of the growing.',
+    kills: 15,
+  },
+  {
+    id: 'warrens_broodsac', name: 'Brood Sac', area: 'warrens', hp: 70, dmg: 1, glints: 16,
+    size: [46, 44], behavior: 'spawner', params: { interval: 3.6, max: 3, child: 'warrens_gnat', sight: 420 },
+    art: { body: 'eyeball', c1: '#d5cf98', c2: '#6f7f2e', c3: '#2a1a10', eye: '#2a1a10' },
+    weight: 99,
+    journal: 'A birthing sac glued to the burrow wall, too full to stay quiet. Burst it quickly, or you will be fighting everything it has been saving.',
+    kills: 10,
+  },
+  {
+    id: 'warrens_sentry', name: 'Hive Sentry', area: 'warrens', hp: 86, dmg: 2, glints: 20,
+    size: [40, 50], behavior: 'guard', params: { speed: 70, sight: 280, lunge: 340, reach: 58, tele: 0.4, shield: true },
+    art: { body: 'knight', c1: '#262c10', c2: '#e2c43a', c3: '#d8d4a8', eye: '#e8ff88', glow: true, weapon: 'spear', horns: 0 },
+    weight: 3,
+    journal: 'The Broodmother\'s soldiers wear the shells of their own fallen as shields. They are never surprised, because they have never been told anything except "hold".',
+    kills: 12,
+  },
+];

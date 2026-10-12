@@ -1,2 +1,80 @@
-// Enemies of area 'bellfry'. See docs/AUTHORING.md
-export default [];
+// Enemies of area 'bellfry' (Bellfry Heights). See docs/AUTHORING.md
+// Palette: pale slate-blue stone, cloud white, bell bronze/gold; one strong accent per creature.
+export default [
+  {
+    id: 'bellfry_clapper', name: 'Clapperkin', area: 'bellfry', hp: 46, dmg: 1, glints: 9,
+    size: [34, 38], behavior: 'hopper', params: { interval: 1.05, vx: 190, vy: 660 },
+    art: { body: 'bell', c1: '#c9a24a', c2: '#fff1c0', eye: '#2a1e08' },
+    weight: 2,
+    journal: 'A handbell that grew tired of waiting for a hand. It hops the rooftops ringing at nothing, and lands on whatever answers.',
+    kills: 20,
+  },
+  {
+    id: 'bellfry_tollhusk', name: 'Tollhusk', area: 'bellfry', hp: 64, dmg: 1, glints: 14,
+    size: [46, 50], behavior: 'spinner', params: { rate: 1.3, speed: 175, arms: 3, interval: 0.42, sight: 420, color: '#ffe7b0', projArt: 'orb' },
+    art: { body: 'bell', c1: '#5f8a7e', c2: '#ffd36a', eye: '#fff5d6' },
+    weight: 99,
+    journal: 'An old verdigris bell that rang so long it forgot how to stop. Every toll leaves its mouth as a little bead of sound, and the beads still sting.',
+    kills: 12,
+  },
+  {
+    id: 'bellfry_gustling', name: 'Gustling', area: 'bellfry', hp: 40, dmg: 1, glints: 8,
+    size: [34, 26], behavior: 'dasher', params: { speed: 560, interval: 1.8, sight: 440 },
+    art: { body: 'bird', c1: '#e8eef8', c2: '#a9b4d0', c3: '#ffcf5a', eye: '#1a2133', centered: true },
+    journal: 'Born in the gaps between the towers, where the wind is thickest. It does not fly so much as get thrown, and it has learned to aim.',
+    kills: 25,
+  },
+  {
+    id: 'bellfry_swift', name: 'Eaveswift', area: 'bellfry', hp: 38, dmg: 1, glints: 7,
+    size: [30, 24], behavior: 'swooper', params: { speed: 460, sight: 300, range: 240 },
+    art: { body: 'bat', c1: '#2b3247', c2: '#56658a', c3: '#ffe7b0', eye: '#fff5d6', glow: true, centered: true },
+    journal: 'Eaveswifts sleep upside down beneath the roof tiles and wake already falling. Look up before you look down.',
+    kills: 25,
+  },
+  {
+    id: 'bellfry_shingleback', name: 'Shingleback', area: 'bellfry', hp: 48, dmg: 1, glints: 9,
+    size: [36, 22], behavior: 'wallcrawler', params: { speed: 70 },
+    art: { body: 'beetle', c1: '#9a5a3f', c2: '#d4865f', horn: 1, spikes: true, eye: '#fff1c0' },
+    weight: 2,
+    journal: 'Its back is a roof tile it never takes off. It walks the walls, the eaves and the undersides of bridges, and does not care which way is down.',
+    kills: 20,
+  },
+  {
+    id: 'bellfry_gutterguard', name: 'Gutterguard', area: 'bellfry', hp: 80, dmg: 2, glints: 22,
+    size: [44, 54], behavior: 'guard', params: { speed: 60, lunge: 300, reach: 50, tele: 0.45, shield: true },
+    art: { body: 'knight', c1: '#5b6478', c2: '#8b95ad', c3: '#dfe3ee', weapon: 'shield', horns: 2, eye: '#ffcf5a', glow: true },
+    weight: 5,
+    journal: 'Carved to keep the rain off the bells, it took the job of keeping everything else off too. Strike it from above; its shield faces the weather.',
+    kills: 10,
+  },
+  {
+    id: 'bellfry_plumewitch', name: 'Plumewitch', area: 'bellfry', hp: 52, dmg: 1, glints: 13,
+    size: [38, 30], behavior: 'flyshooter', params: { speed: 110, keep: 230, interval: 2.1, projSpeed: 290, count: 3, spread: 0.28, color: '#fff5d6', projArt: 'feather' },
+    art: { body: 'moth', wing: 'moth', c1: '#f1e9d6', c2: '#ffe7b0', eye: '#3c4a63', centered: true },
+    journal: 'She plucks her own wings to throw at strangers, and they always grow back whiter. The tower winds carry her feathers for miles.',
+    kills: 15,
+  },
+  {
+    id: 'bellfry_knellwisp', name: 'Knellwisp', area: 'bellfry', hp: 42, dmg: 1, glints: 6,
+    size: [26, 26], behavior: 'orbiter', params: { radius: 72, speed: 1.9 },
+    art: { body: 'wisp', c1: '#fff5d6', c2: '#a9b4d0', eye: '#ffcf5a', glow: true, centered: true },
+    journal: 'The last note of a bell that was never struck again. It circles the place where the sound died, still waiting to be heard.',
+    kills: 20,
+  },
+  {
+    id: 'bellfry_spout', name: 'Gutterspout', area: 'bellfry', hp: 56, dmg: 1, glints: 12,
+    size: [46, 34], behavior: 'thrower', params: { interval: 2.2, speed: 430, gravity: 1100, count: 2, color: '#bfe4ff', projArt: 'glob' },
+    art: { body: 'fish', c1: '#7d879c', c2: '#a9b4d0', c3: '#dfe3ee', teeth: true, eye: '#ffcf5a', glow: true },
+    weight: 3,
+    journal: 'A stone drain-mouth that crawled off its gutter. It still spits what the clouds give it, cold and heavy.',
+    kills: 15,
+  },
+  {
+    id: 'bellfry_ropewarden', name: 'Ropewarden', area: 'bellfry', hp: 72, dmg: 2, glints: 20,
+    size: [38, 52], behavior: 'lancer', params: { speed: 70, reach: 120, tele: 0.55 },
+    art: { body: 'knight', c1: '#34405a', c2: '#ffe7b0', c3: '#f4efe0', weapon: 'spear', eye: '#1a2133' },
+    weight: 4,
+    journal: 'Keeper of the rope bridges, sworn to let no one cross unpaid. The toll was abolished an age ago. No one has told the Ropewarden.',
+    kills: 12,
+  },
+];

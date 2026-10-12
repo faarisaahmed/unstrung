@@ -1,2 +1,36 @@
-// Enemies of area 'unwoven'. See docs/AUTHORING.md
-export default [];
+// Enemies of area 'unwoven' (The Unwoven). Loose ends and void: things that were never
+// finished, in black with a single bruised violet glow.
+export default [
+  { id: 'unwoven_voidbead', name: 'Void Bead', area: 'unwoven', hp: 90, dmg: 2, glints: 14, size: [30, 30],
+    behavior: 'roller', params: { speed: 260, hop: 640, sight: 420 },
+    art: { body: 'ball', c1: '#0b0612', c2: '#d07bff', eye: '#f0c8ff', spikes: true },
+    journal: 'A bead from the same necklace as you, fallen somewhere with no kingdom to become. It hates you for being finished.', kills: 15 },
+  { id: 'unwoven_tangle', name: 'Tangle', area: 'unwoven', hp: 90, dmg: 2, glints: 14, size: [38, 38],
+    behavior: 'exploder', params: { speed: 80, rush: 280, fuse: 0.65, radius: 76 },
+    art: { body: 'yarn', c1: '#2a1238', c2: 'rgba(240,200,255,0.6)', eye: '#ffffff', glow: true },
+    journal: 'A knot pulled so tight it remembers nothing else. When it finds something to hold, it tightens until it bursts.', kills: 15 },
+  { id: 'unwoven_looseend', name: 'Loose End', area: 'unwoven', hp: 100, dmg: 2, glints: 16, size: [30, 52],
+    behavior: 'burrower', params: { sight: 260, speed: 170, up: 1.0 },
+    art: { body: 'worm', c1: '#3a1650', c2: '#d07bff', c3: '#f0c8ff', eye: '#ffffff', glow: true },
+    journal: 'The frayed tip of something enormous, buried in the dark. It whips up beneath whatever moves above it, as if trying to be tied.', kills: 12 },
+  { id: 'unwoven_hollowmoth', name: 'Hollow Moth', area: 'unwoven', hp: 100, dmg: 2, glints: 16, size: [46, 42],
+    behavior: 'flyshooter', params: { speed: 120, keep: 230, interval: 1.9, projSpeed: 280, count: 2, spread: 0.3, color: '#d07bff', projArt: 'orb' },
+    art: { body: 'moth', c1: '#0e0716', c2: '#4a2066', c3: '#d07bff', eye: '#ffffff', glow: true, wing: 'bat', centered: true },
+    journal: 'A moth that flew so far from every light it began to shine darkness instead. It spits little pieces of the void.', kills: 12 },
+  { id: 'unwoven_frayknight', name: 'Frayed Knight', area: 'unwoven', hp: 140, dmg: 2, glints: 28, size: [48, 64],
+    behavior: 'stalker', params: { speed: 175, jump: 820 },
+    art: { body: 'knight', c1: '#170a24', c2: '#d07bff', c3: '#e8d8f0', eye: '#d07bff', weapon: 'nail' },
+    journal: 'A champion who followed the Unraveller here and was unpicked thread by thread. What remains is only the chase.', kills: 10 },
+  { id: 'unwoven_nullwisp', name: 'Null Wisp', area: 'unwoven', hp: 100, dmg: 2, glints: 16, size: [34, 38],
+    behavior: 'phaser', params: { interval: 1.7, dash: 520, sight: 500 },
+    art: { body: 'wisp', c1: '#7a3fa8', c3: '#f0c8ff', centered: true },
+    journal: 'Not a ghost; ghosts were once something. A Null Wisp is the shape of where something should have been.', kills: 12 },
+  { id: 'unwoven_unspool', name: 'Unspooler', area: 'unwoven', hp: 120, dmg: 2, glints: 24, size: [40, 46],
+    behavior: 'spawner', params: { interval: 3.4, max: 2, child: 'unwoven_voidbead', sight: 460 },
+    art: { body: 'spool', c1: '#2a1238', c2: '#0b0612', eye: '#d07bff', glow: true },
+    journal: 'An empty spool that has learned to unwind the dark itself. Each turn of its axle lets loose another hateful bead.', kills: 8 },
+  { id: 'unwoven_absence', name: 'Staring Absence', area: 'unwoven', hp: 110, dmg: 2, glints: 20, size: [40, 40],
+    behavior: 'dasher', params: { speed: 640, interval: 1.6, sight: 520 },
+    art: { body: 'eyeball', c1: '#d07bff', c2: '#4a2066', c3: '#0b0612', centered: true },
+    journal: 'An eye with nothing behind it. It looks at you, and then it is where you were.', kills: 12 },
+];

@@ -13,7 +13,9 @@ const cov = (ch) => COVER[ch] || 0;
 export function extractLoops(room) {
   const edges = [];
   const W = room.w, H = room.h;
+  const sky = room.def && room.def.sky;
   const chAt = (x, y) => {
+    if (sky && y <= 0) return ' ';     // open sky: the top border is invisible
     if (x < -1 || y < -1 || x > W || y > H) return '#';
     const c = room.charAt(x, y);
     return COVER[c] ? c : ' ';
@@ -437,19 +439,28 @@ function drawSpikes(ctx, x, y, room, tx, ty, style, R) {
   ctx.save();
   ctx.translate(x + TILE / 2, y + TILE / 2);
   ctx.rotate(ang + Math.PI / 2);
-  // now spikes point toward -y, base at +TILE/2
-  ctx.fillStyle = style.rock;
-  ctx.strokeStyle = rgba(style.rim, 0.95); ctx.lineWidth = 1.3;
-  const n = 4;
+  // thorns point toward -y, base at +TILE/2
+  const n = 3;
   for (let i = 0; i < n; i++) {
-    const bx = -TILE / 2 + (i + 0.5) * (TILE / n);
-    const hgt = 18 + R() * 10;
-    const lean = (R() - 0.5) * 5;
+    const bx = -TILE / 2 + (i + 0.5) * (TILE / n) + (R() - 0.5) * 3;
+    const hgt = 20 + R() * 9;
+    const lean = (R() - 0.5) * 6;
+    const half = 6.5;
     ctx.beginPath();
-    ctx.moveTo(bx - 5, TILE / 2 + 1);
-    ctx.quadraticCurveTo(bx - 1, TILE / 2 - hgt * 0.5, bx + lean, TILE / 2 - hgt);
-    ctx.quadraticCurveTo(bx + 1, TILE / 2 - hgt * 0.5, bx + 5, TILE / 2 + 1);
-    ctx.fill(); ctx.stroke();
+    ctx.moveTo(bx - half, TILE / 2 + 2);
+    ctx.quadraticCurveTo(bx - 2, TILE / 2 - hgt * 0.45, bx + lean, TILE / 2 - hgt);
+    ctx.quadraticCurveTo(bx + 2, TILE / 2 - hgt * 0.45, bx + half, TILE / 2 + 2);
+    ctx.closePath();
+    ctx.fillStyle = '#0b0a10';
+    ctx.fill();
+    ctx.strokeStyle = rgba(style.rim, 0.95); ctx.lineWidth = 1.6;
+    ctx.stroke();
+    // pale glinting tip
+    ctx.strokeStyle = rgba(style.accent, 0.9); ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(bx + lean * 0.6 - 1, TILE / 2 - hgt * 0.7);
+    ctx.lineTo(bx + lean, TILE / 2 - hgt);
+    ctx.stroke();
   }
   ctx.restore();
 }

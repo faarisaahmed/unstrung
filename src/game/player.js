@@ -64,11 +64,14 @@ export class Player {
     // ---- focus: tap = spell, hold = mend ----
     if (canAct) this.updateFocus(dt, inp);
 
+    // ---- techniques (Rollmasters) ----
+    if (canAct) this.updateTechniques(dt, inp);
+
     // ---- attack ----
     if (canAct && this.mending <= 0 && inp.pressed('attack') && this.attackCd <= 0 &&
         (b.mode === 'normal' || b.mode === 'hang' || b.mode === 'magnet')) {
       this.attackT = 0;
-      this.attackCd = s.attackCd;
+      this.attackCd = s.attackCd * (s.flags.wanderer && this.save.hp >= this.save.maxHp ? 0.85 : 1);
       this.swing++;
       this.attackDir = inp.down('up') ? 'up' : (inp.down('down') && !b.grounded && b.mode === 'normal') ? 'down' : 'side';
       this.hitThisSwing = false;
@@ -82,7 +85,7 @@ export class Player {
     // ---- movement ----
     this.ev.length = 0;
     const lastMode = b.mode;
-    stepBead(b, mi, g.room, this.abilities, dt, this.ev);
+    stepBead(b, mi, g.room, this.moveAbilities(), dt, this.ev);
     if (this.stun > 0 && this.knock) {
       // knockback overrides horizontal velocity briefly
       b.vx = this.knock;
@@ -109,7 +112,7 @@ export class Player {
     const g = this.game, b = this.b, s = this.stats, sv = this.save;
     if (inp.down('focus')) {
       this.focusHeld += dt;
-      if (this.focusHeld > 0.22 && b.grounded && b.mode === 'normal' && sv.thread >= s.mendCost && sv.hp < sv.maxHp) {
+      if (this.focusHeld > 0.22 && (b.grounded || s.flags.airMend) && b.mode === 'normal' && sv.thread >= s.mendCost && sv.hp < sv.maxHp) {
         if (this.mending <= 0) { this.mending = 1; this.mendT = 0; g.sfx('mendStart'); }
         this.mendT += dt;
         b.vx = 0;
@@ -122,7 +125,7 @@ export class Player {
           this.art.impulse(1.25, 0.8);
           if (sv.thread < s.mendCost || sv.hp >= sv.maxHp) this.mending = 0;
         }
-      } else if (this.mending > 0 && (!b.grounded || sv.thread < s.mendCost || sv.hp >= sv.maxHp)) {
+      } else if (this.mending > 0 && ((!b.grounded && !s.flags.airMend) || sv.thread < s.mendCost || sv.hp >= sv.maxHp)) {
         this.mending = 0;
       }
     } else {
@@ -143,7 +146,7 @@ export class Player {
     else if (sv.abilities.unravel) kind = 'unravel';
     if (!kind || sv.thread < s.spellCost) return;
     sv.thread -= s.spellCost;
-    this.spellCd = 0.35;
+    this.spellCd = s.flags.quickcast ? 0.12 : 0.35;
     g.castSpell(kind, this);
   }
 
@@ -238,7 +241,7 @@ export class Player {
   pogo() {
     const b = this.b;
     if (b.mode !== 'normal') return;
-    b.vy = -PHYS.pogoVel;
+    b.vy = -PHYS.pogoVel * (this.stats.flags.bouncy ? 1.2 : 1);
     b.jumping = false;
     resetAir(b, this.abilities);
     this.art.impulse(0.8, 1.2);
@@ -246,6 +249,7 @@ export class Player {
 
   recoil(k = 1) {
     const b = this.b;
+    if (this.stats.flags.steady) return;
     if (this.attackDir === 'side') b.vx = -b.facing * 190 * k;
     else if (this.attackDir === 'up' && b.vy < 0) b.vy *= 0.6;
   }
@@ -253,6 +257,16 @@ export class Player {
   hurt(dmg, srcX, opts = {}) {
     const g = this.game, sv = this.save;
     if (this.invuln > 0 || this.dead || g.cutscene) return false;
+    const fl = this.stats.flags;
+    if (!opts.hazard && fl.shield && (this.shieldCd || 0) <= 0) {
+      this.shieldCd = 6; this.invuln = 0.6;
+      g.sfx('parry'); g.fx.ring(this.cx, this.cy, 14, 50, 0.4, 'rgba(232,201,138,0.9)', 4);
+      return false;
+    }
+    if (!opts.hazard && fl.lucky && Math.random() < 0.15) {
+      this.invuln = 0.5; g.sfx('clink'); g.fx.text(this.cx, this.cy - 30, 'lucky!', '#e8c98a', 13);
+      return false;
+    }
     dmg = Math.max(1, Math.round(dmg * (this.stats.damageTaken || 1)));
     sv.hp -= dmg;
     this.mending = 0; this.focusHeld = 0;
@@ -260,7 +274,9 @@ export class Player {
     this.hurtFlash = 0.12;
     this.stun = 0.18;
     const dir = srcX !== undefined ? (this.cx < srcX ? -1 : 1) : -this.b.facing;
-    this.knock = dir * 260;
+    this.knock = this.stats.flags.noKnock ? 0 : dir * 260;
+    if (this.stats.flags.hurtThread) sv.thread = Math.min(sv.maxThread, sv.thread + 15);
+    if (this.stats.flags.briar) g.briarBurst(this);
     if (this.b.mode !== 'normal' && this.b.mode !== 'magnet') { this.b.mode = 'normal'; }
     if (this.b.mode === 'magnet') { this.b.mode = 'normal'; this.b.magnet = null; }
     this.b.vy = -380;
@@ -301,7 +317,62 @@ export class Player {
     return room.rectBlocked(b.x, b.y + b.h + 1, b.w, 2);
   }
 
+  moveAbilities() {
+    const s = this.stats, fl = s.flags;
+    const ab = Object.assign({}, this.abilities);
+    ab.speedMul = s.speedMul * (fl.wanderer && this.save.hp >= this.save.maxHp ? 1.08 : 1);
+    if (fl.dashmaster) ab.dashCdMul = 0.55;
+    if (fl.feather) ab.glideMul = 0.7;
+    if (fl.longline) ab.hookMul = 1.5;
+    return ab;
+  }
+
+  // Rollmaster techniques: Spin (hold Bonk), Rebound (Bonk right after a dash), Cyclone (hold Bonk + Up)
+  updateTechniques(dt, inp) {
+    const g = this.game, b = this.b, tq = this.save.techniques || {};
+    this.shieldCd = (this.shieldCd || 0) - dt;
+    if (b.mode === 'dash') this.sinceDash = 0; else this.sinceDash = (this.sinceDash ?? 9) + dt;
+    if (tq.rebound && inp.pressed('attack') && this.sinceDash < 0.22 && b.mode !== 'dash') {
+      this.sinceDash = 9;
+      g.technique('rebound', this);
+      return;
+    }
+    if ((tq.spin || tq.cyclone) && inp.down('attack') && this.mending <= 0) {
+      this.chargeT += dt;
+      if (this.chargeT > 0.65 && !this.chargedFx) { this.chargedFx = true; g.sfx('cometCharge'); g.fx.ring(this.cx, this.cy, 30, 6, 0.3, '#fff3d8', 2); }
+    } else {
+      if (this.chargeT > 0.65) {
+        if (tq.cyclone && inp.down('up')) g.technique('cyclone', this);
+        else if (tq.spin) g.technique('spin', this);
+        else if (tq.cyclone) g.technique('cyclone', this);
+      }
+      this.chargeT = 0; this.chargedFx = false;
+    }
+  }
+
+  // Effective Bonk damage (Last Stitch knot doubles down at 1 Shell)
+  bonkDamage() {
+    const s = this.stats;
+    return Math.round(s.damage * (s.flags.desperate && this.save.hp === 1 ? 1.75 : 1));
+  }
+
   draw(ctx, time) {
+    if (this.chargeT > 0.25) {
+      const k = Math.min(1, this.chargeT / 0.65);
+      ctx.globalCompositeOperation = 'lighter';
+      const gr = ctx.createRadialGradient(this.cx, this.cy, 4, this.cx, this.cy, 40 * k);
+      gr.addColorStop(0, `rgba(255,243,216,${0.5 * k})`); gr.addColorStop(1, 'rgba(255,243,216,0)');
+      ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(this.cx, this.cy, 40 * k, 0, Math.PI * 2); ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    if (this.orbitals) for (const o of this.orbitals) {
+      ctx.fillStyle = '#f4eedf'; ctx.strokeStyle = '#16141c'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(o.x, o.y, 5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    }
+    if (this.stats.flags.shield && (this.shieldCd || 0) <= 0) {
+      ctx.strokeStyle = 'rgba(232,201,138,0.35)'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(this.cx, this.cy, 20, time * 2, time * 2 + 4.5); ctx.stroke();
+    }
     this.art.draw(ctx, this, time);
   }
 }

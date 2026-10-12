@@ -11,9 +11,9 @@ const KEYMAP = {
   ability: ['KeyV', 'KeyI'],
   map: ['Tab', 'KeyM'],
   inventory: ['KeyE', 'KeyQ'],
-  pause: ['Escape', 'Enter'],
+  pause: ['Escape', 'KeyP'],
   confirm: ['Enter', 'KeyZ', 'Space'],
-  back: ['Escape', 'KeyX', 'Backspace'],
+  back: ['Escape', 'Backspace'],
 };
 // WASD conflicts with letter actions on some layouts; A is left so focus uses F/L.
 

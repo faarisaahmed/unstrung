@@ -1,2 +1,28 @@
-// Enemies of area 'cradle'. See docs/AUTHORING.md
-export default [];
+// Enemies of area 'cradle' (Moon's Cradle). Silver and moonlight: courtiers of a moon that
+// has waited too long, and the night things that gather toward her light.
+export default [
+  { id: 'cradle_moonmoth', name: 'Moon-Moth', area: 'cradle', hp: 80, dmg: 2, glints: 14, size: [44, 40],
+    behavior: 'flyer', params: { speed: 150, accel: 380, sight: 420, bob: 18 },
+    art: { body: 'moth', c1: '#c8cde6', c2: '#f4f6ff', c3: '#ffffff', eye: '#7fa0ff', glow: true, centered: true },
+    journal: 'Moths fly toward the moon; these ones arrived. Their wings are dusted with her light, and they defend her from every smaller flame.', kills: 15 },
+  { id: 'cradle_starwisp', name: 'Star-Wisp', area: 'cradle', hp: 80, dmg: 2, glints: 10, size: [26, 26],
+    behavior: 'swarm', params: { speed: 200, accel: 650 },
+    art: { body: 'wisp', c1: '#b9c6ff', c3: '#ffffff', centered: true },
+    journal: 'A star that came loose from the sky\'s hem. They swarm in little constellations and sting like frost.', kills: 20 },
+  { id: 'cradle_tidewarden', name: 'Tidewarden', area: 'cradle', hp: 130, dmg: 2, glints: 24, size: [48, 64],
+    behavior: 'guard', params: { speed: 70, sight: 340, lunge: 360, reach: 58, tele: 0.38 },
+    art: { body: 'knight', c1: '#2a2f45', c2: '#f4f6ff', c3: '#ffffff', eye: '#9fb6ff', weapon: 'nail' },
+    journal: 'The moon\'s own knights, sworn to pull the tides. Their oath outlived the sea they were sworn to; now they pull at anything that climbs.', kills: 10 },
+  { id: 'cradle_crescent', name: 'Crescent Reaper', area: 'cradle', hp: 110, dmg: 2, glints: 20, size: [44, 56],
+    behavior: 'lancer', params: { speed: 55, sight: 300, reach: 140, tele: 0.45 },
+    art: { body: 'mantis', c1: '#3b4260', c2: '#f4f6ff', c3: '#c8cde6', eye: '#ffffff', glow: true },
+    journal: 'Its arms are two slivers of the waning moon. It harvests the light of anything that reaches higher than it should.', kills: 10 },
+  { id: 'cradle_halo', name: 'Halo Lantern', area: 'cradle', hp: 120, dmg: 2, glints: 22, size: [40, 48],
+    behavior: 'spinner', params: { rate: 1.3, speed: 170, arms: 5, interval: 0.42, sight: 460, color: '#e8edff', projArt: 'shard' },
+    art: { body: 'crystal', c1: '#c8cde6', c2: '#ffffff', c3: '#7f8cc0', eye: '#2a2f45', n: 5, glow: true },
+    journal: 'A shrine-lamp grown from moonstone. It turns slowly and scatters its light like seeds, and the light is sharp.', kills: 10 },
+  { id: 'cradle_nightjar', name: 'Nightjar Herald', area: 'cradle', hp: 90, dmg: 2, glints: 16, size: [46, 34],
+    behavior: 'bomber', params: { speed: 150, interval: 1.6, height: 170 },
+    art: { body: 'bird', c1: '#1e2234', c2: '#c8cde6', c3: '#f4f6ff', eye: '#ffffff', glow: true, centered: true },
+    journal: 'It cries the hour of the moonrise and drops stones of hardened starlight on the heads of the late.', kills: 12 },
+];

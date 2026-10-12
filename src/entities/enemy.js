@@ -38,6 +38,14 @@ export class Enemy extends Entity {
   }
 
   update(dt) {
+    if (this.chillT > 0) { this.chillT -= dt; dt *= 0.55; }
+    if (this.burnT > 0) {
+      this.burnT -= dt;
+      this.burnTick = (this.burnTick || 0) + dt;
+      if (this.burnTick > 0.5) { this.burnTick = 0; this.hurt(2, 0, 'burn'); }
+      if (Math.random() < 0.3) this.game.fx.add({ x: this.cx + (Math.random() - 0.5) * this.w, y: this.cy, vx: 0, vy: -60, life: 0.4, size: 2, color: '#ff9a4a', g: 0, glow: true });
+    }
+    if (this.dead) return;
     this.flashT -= dt;
     this.anim += dt * (this.animSpeed ?? 1);
     if (this.ramT) this.ramT -= dt;
@@ -71,7 +79,7 @@ export class Enemy extends Entity {
     this.flashT = 0.12;
     this.game.sfx('hit');
     const kb = (src === 'spell' ? 160 : 260) / this.weight;
-    if (this.weight < 50) {
+    if (this.weight < 50 && src !== 'burn') {
       this.vx = dir * kb;
       if (this.air) this.vy = -60 / this.weight;
       this.stunT = this.def.noStun ? 0 : 0.12;

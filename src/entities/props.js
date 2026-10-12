@@ -424,7 +424,7 @@ export class Deco extends Entity {
     super(game, tx * TILE, ty * TILE, TILE, TILE);
     this.spec = spec;
     this.layer = spec.front ? 'front' : 'back';
-    this.light = spec.kind === 'lamp' ? 150 : spec.kind === 'candle' ? 90 : 0;
+    this.light = spec.kind === 'lamp' || spec.kind === 'lamppost' ? 150 : spec.kind === 'candle' ? 90 : spec.kind === 'house' ? 120 : 0;
   }
   draw(ctx, t) {
     const s = this.spec, x = this.cx, y = this.y + TILE, st = this.game.style;
@@ -458,6 +458,59 @@ export class Deco extends Entity {
     } else if (s.kind === 'banner') {
       ctx.fillStyle = s.color || '#6a3040'; ctx.strokeStyle = INK; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.moveTo(x - 14, this.y); ctx.lineTo(x + 14, this.y); ctx.lineTo(x + 14 + Math.sin(t) * 2, this.y + 70); ctx.lineTo(x, this.y + 58); ctx.lineTo(x - 14 + Math.sin(t) * 2, this.y + 70); ctx.closePath(); ctx.fill(); ctx.stroke();
+    } else if (s.kind === 'house') {
+      // a town facade, drawn behind everything: w,h in tiles, anchored bottom-left at this tile
+      const w = (s.w || 6) * TILE, h = (s.h || 5) * TILE, x0 = this.x, y0 = y - h;
+      ctx.fillStyle = s.color || '#231d29'; ctx.strokeStyle = INK; ctx.lineWidth = 2;
+      ctx.fillRect(x0, y0, w, h); ctx.strokeRect(x0, y0, w, h);
+      ctx.beginPath(); ctx.moveTo(x0 - 12, y0); ctx.lineTo(x0 + w * (s.peak ?? 0.5), y0 - h * 0.45); ctx.lineTo(x0 + w + 12, y0); ctx.closePath();
+      ctx.fillStyle = s.roof || '#3a2e3e'; ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1;
+      for (let k = 1; k < 5; k++) { ctx.beginPath(); ctx.moveTo(x0 - 12 + k * 4, y0 - k * 3); ctx.lineTo(x0 + w + 12 - k * 4, y0 - k * 3); ctx.stroke(); }
+      const win = (wx, wy) => {
+        const fl = 0.75 + Math.sin(t * 2 + wx) * 0.08;
+        const g = ctx.createRadialGradient(wx + 7, wy + 9, 1, wx + 7, wy + 9, 30);
+        g.addColorStop(0, `rgba(255,200,120,${0.35 * fl})`); g.addColorStop(1, 'rgba(255,200,120,0)');
+        ctx.fillStyle = g; ctx.fillRect(wx - 23, wy - 21, 60, 60);
+        ctx.fillStyle = `rgba(255,214,140,${fl})`; ctx.fillRect(wx, wy, 14, 18);
+        ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.strokeRect(wx, wy, 14, 18);
+        ctx.beginPath(); ctx.moveTo(wx + 7, wy); ctx.lineTo(wx + 7, wy + 18); ctx.moveTo(wx, wy + 9); ctx.lineTo(wx + 14, wy + 9); ctx.stroke();
+      };
+      const cols = Math.max(1, Math.floor(w / 64));
+      for (let c = 0; c < cols; c++) for (let rr = 0; rr < Math.max(1, Math.floor(h / 70)); rr++) {
+        if (s.door && c === Math.floor(cols / 2) && rr === Math.max(1, Math.floor(h / 70)) - 1) continue;
+        win(x0 + (c + 0.5) * (w / cols) - 7, y0 + 18 + rr * 64);
+      }
+      if (s.door) {
+        const dx = x0 + w / 2 - 12;
+        ctx.fillStyle = '#120e14'; ctx.beginPath(); ctx.moveTo(dx, y); ctx.lineTo(dx, y - 36); ctx.quadraticCurveTo(dx + 12, y - 48, dx + 24, y - 36); ctx.lineTo(dx + 24, y); ctx.fill(); ctx.stroke();
+      }
+      if (s.sign) {
+        ctx.fillStyle = '#4a3a2a'; ctx.fillRect(x0 + w / 2 - 34, y0 + h - 70, 68, 18); ctx.strokeRect(x0 + w / 2 - 34, y0 + h - 70, 68, 18);
+        ctx.fillStyle = '#efd9a8'; ctx.font = '11px Georgia'; ctx.textAlign = 'center'; ctx.fillText(s.sign, x0 + w / 2, y0 + h - 57);
+      }
+    } else if (s.kind === 'lamppost') {
+      ctx.strokeStyle = INK; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - 80); ctx.quadraticCurveTo(x, y - 92, x + 12, y - 92); ctx.stroke();
+      const g = ctx.createRadialGradient(x + 12, y - 82, 2, x + 12, y - 82, 90);
+      g.addColorStop(0, 'rgba(255,214,150,0.4)'); g.addColorStop(1, 'rgba(255,214,150,0)');
+      ctx.fillStyle = g; ctx.fillRect(x - 80, y - 172, 184, 184);
+      ctx.fillStyle = '#ffdc96'; ctx.strokeStyle = INK; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(x + 6, y - 90); ctx.lineTo(x + 18, y - 90); ctx.lineTo(x + 16, y - 76); ctx.lineTo(x + 8, y - 76); ctx.closePath(); ctx.fill(); ctx.stroke();
+    } else if (s.kind === 'fence') {
+      ctx.strokeStyle = INK; ctx.lineWidth = 3;
+      const n = s.w || 4;
+      for (let k = 0; k <= n; k++) { ctx.beginPath(); ctx.moveTo(this.x + k * 16, y); ctx.lineTo(this.x + k * 16, y - 22); ctx.stroke(); }
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(this.x, y - 16); ctx.lineTo(this.x + n * 16, y - 18); ctx.moveTo(this.x, y - 8); ctx.lineTo(this.x + n * 16, y - 9); ctx.stroke();
+    } else if (s.kind === 'well') {
+      ctx.fillStyle = st.rockHi; ctx.strokeStyle = INK; ctx.lineWidth = 2;
+      ctx.strokeStyle = INK; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(x - 50, y - 10); ctx.lineTo(x - 50, y - 90); ctx.moveTo(x + 50, y - 10); ctx.lineTo(x + 50, y - 90); ctx.stroke();
+      ctx.fillStyle = '#3a2e3e';
+      ctx.beginPath(); ctx.moveTo(x - 64, y - 88); ctx.lineTo(x, y - 120); ctx.lineTo(x + 64, y - 88); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x, y - 90); ctx.lineTo(x, y - 40 + Math.sin(t) * 3); ctx.stroke();
+      ctx.fillStyle = '#5a4632'; ctx.fillRect(x - 6, y - 40 + Math.sin(t) * 3, 12, 10);
     } else if (s.kind === 'bones') {
       ctx.strokeStyle = '#d9cdb0'; ctx.lineWidth = 3;
       ctx.beginPath(); ctx.moveTo(x - 14, y - 3); ctx.lineTo(x + 10, y - 6); ctx.moveTo(x - 4, y - 2); ctx.lineTo(x + 12, y - 1); ctx.stroke();
@@ -480,5 +533,86 @@ export class Trigger extends Entity {
     if (s.text) g.dialogue = new Dialogue(g, Array.isArray(s.text) ? s.text : [s.text], { speaker: s.speaker, style: s.style });
     if (s.hint) g.message = { title: s.hint, desc: s.desc || '', t: 0, dur: s.dur || 3.5 };
     if (!s.repeat) this.dead = true;
+  }
+}
+
+// ----- Hall of Echoes: boss statues (rematch an Echo) and Pantheon shrines (boss rushes) -----
+export const PANTHEONS = {
+  1: { name: 'Pantheon of the Fallen Strand', bosses: ['gnarlknot', 'mossmother', 'brassbeetle', 'petalmaw', 'glassmoths', 'wickwidow', 'ossuaryknight', 'sporecap'] },
+  2: { name: 'Pantheon of Engines and Tides', bosses: ['hush', 'gearwright', 'choir', 'gullet', 'brinematron', 'vitrius', 'cindertwins', 'prismwarden'] },
+  3: { name: 'Pantheon of the Keepers', bosses: ['reflection', 'carillon', 'galeharrow', 'quill', 'inkwraith', 'gnash', 'stingercourt', 'rimehorn'] },
+  4: { name: 'Pantheon of the Unstrung', bosses: ['sentinel', 'lintking', 'hoarder', 'rollmasters', 'unraveller', 'weaver', 'selene'] },
+};
+
+export class Statue extends Interactable {
+  constructor(game, tx, ty, spec) {
+    super(game, tx * TILE - 16, ty * TILE - 64, 64, 96, 'Challenge');
+    this.boss = spec.boss;
+    this.light = 90;
+    this.marker = null;
+  }
+  get unlocked() { return !!this.game.save.flags['boss_' + this.boss]; }
+  update(dt) { this.disabled = !this.unlocked; super.update(dt); }
+  interact() {
+    const g = this.game;
+    const info = g.bossInfo[this.boss] || { name: this.boss };
+    g.dialogue = new Dialogue(g, [`${info.name}${info.epithet ? ', ' + info.epithet : ''}.`, g.save.echoes[this.boss] ? 'Its Echo has been bested. It would answer again.' : 'Its Echo waits to answer you.'], {
+      speaker: 'Echo Statue', style: 'lore',
+      choices: [{ label: 'Challenge', fn: () => g.startEcho([this.boss], { kind: 'statue' }) }, { label: 'Leave' }],
+    });
+  }
+  draw(ctx, t) {
+    const x = this.cx, y = this.y + this.h, info = this.game.bossInfo[this.boss] || {};
+    const on = this.unlocked, beat = this.game.save.echoes[this.boss];
+    ctx.fillStyle = on ? '#3a3448' : '#1c1a24'; ctx.strokeStyle = INK; ctx.lineWidth = 2;
+    ctx.fillRect(x - 26, y - 14, 52, 14); ctx.strokeRect(x - 26, y - 14, 52, 14);
+    // a stylised effigy: a hooded mask on a plinth
+    ctx.fillStyle = on ? '#4a4458' : '#24212e';
+    ctx.beginPath(); ctx.moveTo(x - 20, y - 14); ctx.quadraticCurveTo(x - 24, y - 70, x, y - 84); ctx.quadraticCurveTo(x + 24, y - 70, x + 20, y - 14); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = on ? '#e9e2cf' : '#55506a';
+    ctx.beginPath(); ctx.ellipse(x, y - 58, 11, 14, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = INK;
+    ctx.beginPath(); ctx.ellipse(x - 4.5, y - 58, 2.6, 4.5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x + 4.5, y - 58, 2.6, 4.5, 0, 0, Math.PI * 2); ctx.fill();
+    if (beat) { ctx.fillStyle = '#e8c98a'; ctx.beginPath(); ctx.arc(x, y - 92, 4 + Math.sin(t * 2) * 0.6, 0, Math.PI * 2); ctx.fill(); }
+    if (on && Math.abs(this.player.cx - x) < 90) {
+      ctx.font = '12px Georgia'; ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(239,230,207,0.8)';
+      ctx.fillText(info.name || this.boss, x, y - 104);
+    }
+    this.drawPrompt(ctx);
+  }
+}
+
+export class PantheonDoor extends Interactable {
+  constructor(game, tx, ty, spec) {
+    super(game, tx * TILE - 16, ty * TILE - 96, 64, 128, 'Enter');
+    this.id = spec.id;
+    this.light = 140;
+  }
+  get def() { return PANTHEONS[this.id]; }
+  get unlocked() { return this.def && this.def.bosses.every((b) => this.game.save.flags['boss_' + b]); }
+  interact() {
+    const g = this.game, d = this.def;
+    if (!this.unlocked) {
+      g.dialogue = new Dialogue(g, [d.name + '.', 'The door is silent. Not every name inside it has been answered yet.'], { style: 'lore' });
+      return;
+    }
+    const cleared = g.save.flags['pantheon' + this.id + '_clear'];
+    g.dialogue = new Dialogue(g, [d.name + '.', `${d.bosses.length} echoes, one after another. No rest between.${cleared ? ' (Cleared.)' : ''}`], {
+      style: 'lore',
+      choices: [{ label: 'Begin', fn: () => g.startEcho(d.bosses.slice(), { kind: 'pantheon', id: this.id }) }, { label: 'Leave' }],
+    });
+  }
+  draw(ctx, t) {
+    const x = this.cx, y = this.y + this.h;
+    const cleared = this.game.save.flags['pantheon' + this.id + '_clear'];
+    ctx.fillStyle = '#1a1724'; ctx.strokeStyle = INK; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(x - 30, y); ctx.lineTo(x - 30, y - 90); ctx.quadraticCurveTo(x, y - 128, x + 30, y - 90); ctx.lineTo(x + 30, y); ctx.closePath(); ctx.fill(); ctx.stroke();
+    const glow = this.unlocked ? 0.5 + Math.sin(t * 2) * 0.2 : 0.1;
+    ctx.strokeStyle = cleared ? `rgba(232,201,138,${glow + 0.3})` : `rgba(230,220,255,${glow})`; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x - 22, y); ctx.lineTo(x - 22, y - 86); ctx.quadraticCurveTo(x, y - 116, x + 22, y - 86); ctx.lineTo(x + 22, y); ctx.stroke();
+    ctx.font = '20px Georgia'; ctx.textAlign = 'center'; ctx.fillStyle = `rgba(239,230,207,${0.4 + glow})`;
+    ctx.fillText(['', 'I', 'II', 'III', 'IV'][this.id] || '', x, y - 56);
+    this.drawPrompt(ctx);
   }
 }

@@ -1,2 +1,36 @@
-// Enemies of area 'loom'. See docs/AUTHORING.md
-export default [];
+// Enemies of area 'loom' (The Loom Below). Black & white, sacred, silent: things the looms
+// made and forgot to unmake. One accent only: the cold white of a fresh-spun thread.
+export default [
+  { id: 'loom_threadwraith', name: 'Thread-Wraith', area: 'loom', hp: 80, dmg: 2, glints: 14, size: [34, 40],
+    behavior: 'phaser', params: { interval: 2.1, dash: 470, sight: 460 },
+    art: { body: 'wisp', c1: '#d8d8e0', c3: '#ffffff', centered: true },
+    journal: 'The ghost of a thread that was cut before it could be woven into anything. It drifts through the warp, trying on the shapes of passers-by.', kills: 12 },
+  { id: 'loom_shuttle', name: 'Shuttlewing', area: 'loom', hp: 70, dmg: 2, glints: 12, size: [54, 22],
+    behavior: 'dasher', params: { speed: 600, interval: 1.7, sight: 480 },
+    art: { body: 'fish', c1: '#2a2a31', c2: '#f2f2f7', c3: '#bdbdc8', eye: '#ffffff', glow: true, centered: true, teeth: false },
+    journal: 'Once these shuttles flew between the warp threads a thousand times a heartbeat. The pattern is long finished; they have not been told.', kills: 15 },
+  { id: 'loom_warplancer', name: 'Warp Lancer', area: 'loom', hp: 110, dmg: 2, glints: 20, size: [40, 60],
+    behavior: 'lancer', params: { speed: 45, sight: 300, reach: 150, tele: 0.5 },
+    art: { body: 'knight', c1: '#1c1c22', c2: '#ffffff', c3: '#ecebf2', eye: '#ffffff', weapon: 'spear' },
+    journal: 'Its lance is a single warp thread pulled taut, sharp enough to part the dark. It guards the looms from anyone who would change the weave.', kills: 10 },
+  { id: 'loom_heddle', name: 'Heddle Warden', area: 'loom', hp: 120, dmg: 2, glints: 22, size: [46, 62],
+    behavior: 'guard', params: { speed: 60, sight: 320, lunge: 320, reach: 52, tele: 0.4, shield: true },
+    art: { body: 'knight', c1: '#3a3a44', c2: '#d4d4dc', c3: '#f5f5fa', eye: '#ffffff', weapon: 'shield', horns: 0 },
+    journal: 'A heddle lifts some threads and lowers others; this one decides who passes and who is pressed flat. Strike it from above, where its frame is open.', kills: 10 },
+  { id: 'loom_bobbin', name: 'Idle Bobbin', area: 'loom', hp: 60, dmg: 2, glints: 10, size: [32, 38],
+    behavior: 'charger', params: { speed: 55, chargeSpeed: 430, sight: 340, tele: 0.4 },
+    art: { body: 'spool', c1: '#e6e6ec', c2: '#24242b', eye: '#16141c' },
+    journal: 'Wound full with a thread no loom will ever call for. Bored to madness, it hurls itself at anything that moves.', kills: 15 },
+  { id: 'loom_snarl', name: 'Snarl', area: 'loom', hp: 70, dmg: 2, glints: 12, size: [34, 34],
+    behavior: 'hopper', params: { interval: 1.0, vx: 230, vy: 700 },
+    art: { body: 'yarn', c1: '#efeff4', c2: 'rgba(20,20,28,0.55)', eye: '#16141c' },
+    journal: 'A tangle that learned to hop. Every Snarl is a mistake in the weave that crawled off the loom before anyone could pick it out.', kills: 15 },
+  { id: 'loom_weftspider', name: 'Weft Creeper', area: 'loom', hp: 75, dmg: 2, glints: 12, size: [38, 28],
+    behavior: 'dropper', params: { range: 70, speed: 120 },
+    art: { body: 'spider', c1: '#0e0e12', c2: '#ffffff', c3: '#2c2c34', eye: '#ffffff', eyes: 6, glow: true },
+    journal: 'It nests in the shed between warp and weft and drops on the careless. Its silk is the only thread down here still being made.', kills: 12 },
+  { id: 'loom_patterneye', name: 'Pattern Eye', area: 'loom', hp: 90, dmg: 2, glints: 16, size: [36, 36],
+    behavior: 'flyshooter', params: { speed: 90, keep: 240, interval: 2.0, projSpeed: 300, count: 3, spread: 0.22, color: '#ffffff', projArt: 'needle' },
+    art: { body: 'eyeball', c1: '#16141c', c2: '#d6d6de', c3: '#f6f6fa', centered: true },
+    journal: 'The weavers grew these eyes to check the cloth for flaws. It still finds them, and it still fires needles to unpick them.', kills: 12 },
+];

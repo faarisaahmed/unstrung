@@ -20,6 +20,7 @@ export default [
     req: ['sap'],                 // optional: abilities to validate this room with (default: area tier)
     lockedDoors: ['3'],           // optional: doors intentionally unreachable with `req` (need later abilities)
     deadEnd: ['2'],               // optional: entries that are allowed to have no other exit (e.g. treasure nooks)
+    oneWay: { '3': true },        // optional: entering through door 3 is a one-way trip (validator won't demand an exit)
     legend: {
       a: { e: 'enemy', id: 'mossgrub' },
       s: { e: 'spindle' },
@@ -54,7 +55,7 @@ export default [
 | `O` | grapple hook ring for **Spool Line** (non-solid). Range is about 6 tiles. |
 | `W` | updraft column: carries Bead upward while gliding with **Dandelion** |
 | `I` | ice: solid, slippery, and you can't wall-cling to it |
-| `*` | fake wall: drawn as rock, but passable, and reveals itself when Bead enters (secret rooms!) |
+| `*` | fake wall: drawn as rock, but passable, and reveals itself when Bead enters. **Fill an entire secret chamber with `*`**: it renders as solid rock, its entities stay hidden, and the whole connected `*` region opens when Bead first touches it. |
 | `0`–`9` | door cells (must be on the room border, see below) |
 | `@` | player start (only the very first room of the game) |
 | any letter | entity marker, defined in `legend` (the cell itself is empty air) |
@@ -109,6 +110,7 @@ export default [
 | `deco` | `kind`: `lamp`(+`hang:true`), `candle`, `statue`, `sign`(+`text`), `banner`(+`color`), `bones`; `front:true` draws in front | pure decoration |
 | `trigger` | `w`,`h` (tiles), `flag`, `hint`/`desc` (banner) or `text`(+`speaker`) (dialogue) | invisible tutorial or story trigger |
 
+`under: '~'` on a legend entry sets the tile under the marker (default empty air), e.g. an enemy placed inside ink.
 `needs: [...]` on any legend entry tells the validator that this entity is reachable only with
 those extra abilities.
 

@@ -4,9 +4,9 @@ export default [
     id: 'test_a', area: 'fray',
     legend: {
       s: { e: 'spindle' },
-      m: { e: 'enemy', id: 'lintmite' },
-      g: { e: 'enemy', id: 'stitchgrub' },
-      f: { e: 'enemy', id: 'threadfly' },
+      m: { e: 'enemy', id: 'fray_lintmite' },
+      g: { e: 'enemy', id: 'fray_stitchgrub' },
+      f: { e: 'enemy', id: 'fray_threadfly' },
       p: { e: 'pot' },
       j: { e: 'beadling' },
       i: { e: 'item', item: 'shellFrag' },
@@ -35,7 +35,7 @@ export default [
   },
   {
     id: 'test_b', area: 'hollows',
-    legend: { m: { e: 'enemy', id: 'lintmite' }, K: { e: 'boss', id: 'gnarlknot' }, a: { e: 'gate', arena: true, h: 3 } },
+    legend: { m: { e: 'enemy', id: 'fray_lintmite' }, K: { e: 'boss', id: 'gnarlknot' }, a: { e: 'gate', arena: true, h: 3 } },
     doors: { 1: 'test_a:1' },
     tiles: [
       '##################################################',
