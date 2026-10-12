@@ -98,9 +98,11 @@ registerProjectileArt('gl_wave', (ctx, p, t) => {
 registerProjectileArt('bm_bubble', (ctx, p, t) => {
   const r = p.r * (1 + Math.sin(p.age * 9 + (p.ph || 0)) * 0.06);
   ctx.save();
-  ctx.fillStyle = 'rgba(150,220,235,0.28)';
+  glow(ctx, p.cx, p.cy, r * 2.2, '150,230,255', 0.25);
+  ctx.fillStyle = 'rgba(190,240,250,0.42)';
   ctx.beginPath(); ctx.arc(p.cx, p.cy, r, 0, TAU); ctx.fill();
-  ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.stroke();
+  ctx.strokeStyle = INK; ctx.lineWidth = 3.5; ctx.stroke();
+  ctx.strokeStyle = '#d8f8ff'; ctx.lineWidth = 1.5; ctx.stroke();
   ctx.strokeStyle = 'rgba(210,250,255,0.9)'; ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.arc(p.cx, p.cy, r - 2.5, Math.PI * 1.1, Math.PI * 1.6); ctx.stroke();
   ctx.fillStyle = 'rgba(255,255,255,0.9)';

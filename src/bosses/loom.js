@@ -296,7 +296,7 @@ export class Weaver extends Boss {
   onStart() { this.facePlayer(); }
 
   // ---------- attack selection ----------
-  onPhase(n) { this.pendingPhase = n; }
+  onPhase(n) { this.pendingPhase = Math.max(this.pendingPhase || 0, n); }
   chooseAttack() {
     if (this.pendingPhase) { const n = this.pendingPhase; this.pendingPhase = 0; return this.phaseShift(n); }
     this.count++;
@@ -578,7 +578,7 @@ export class Weaver extends Boss {
       this.eyesOpen = 1;
       this.speedMul *= 1.08;
     } else {
-      this.crack = 1; this.shed = 1;
+      this.eyesOpen = 1; this.crack = 1; this.shed = 1;
       this.speedMul *= 1.12;
       this.fx.burst(this.cx, this.cy, 30, { color: INK, speed: 380, size: 5, life: 1.0, shape: 'shard' });
     }

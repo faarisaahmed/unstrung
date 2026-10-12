@@ -101,7 +101,7 @@ export class MossMother extends Boss {
     this.p = { squash: 0, rear: 0, withdraw: 0, puff: 0, birth: 0, charge: 0, jaw: 0, wake: 0 };
     this.pt = Object.assign({}, this.p);
     this.walkPh = 0; this.spinAng = 0; this.dazed = 0; this.queue = [];
-    this.crack = 0; this.blink = 0;
+    this.crack = 0; this.blink = 0; this.marks = [];
   }
 
   update(dt) { super.update(dt); this.animate(dt); }
@@ -113,6 +113,8 @@ export class MossMother extends Boss {
     if (this.moving) this.walkPh += dt * (this.dashing ? 22 : 12);
     if (this.spinning) this.spinAng += dt * (this.dashing ? 26 : 16);
     if (this.dazed > 0) this.dazed -= dt;
+    for (const m of this.marks) m.t -= dt;
+    this.marks = this.marks.filter((m) => m.t > 0);
     this.blink -= dt;
     if (this.blink < -3 - Math.random() * 3) this.blink = 0.14;
     const g = this.game;
@@ -222,6 +224,7 @@ export class MossMother extends Boss {
           const px = clamp(x, this.arena.x + 20, this.arena.x + this.arena.w - 20);
           this.fx.burst(px, this.arena.y + 4, 6, { color: '#5f7d72', speed: 90, angle: Math.PI / 2, spread: 1, size: 3, life: 0.6 });
           this.fire(px, this.arena.y + 12, 0, 40, { gravity: 820, art: 'mm_pebble', r: 10, life: 3, color: '#4f6e64' });
+          this.marks.push({ x: px, t: 1.1, max: 1.1 });
         }
       }
       this.facing = -this.facing;
@@ -327,6 +330,13 @@ export class MossMother extends Boss {
   }
 
   drawExtra(ctx, t) {
+    // growing shadows where loosened pebbles will land
+    for (const m of this.marks) {
+      const k = 1 - m.t / m.max;
+      ctx.fillStyle = `rgba(0,0,0,${0.2 + 0.35 * k})`;
+      ctx.beginPath(); ctx.ellipse(m.x, this.groundY - 2, 6 + 12 * k, 3 + 2 * k, 0, 0, TAU); ctx.fill();
+      ctx.strokeStyle = `rgba(191,245,223,${0.5 * k})`; ctx.lineWidth = 1.5; ctx.stroke();
+    }
     // dazed stars
     if (this.dazed > 0 && this.mode === 'fight') {
       for (let i = 0; i < 3; i++) {

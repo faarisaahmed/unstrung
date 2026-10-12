@@ -870,7 +870,7 @@ export class FrostboundSentinel extends Boss {
       this.fx.add({ x: h.x, y: h.y, vx: this.facing * 18, vy: -14, life: 1.0, size: 4, color: 'rgba(225,245,255,0.3)', g: -15, drag: 1, front: false });
     }
   }
-  toWorld(lx, ly) { return { x: this.cx + lx * this.facing, y: this.y + this.h + ly + this.pose.kneel * 26 }; }
+  toWorld(lx, ly) { return { x: this.cx + lx * 1.12 * this.facing, y: this.y + this.h + ly * 1.12 + this.pose.kneel * 26 }; }
   idle(dt) { this.animate(dt); }
   introUpdate(dt, t) {
     this.animate(dt);
@@ -1036,7 +1036,7 @@ export class FrostboundSentinel extends Boss {
     const k = n > 1 ? i / (n - 1) : 0.5;
     const a = -Math.PI * (0.88 - 0.76 * k);
     const ax = Math.cos(a) * this.facing, ay = Math.sin(a);
-    return { x: c.x + ax * 92, y: c.y + ay * 92 + Math.sin(this.anim * 2 + i + spin) * 3, ang: Math.atan2(ay, ax) };
+    return { x: c.x + ax * 103, y: c.y + ay * 103 + Math.sin(this.anim * 2 + i + spin) * 3, ang: Math.atan2(ay, ax) };
   }
 
   // ---- 2. Shield bash (armored)
@@ -1236,7 +1236,7 @@ export class FrostboundSentinel extends Boss {
     const f = this.facing, P = this.pose, a = this.anim;
     ctx.save();
     ctx.translate(this.cx, this.y + this.h + P.kneel * 26);
-    ctx.scale(f, 1);
+    ctx.scale(f * 1.12, 1.12);
     const br = Math.sin(a * 1.6) * 1.5;
     const arm = this.armored;
     // halo of lances behind
@@ -1279,21 +1279,40 @@ export class FrostboundSentinel extends Boss {
     fillInk(ctx, arm ? FS.iceLo : '#24304a', white, 2.5);
     // torso
     if (arm) {
+      // broad breastplate of old ice
       ctx.beginPath();
-      ctx.moveTo(-32, -136 + br); ctx.lineTo(32, -136 + br); ctx.lineTo(28, -100); ctx.lineTo(20, -84); ctx.lineTo(-20, -84); ctx.lineTo(-28, -100);
+      ctx.moveTo(-34, -138 + br);
+      ctx.quadraticCurveTo(0, -146 + br, 34, -138 + br);
+      ctx.quadraticCurveTo(36, -112, 24, -86);
+      ctx.lineTo(-24, -86);
+      ctx.quadraticCurveTo(-36, -112, -34, -138 + br);
       ctx.closePath();
       fillInk(ctx, FS.ice, white, 3);
       if (!white) {
-        ctx.fillStyle = FS.iceHi;
-        ctx.beginPath(); ctx.moveTo(-26, -132 + br); ctx.lineTo(-4, -132 + br); ctx.lineTo(-12, -104); ctx.lineTo(-24, -102); ctx.closePath(); ctx.fill();
+        ctx.save(); ctx.clip();
         ctx.fillStyle = FS.iceLo;
-        ctx.beginPath(); ctx.moveTo(6, -110); ctx.lineTo(26, -126); ctx.lineTo(24, -100); ctx.lineTo(16, -88); ctx.closePath(); ctx.fill();
-        // a slow glint travelling over the armor
-        const gx = -30 + ((a * 30) % 90);
-        glow(ctx, gx, -118, 14, '255,255,255', 0.35);
+        ctx.beginPath(); ctx.moveTo(4, -146); ctx.lineTo(40, -146); ctx.lineTo(40, -80); ctx.lineTo(10, -80); ctx.lineTo(16, -112); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = FS.iceHi;
+        ctx.beginPath(); ctx.moveTo(-30, -136 + br); ctx.lineTo(-8, -138 + br); ctx.lineTo(-16, -112); ctx.lineTo(-30, -108); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.55)';
+        ctx.beginPath(); ctx.moveTo(-26, -130); ctx.lineTo(-20, -132); ctx.lineTo(-26, -112); ctx.closePath(); ctx.fill();
         // inner warmth seen through the ice: the last ember it guards
-        glow(ctx, 0, -112, 22, '255,190,120', 0.25 + 0.1 * Math.sin(a * 3));
+        glow(ctx, 0, -112, 26, '255,190,120', 0.28 + 0.1 * Math.sin(a * 3));
+        ctx.restore();
+        // keel ridge and plate seams
+        ctx.strokeStyle = INK; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(0, -142 + br); ctx.lineTo(4, -112); ctx.lineTo(0, -88); ctx.stroke();
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(-32, -112); ctx.quadraticCurveTo(0, -104, 32, -112); ctx.stroke();
+        // a slow glint travelling over the armor
+        glow(ctx, -30 + ((a * 30) % 90), -122, 14, '255,255,255', 0.35);
       }
+      // belt
+      ctx.beginPath(); ctx.rect(-26, -90, 52, 8); fillInk(ctx, '#2c4a62', white, 2);
+      if (!white) { ctx.fillStyle = '#ffcf8a'; ctx.beginPath(); ctx.arc(2, -86, 3, 0, TAU); ctx.fill(); }
+      // gorget
+      ctx.beginPath(); ctx.moveTo(-16, -140 + br); ctx.quadraticCurveTo(2, -132 + br, 20, -140 + br); ctx.lineTo(16, -150 + br); ctx.lineTo(-12, -150 + br); ctx.closePath();
+      fillInk(ctx, FS.iceLo, white, 2);
     } else {
       // gaunt body under the broken shell
       ctx.beginPath();
@@ -1359,18 +1378,28 @@ export class FrostboundSentinel extends Boss {
         ctx.beginPath(); ctx.moveTo(x - 5, -22); ctx.lineTo(x + (i - 2) * 1.5, -22 - h); ctx.lineTo(x + 5, -22); ctx.closePath();
         fillInk(ctx, FS.iceHi, white, 2);
       }
+      // tall great-helm
       ctx.beginPath();
-      ctx.moveTo(-22, 14); ctx.lineTo(-24, -14); ctx.quadraticCurveTo(-20, -28, 0, -28); ctx.quadraticCurveTo(20, -28, 24, -14);
-      ctx.lineTo(26, 6); ctx.lineTo(14, 18); ctx.lineTo(-12, 18); ctx.closePath();
+      ctx.moveTo(-20, 16); ctx.lineTo(-23, -10); ctx.quadraticCurveTo(-22, -30, 2, -32); ctx.quadraticCurveTo(26, -30, 26, -10);
+      ctx.lineTo(28, 8); ctx.quadraticCurveTo(22, 20, 4, 22); ctx.quadraticCurveTo(-12, 22, -20, 16);
+      ctx.closePath();
       fillInk(ctx, FS.ice, white, 3);
-      // visor slit with the pale mask behind it
-      ctx.beginPath(); ctx.moveTo(-14, -8); ctx.lineTo(22, -8); ctx.lineTo(20, 4); ctx.lineTo(-12, 4); ctx.closePath();
+      if (!white) {
+        ctx.save(); ctx.clip();
+        ctx.fillStyle = FS.iceLo; ctx.fillRect(12, -40, 20, 70);
+        ctx.fillStyle = FS.iceHi; ctx.beginPath(); ctx.moveTo(-20, -12); ctx.lineTo(-8, -28); ctx.lineTo(-4, -24); ctx.lineTo(-16, -4); ctx.closePath(); ctx.fill();
+        ctx.restore();
+      }
+      // T-shaped visor: darkness, and two cold eyes within
+      ctx.beginPath();
+      ctx.moveTo(-14, -8); ctx.lineTo(24, -8); ctx.lineTo(24, -2); ctx.lineTo(8, -2); ctx.lineTo(8, 14); ctx.lineTo(2, 14); ctx.lineTo(2, -2); ctx.lineTo(-14, -2);
+      ctx.closePath();
       fillInk(ctx, INK, white, 1.5);
       if (!white) {
-        ctx.fillStyle = FS.mask; ctx.beginPath(); ctx.moveTo(-10, -5); ctx.lineTo(18, -5); ctx.lineTo(16, 2); ctx.lineTo(-8, 2); ctx.closePath(); ctx.fill();
-        ctx.fillStyle = INK; ctx.fillRect(-4, -5, 6, 7); ctx.fillRect(8, -5, 6, 7);
-        eye(ctx, -1, -1.5, 2.2, '#bff4ff', true); eye(ctx, 11, -1.5, 2.2, '#bff4ff', true);
-        ctx.fillStyle = FS.iceHi; ctx.beginPath(); ctx.moveTo(-20, -14); ctx.lineTo(-6, -24); ctx.lineTo(-4, -18); ctx.lineTo(-18, -8); ctx.closePath(); ctx.fill();
+        const pul = 0.8 + 0.2 * Math.sin(a * 4);
+        eye(ctx, -5, -5, 2.4 * pul, '#bff4ff', true); eye(ctx, 16, -5, 2.4 * pul, '#bff4ff', true);
+        ctx.strokeStyle = INK; ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.moveTo(-18, 8); ctx.lineTo(-6, 10); ctx.moveTo(14, 10); ctx.lineTo(24, 6); ctx.stroke();
       }
     } else {
       // the bare long mask, with a few ice horns left
@@ -1429,7 +1458,7 @@ export class FrostboundSentinel extends Boss {
     ctx.save();
     if (P.thrust !== 0 || P.plunge > 0.05) {
       // held forward for thrusts / downward for plunges
-      const ty = this.thrustY ? (this.thrustY - (this.y + this.h)) : -100;
+      const ty = this.thrustY ? (this.thrustY - (this.y + this.h)) / 1.12 : -100;
       const reachBack = P.thrust < 0 ? -40 * -P.thrust : 60 * Math.max(0, P.thrust);
       if (P.plunge > 0.05) { ctx.translate(30, -110); ctx.rotate(Math.PI / 2 * P.plunge); }
       else { ctx.translate(reachBack, clamp(ty, -150, -16)); }
