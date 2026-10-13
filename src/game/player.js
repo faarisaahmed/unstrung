@@ -114,7 +114,9 @@ export class Player {
     if (fast && this.mending <= 0) {
       this.spinAcc = (this.spinAcc || 0) + s.rollGain * dt * (b.mode === 'comet' ? 2 : 1);
       if (this.spinAcc >= 1) { const k = Math.floor(this.spinAcc); this.spinAcc -= k; sv.thread = Math.min(sv.maxThread, sv.thread + k); }
-    }
+      this.winding = sv.thread < sv.maxThread; // HUD + coach feedback
+    } else this.winding = false;
+    this.buffBlocked = false;
     if (inp.down('focus')) {
       this.focusHeld += dt;
       const canBuff = (rolling || (s.flags.airMend && b.mode === 'normal')) && sv.thread >= s.mendCost && sv.hp < sv.maxHp;
@@ -133,11 +135,16 @@ export class Player {
           g.fx.ring(this.cx, this.cy, 6, 44, 0.4, '#ffe7a8', 3);
           this.art.impulse(1.2, 0.85);
           this.art.shine = 0.6;
+          sv.flags.buffs = (sv.flags.buffs || 0) + 1;
           if (sv.thread < s.mendCost || sv.hp >= sv.maxHp) this.mending = 0;
         }
       } else if (this.mending > 0) {
         // stopped rolling (or ran dry): the buff fizzles
         this.mending = 0; this.mendT = 0;
+        if (sv.hp < sv.maxHp && sv.thread >= s.mendCost) { g.fx.text(this.cx, this.cy - 26, 'Keep rolling!', '#ffe7a8', 14); g.sfx('deny'); }
+      } else if (this.focusHeld > 0.22 && sv.hp < sv.maxHp) {
+        // holding Focus but not able to Buff: tell the coach why
+        this.buffBlocked = sv.thread < s.mendCost ? 'spin' : 'still';
       }
     } else {
       if (this.focusHeld > 0 && this.focusHeld <= 0.22 && this.mending <= 0) this.castSpell(inp);

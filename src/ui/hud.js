@@ -1,6 +1,7 @@
 // In-game HUD: thread vessel, shells (health), glints, boss bar, area titles, banners.
 import { VIEW_W, VIEW_H } from '../core/constants.js';
 import { TAU, clamp } from '../core/math.js';
+import { coachLine } from '../game/coach.js';
 
 const INK = '#16141c';
 
@@ -133,7 +134,25 @@ export class HUD {
     ctx.fillStyle = 'rgba(8,8,12,0.7)'; ctx.fillText(String(Math.round(this.shownGlints)), gx + 13, gy + 2.5);
     ctx.fillStyle = '#efe8d6';
     ctx.fillText(String(Math.round(this.shownGlints)), gx + 12, gy + 1);
+    // while winding: little loops of yarn fly onto the ball
+    if (g.player && g.player.winding && Math.random() < 0.35) (this.windFx = this.windFx || []).push({ a: Math.random() * TAU, t: 0 });
+    if (this.windFx) for (let i = this.windFx.length - 1; i >= 0; i--) {
+      const w = this.windFx[i]; w.t += 1 / 60;
+      if (w.t > 0.4) { this.windFx.splice(i, 1); continue; }
+      const d = vr + 16 * (1 - w.t / 0.4), a = w.a + w.t * 4;
+      ctx.strokeStyle = `rgba(246,232,196,${1 - w.t / 0.4})`; ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.arc(vx + Math.cos(a) * d, vy + Math.sin(a) * d, 2.2, 0, TAU); ctx.stroke();
+    }
     ctx.restore();
+    // a standing reminder of how to heal, until it has been learned
+    const cl = coachLine(g);
+    if (cl) {
+      ctx.font = `14px ${FONT}`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      const a = cl.hot ? 0.75 + 0.25 * Math.sin(t * 5) : 0.6;
+      ctx.fillStyle = 'rgba(8,8,12,0.55)'; ctx.fillText(cl.str, 23, 113);
+      ctx.fillStyle = cl.hot ? `rgba(255,231,168,${a})` : `rgba(220,210,190,${a})`;
+      ctx.fillText(cl.str, 22, 112);
+    }
 
     // --- boss bar ---
     if (g.bossBar && g.bossBar.boss && !g.bossBar.boss.dead) {
@@ -232,7 +251,7 @@ export function flourish(ctx, x, y, w) {
   ctx.beginPath(); ctx.moveTo(x, y - 5); ctx.lineTo(x + 5, y); ctx.lineTo(x, y + 5); ctx.lineTo(x - 5, y); ctx.fill();
 }
 
-function drawCoat(ctx, x, y, grow = 1, cracked = false, spin = 0) {
+export function drawCoat(ctx, x, y, grow = 1, cracked = false, spin = 0) {
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(spin);

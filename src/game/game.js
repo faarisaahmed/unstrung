@@ -18,6 +18,7 @@ import { ROOMS, AREAS, START_ROOM } from '../data/world.js';
 import { HUD } from '../ui/hud.js';
 import { BOSS_INFO } from '../data/bossinfo.js';
 import { Dialogue } from '../ui/dialogue.js';
+import { updateCoach } from './coach.js';
 
 const terrainCache = new Map();
 
@@ -491,6 +492,7 @@ export class Game {
     if (!p.dead) p.update(dt);
 
     this.updateKnots(dt);
+    updateCoach(this, dt);
     // entities
     for (const e of this.entities) if (!e.dead) e.update(dt);
     this.resolveCombat();

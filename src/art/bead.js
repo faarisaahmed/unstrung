@@ -166,7 +166,14 @@ export class BeadArt {
     const notch = (p.save && p.save.notches) || 3;
     drawSprig(ctx, 0, -r + 1, k * (b.small ? 0.8 : 1) * (1 + Math.max(0, notch - 3) * 0.05), this.sway + Math.sin(time * 2.2) * 0.04, flash, '#b8323e', [], b.facing);
 
-    // buffing: a bright polish highlight sweeps around the shell
+    // buffing: a progress ring fills around Bead, and a polish highlight sweeps the shell
+    if (p.mending > 0 && p.stats) {
+      const k = Math.min(1, (p.mendT || 0) / p.stats.mendTime);
+      ctx.strokeStyle = 'rgba(22,20,28,0.6)'; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.arc(0, 0, r + 6, 0, TAU); ctx.stroke();
+      ctx.strokeStyle = '#ffe7a8'; ctx.lineWidth = 2.4;
+      ctx.beginPath(); ctx.arc(0, 0, r + 6, -Math.PI / 2, -Math.PI / 2 + k * TAU); ctx.stroke();
+    }
     if (p.mending > 0 || this.shine > 0) {
       const kk = p.mending > 0 ? 1 : this.shine / 0.6;
       ctx.strokeStyle = `rgba(255,248,225,${0.85 * kk})`; ctx.lineWidth = 2.2;

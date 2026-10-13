@@ -6,6 +6,8 @@ import { loadSave, newSave, deleteSave, completion } from '../game/save.js';
 import { AREAS } from '../data/world.js';
 import { styleFor } from '../art/palettes.js';
 import { getBackground, drawBackground } from '../art/backgrounds.js';
+import { drawCoat } from './hud.js';
+import { drawWhip } from '../art/bead.js';
 
 const fmtTime = (s) => { const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60); return `${h}h ${String(m).padStart(2, '0')}m`; };
 
@@ -28,6 +30,7 @@ export class TitleScreen {
     const any = this.slots.some(Boolean);
     return [
       { label: any ? 'Continue' : 'Begin', id: 'play' },
+      { label: 'How to Play', id: 'howto' },
       { label: 'Options', id: 'options' },
       { label: 'Controls', id: 'controls' },
       { label: 'Credits', id: 'credits' },
@@ -53,6 +56,7 @@ export class TitleScreen {
         if (id === 'play') { this.mode = 'slots'; this.slotSel = { sel: 0 }; }
         else if (id === 'options') this.sub = new OptionsScreen(this.app);
         else if (id === 'controls') this.sub = new ControlsScreen(this.app);
+        else if (id === 'howto') this.sub = new HowToPlayScreen(this.app);
         else if (id === 'credits') this.app.showCredits(false);
       }
     } else if (this.mode === 'slots') {
@@ -249,24 +253,96 @@ export class ControlsScreen {
   }
 }
 
+// ------------------------------------------------------------------ how to play
+// One page that explains the survival loop in plain words, with the HUD pieces drawn next to them.
+export class HowToPlayScreen {
+  constructor(app) { this.app = app; this.t = 0; }
+  update(dt) {
+    this.t += dt;
+    const inp = this.app.input;
+    if (this.t > 0.2 && (inp.pressed('back') || inp.pressed('confirm') || inp.pressed('jump') || inp.pressed('pause'))) { inp.eatAll(); this.done = true; this.app.audio.sfx('menuClose'); }
+  }
+  draw(ctx) {
+    dim(ctx, 0.97);
+    const pad = this.app.input.lastDevice === 'pad';
+    const K = pad ? { at: 'X', fo: 'Y', up: 'Up', inv: 'RT', jump: 'A' } : { at: 'X', fo: 'F', up: '↑', inv: 'E', jump: 'Z' };
+    title(ctx, 'How to Play', VIEW_W / 2, 44, 26);
+    const blocks = [
+      ['Bonk', 'whip', `${K.at} lashes your yarn whip. Hold ${K.up} to strike upward. In the air, hold down + ${K.at} to pogo: bounce off enemies and spikes.`],
+      ['Coats  (your health)', 'coat', 'The ivory beads on the thread, top left. Every hit knocks one off. Lose them all and Bead unravels, leaving your Glints in a Tangle where you fell. Touch the Tangle to get them back.'],
+      ['Spin  (the ball of yarn)', 'yarn', 'Rolling at full speed winds yarn onto the ball. Bonking enemies winds it too. The fuller the ball, the more Spin you have to spend.'],
+      ['Buffing  (how to heal)', 'buff', `Roll at full speed and HOLD ${K.fo}. A ring fills around Bead, and when it closes a Coat comes back. Stop rolling and it cancels. Each Buff costs some Spin. Tap ${K.fo} instead to cast a spell, once you know one.`],
+      ['Is it that easy?', 'none', 'Yes: between fights you can always roll back and forth to wind Spin and Buff back up. The challenge is finding room to keep rolling in the middle of a fight.'],
+      ['Spindles  (benches)', 'bench', `Press ${K.up} at a Spindle to rest: full heal, and your game is saved. While resting, press ${K.inv} to tie Knots (charms) into your thread.`],
+    ];
+    const colW = 410, x0 = 64, x1 = 64 + colW + 50;
+    blocks.forEach(([head, icon, body], i) => {
+      const x = i % 2 ? x1 : x0, y = 100 + Math.floor(i / 2) * 140;
+      this.icon(ctx, icon, x + 18, y + 22);
+      text(ctx, head, x + 48, y, 18, C.gold);
+      wrap(ctx, body, x + 48, y + 24, colW - 48, 19, 14.5);
+    });
+    text(ctx, 'Press any button to return', VIEW_W / 2, VIEW_H - 22, 13, C.faint, 'center');
+  }
+  icon(ctx, kind, x, y) {
+    ctx.save();
+    if (kind === 'coat') { drawCoat(ctx, x, y - 6); drawCoat(ctx, x, y + 14); }
+    else if (kind === 'yarn') {
+      ctx.fillStyle = '#1d1a22'; ctx.beginPath(); ctx.arc(x, y, 15, 0, TAU); ctx.fill();
+      ctx.save(); ctx.beginPath(); ctx.arc(x, y, 14.5, 0, TAU); ctx.clip();
+      for (let i = 0; i < 8; i++) { ctx.strokeStyle = i % 2 ? '#bdb197' : '#d8ccb0'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.ellipse(x, y, 14, 3 + i * 1.5, i * 2.4, 0, TAU); ctx.stroke(); }
+      ctx.restore();
+      ctx.strokeStyle = C.ink; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(x, y, 15, 0, TAU); ctx.stroke();
+    } else if (kind === 'buff') {
+      ctx.fillStyle = '#f1e9d6'; ctx.strokeStyle = C.ink; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(x, y, 11, 0, TAU); ctx.fill(); ctx.stroke();
+      const k = (this.t % 1.2) / 1.2;
+      ctx.strokeStyle = '#ffe7a8'; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.arc(x, y, 16, -Math.PI / 2, -Math.PI / 2 + k * TAU); ctx.stroke();
+      ctx.fillStyle = C.ink; for (const s of [-1, 1]) { ctx.beginPath(); ctx.ellipse(x + 3 + s * 4, y - 1, 1.8, 2.8, 0, 0, TAU); ctx.fill(); }
+    } else if (kind === 'whip') {
+      ctx.fillStyle = '#f1e9d6'; ctx.strokeStyle = C.ink; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(x - 12, y + 4, 8, 0, TAU); ctx.fill(); ctx.stroke();
+      drawWhip(ctx, x - 12, y + 4, 8, 'up', 1, 0.1, 1, 0.42, ['#b8323e', '#d4535c', '#93262f']);
+    } else if (kind === 'bench') {
+      ctx.fillStyle = '#6b4a2e'; ctx.strokeStyle = C.ink; ctx.lineWidth = 2;
+      ctx.fillRect(x - 15, y - 2, 30, 8); ctx.strokeRect(x - 15, y - 2, 30, 8);
+      for (const s of [-1, 1]) { ctx.beginPath(); ctx.ellipse(x + s * 15, y + 2, 4, 9, 0, 0, TAU); ctx.fill(); ctx.stroke(); }
+      ctx.fillStyle = '#b8323e'; ctx.fillRect(x - 11, y - 1, 22, 5);
+    }
+    ctx.restore();
+  }
+}
+
+function wrap(ctx, str, x, y, w, lh, size) {
+  ctx.font = `${size}px ${FONT}`;
+  let line = '', yy = y;
+  for (const word of str.split(' ')) {
+    const tryL = line ? line + ' ' + word : word;
+    if (ctx.measureText(tryL).width > w && line) { text(ctx, line, x, yy, size, C.text); line = word; yy += lh; }
+    else line = tryL;
+  }
+  if (line) text(ctx, line, x, yy, size, C.text);
+}
+
 // ------------------------------------------------------------------ pause
 export class PauseMenu {
   constructor(app) {
     this.app = app; this.st = { sel: 0 }; this.t = 0;
     app.audio.sfx('menuOpen');
   }
-  items() { return [{ label: 'Resume' }, { label: 'Options' }, { label: 'Controls' }, { label: 'Quit to Title' }]; }
+  items() { return [{ label: 'Resume' }, { label: 'How to Play' }, { label: 'Options' }, { label: 'Controls' }, { label: 'Quit to Title' }]; }
   update(dt) {
     const inp = this.app.input, sfx = (n) => this.app.audio.sfx(n);
     this.t += dt;
     if (this.sub) { this.sub.update(dt); if (this.sub.done) this.sub = null; return; }
-    menuInput(inp, this.st, 4, sfx);
+    menuInput(inp, this.st, 5, sfx);
     if (inp.pressed('back') || (inp.pressed('pause') && this.t > 0.1)) { inp.eatAll(); this.app.closeOverlay(); sfx('menuClose'); return; }
     if (inp.pressed('confirm') || inp.pressed('jump')) {
       inp.eatAll(); sfx('confirm');
       if (this.st.sel === 0) this.app.closeOverlay();
-      else if (this.st.sel === 1) this.sub = new OptionsScreen(this.app);
-      else if (this.st.sel === 2) this.sub = new ControlsScreen(this.app);
+      else if (this.st.sel === 1) this.sub = new HowToPlayScreen(this.app);
+      else if (this.st.sel === 2) this.sub = new OptionsScreen(this.app);
+      else if (this.st.sel === 3) this.sub = new ControlsScreen(this.app);
       else this.app.quitToTitle();
     }
   }
