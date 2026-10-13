@@ -572,6 +572,7 @@ export class Selene extends Boss {
       g.camera.shake(12, 3.2);
       g.sfx('bossDie');
       g.cutscene = { kind: 'bossIntro' };
+      g.bossBar = null;
       g.player.locked = true;
       g.app.audio && g.app.audio.stopMusic(0.4);
       return;
@@ -956,6 +957,28 @@ export class Selene extends Boss {
         ctx.beginPath(); ctx.moveTo(cx + 30, cy - R * 0.44); ctx.lineTo(cx + R * 0.66, cy - R * 0.56); ctx.stroke();
         glow(ctx, cx + 18, cy - R * 0.44, 34, VOID, 0.3 + 0.2 * Math.sin(t * 5));
       }
+    }
+    // breaking open: cracks race across her and the void shows through
+    if (this.mode === 'transform') {
+      const k = Math.min(1, this.tfT / 2.5);
+      const n = Math.floor(3 + k * 12);
+      ctx.save();
+      ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.clip();
+      glow(ctx, cx + 10, cy - 10, R * (0.3 + k), '20,0,40', 0);
+      ctx.fillStyle = `rgba(4,2,10,${0.15 + 0.6 * k * k})`;
+      ctx.beginPath(); ctx.arc(cx + 10, cy - 10, R * 0.9 * k, 0, TAU); ctx.fill();
+      for (let i = 0; i < n; i++) {
+        const a = i * 2.4 + 0.3;
+        const L = R * (0.4 + 0.7 * k) * (0.6 + ((i * 37) % 10) / 25);
+        ctx.strokeStyle = INK; ctx.lineWidth = 2 + 3 * k;
+        ctx.beginPath(); ctx.moveTo(cx + 10, cy - 10);
+        let x = cx + 10, y = cy - 10;
+        for (let j = 1; j <= 4; j++) { x = cx + 10 + Math.cos(a + Math.sin(j * 3 + i) * 0.25) * L * j / 4; y = cy - 10 + Math.sin(a + Math.sin(j * 3 + i) * 0.25) * L * j / 4; ctx.lineTo(x, y); }
+        ctx.stroke();
+        ctx.strokeStyle = `rgba(${VOID},${0.5 * k})`; ctx.lineWidth = 1.2; ctx.stroke();
+      }
+      ctx.restore();
+      glow(ctx, cx + 10, cy - 10, R * 0.8, VOID, 0.5 * k + 0.2 * Math.sin(t * 20) * k);
     }
   }
 }

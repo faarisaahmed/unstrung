@@ -97,6 +97,17 @@ export const STYLES = {
   },
 };
 
+// Per-area colors for the '!' hazard liquid: [body, surface]
+const ACID = {
+  kilns: ['rgba(255,104,36,0.78)', 'rgba(255,224,150,0.95)'],
+  warrens: ['rgba(90,140,20,0.7)', 'rgba(210,255,90,0.85)'],
+  archive: ['rgba(14,12,40,0.85)', 'rgba(140,130,255,0.8)'],
+  cistern: ['rgba(18,10,40,0.8)', 'rgba(170,120,255,0.8)'],
+  unwoven: ['rgba(40,0,60,0.8)', 'rgba(220,120,255,0.9)'],
+  loom: ['rgba(8,8,10,0.9)', 'rgba(240,240,250,0.8)'],
+};
+for (const [k, v] of Object.entries(ACID)) if (STYLES[k]) STYLES[k].acid = v;
+
 export function styleFor(area) {
   return STYLES[area] || STYLES.fray;
 }

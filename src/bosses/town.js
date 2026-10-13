@@ -62,7 +62,7 @@ export class RollmasterTrio extends Boss {
     this.noPhysics = true;
     const A = this.arena, gy = this.groundY;
     const mk = (kind, x, state) => ({
-      kind, x, y: kind === 'cyclone' && state === 'active' ? gy - 150 : gy - 34, vx: 0, vy: 0, r: 34, ang: 0, spinV: kind === 'spin' ? 6 : 0,
+      kind, x, y: kind === 'cyclone' && state === 'active' ? gy - 150 : gy - 38, vx: 0, vy: 0, r: 38, ang: 0, spinV: kind === 'spin' ? 6 : 0,
       facing: -1, sq: 0, state, phys: true, bouncy: false, grounded: true, drive: false, flashT: 0, tele: 0, busy: false, co: null, wait: 0,
       bow: 0, aim: null, last: null, trail: [], hitWall: 0, wing: 0, seed: Math.random() * 10,
     });
@@ -666,7 +666,7 @@ export class RollmasterTrio extends Boss {
       ctx.fillStyle = P.b;
       for (let i = 0; i < 6; i++) {
         const u = ((i / 6 + m.ang / TAU) % 1 + 1) % 1 * 2 - 1;
-        const w = R * 0.2 * Math.sqrt(Math.max(0, 1 - u * u)) + 0.5;
+        const w = R * 0.085 * Math.sqrt(Math.max(0, 1 - u * u)) + 0.5;
         ctx.beginPath(); ctx.ellipse(u * R * 1.08, cy, w, R * 1.1, 0, 0, TAU); ctx.fill();
       }
       ctx.fillStyle = 'rgba(255,255,255,0.18)'; ctx.beginPath(); ctx.ellipse(-R * 0.35, cy - R * 0.45, R * 0.45, R * 0.25, -0.4, 0, TAU); ctx.fill();

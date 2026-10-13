@@ -12,7 +12,7 @@ export function drawDynamicTiles(ctx, room, camX, camY, time, style, player) {
       const x = tx * TILE, y = ty * TILE;
       switch (ch) {
         case '~': liquid(ctx, room, tx, ty, x, y, time, 'rgba(70,130,200,0.38)', 'rgba(170,220,255,0.75)', '~'); break;
-        case '!': liquid(ctx, room, tx, ty, x, y, time, 'rgba(60,20,70,0.72)', 'rgba(200,120,255,0.8)', '!'); break;
+        case '!': liquid(ctx, room, tx, ty, x, y, time, style.acid ? style.acid[0] : 'rgba(60,20,70,0.72)', style.acid ? style.acid[1] : 'rgba(200,120,255,0.8)', '!'); break;
         case 'W': updraft(ctx, x, y, tx, ty, time); break;
         case 'O': hook(ctx, x, y, time, player); break;
         case 'B': breakable(ctx, x, y, tx, ty, style, room); break;
