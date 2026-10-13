@@ -40,6 +40,13 @@ function openArena(room, A, G, x0) {
   return { x: l, y: top, w: r - l, h: G - top };
 }
 
+// Frame the arena during the fight (floor near the bottom of the screen, like a proper boss stage).
+function lockCamera(b, bottom) {
+  const room = b.game.room, A = b.arena;
+  const top = Math.max(0, A.y - 48);
+  b.game.camera.lockRect = { x: 0, y: top, w: room.pxW, h: Math.max(540, Math.min(room.pxH, bottom + 64) - top) };
+}
+
 function glow(ctx, x, y, r, rgb, a) {
   if (a <= 0 || r <= 0) return;
   ctx.save();
@@ -284,6 +291,9 @@ export class Gullet extends Boss {
   }
 
   // ---------- engine hooks ----------
+  onStart() { lockCamera(this, this.wet ? this.W + 96 : this.W); }
+  finish() { this.game.camera.lockRect = null; super.finish(); }
+
   update(dt) {
     this.dt = dt;
     super.update(dt);
@@ -881,6 +891,9 @@ export class BrineMatron extends Boss {
   }
 
   // ---------- engine hooks ----------
+  onStart() { lockCamera(this, this.groundY); }
+  finish() { this.game.camera.lockRect = null; super.finish(); }
+
   update(dt) {
     this.dt = dt;
     super.update(dt);

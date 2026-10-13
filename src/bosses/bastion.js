@@ -29,6 +29,13 @@ function openArena(room, A, G, x0) {
   return { x: l, y: top, w: r - l, h: G - top };
 }
 
+// Frame the arena during the fight (floor near the bottom of the screen, like a proper boss stage).
+function lockCamera(b, bottom) {
+  const room = b.game.room, A = b.arena;
+  const top = Math.max(0, A.y - 48);
+  b.game.camera.lockRect = { x: 0, y: top, w: room.pxW, h: Math.max(540, Math.min(room.pxH, bottom + 64) - top) };
+}
+
 function glow(ctx, x, y, r, rgb, a) {
   if (a <= 0 || r <= 0) return;
   ctx.save();
@@ -226,6 +233,9 @@ export class Gearwright extends Boss {
   }
 
   // ---------- engine hooks ----------
+  onStart() { lockCamera(this, this.G); }
+  finish() { this.game.camera.lockRect = null; super.finish(); }
+
   update(dt) {
     this.dt = dt;
     if (!this.prop && !this.dead) this.prop = this.game.add(new Backdrop(this.game, this));
@@ -907,6 +917,9 @@ export class AutomatonChoir extends Boss {
   get beat() { return [0.5, 0.44, 0.38][this.phase - 1]; }
   alive() { return this.singers.filter((s) => s.alive); }
   staffY(k) { return this.G - 14 - k * 58; }
+
+  onStart() { lockCamera(this, this.G); }
+  finish() { this.game.camera.lockRect = null; super.finish(); }
 
   update(dt) {
     this.dt = dt;

@@ -22,7 +22,7 @@ function parseTrack(str, isDrum, oct = 0) {
   return { events, length: toks.length };
 }
 
-function compile(song) {
+export function compile(song) {
   const pats = {};
   for (const [name, pat] of Object.entries(song.pat)) {
     let len = 0;
