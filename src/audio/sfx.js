@@ -134,6 +134,10 @@ export class SFX {
       case 'laser': this.osc('sawtooth', 900, 1100, t, 0.6, 0.06, { lp: 4000 }); this.noise(t, 0.6, 0.1, { f0: 6000, type: 'highpass' }); break;
       case 'warn': this.osc('square', 880, 880, t, 0.08, 0.05, { lp: 2000 }); this.osc('square', 880, 880, t + 0.12, 0.08, 0.05, { lp: 2000 }); break;
       case 'bell': e.note('bell', 55 + Math.floor(R(0, 3)) * 5, t, 2, 0.8, e.sfxBus, { vol: 0.3, rev: 0.7 }); break;
+      case 'iceCrack':
+        for (let i = 0; i < 4; i++) this.osc('square', R(2400, 4200), R(1200, 2000), t + i * 0.03, 0.08, 0.04, { lp: 6000, rev: 0.4 });
+        this.noise(t, 0.25, 0.25, { f0: 3000, f1: 1200, q: 2 }); break;
+      case 'freezeBreath': this.noise(t, 1.0, 0.25, { f0: 2500, f1: 6000, q: 0.5, a: 0.3, rev: 0.5 }); break;
       case 'splash': this.noise(t, 0.4, 0.25, { f0: 1200, f1: 300, type: 'lowpass' }); break;
       default: break;
     }

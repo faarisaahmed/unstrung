@@ -31,6 +31,35 @@ function limb(ctx, pts, white, c, lw = 5) {
   ctx.strokeStyle = col(white, INK); ctx.lineWidth = lw + 3; ctx.stroke();
   ctx.strokeStyle = col(white, c); ctx.lineWidth = lw; ctx.stroke();
 }
+// smooth tapered branch through points (Catmull-Rom), filled with an ink outline
+function branch(ctx, pts, w0, w1, fill, white, lw = 2.5) {
+  const sm = [];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(pts.length - 1, i + 2)];
+    for (let k = 0; k < 5; k++) {
+      const u = k / 5, u2 = u * u, u3 = u2 * u;
+      sm.push([
+        0.5 * (2 * p1[0] + (-p0[0] + p2[0]) * u + (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * u2 + (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * u3),
+        0.5 * (2 * p1[1] + (-p0[1] + p2[1]) * u + (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * u2 + (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * u3),
+      ]);
+    }
+  }
+  sm.push(pts[pts.length - 1]);
+  const L = [], R = [];
+  for (let i = 0; i < sm.length; i++) {
+    const a = sm[Math.max(0, i - 1)], b = sm[Math.min(sm.length - 1, i + 1)];
+    let nx = -(b[1] - a[1]), ny = b[0] - a[0];
+    const d = Math.hypot(nx, ny) || 1; nx /= d; ny /= d;
+    const w = (w0 + (w1 - w0) * (i / (sm.length - 1))) / 2;
+    L.push([sm[i][0] + nx * w, sm[i][1] + ny * w]); R.push([sm[i][0] - nx * w, sm[i][1] - ny * w]);
+  }
+  ctx.beginPath(); ctx.moveTo(L[0][0], L[0][1]);
+  for (const q of L) ctx.lineTo(q[0], q[1]);
+  for (let i = R.length - 1; i >= 0; i--) ctx.lineTo(R[i][0], R[i][1]);
+  ctx.closePath();
+  fillInk(ctx, fill, white, lw);
+  return sm;
+}
 const approach = (v, t, k) => v + (t - v) * k;
 
 // ---------------------------------------------------------------- projectile art
@@ -614,16 +643,16 @@ export class Gnash extends Boss {
       let fy = -Math.max(0, Math.sin(ph)) * 10;
       if (i === 2 && P.rear > 0.2) { fx = 92 + P.rear * 10; fy = -30 * P.rear - Math.sin(a * 12) * 8 * P.rear; }
       if (this.sink > 0) fy -= Math.sin(a * 20 + i) * 6 * this.sink;
-      const kx = (hip[0] + fx) / 2 + (i - 1) * 16, ky = -96 - (i === 1 ? 6 : 0) + Math.sin(ph) * 4;
-      limb(ctx, [hip, [kx, ky], [fx, fy]], white, far ? '#151a08' : '#323b16', far ? 4.5 : 6.5);
-      // knee spur
-      ctx.beginPath(); ctx.moveTo(kx, ky); ctx.lineTo(kx + 6, ky - 12); inkStroke(ctx, white, 2.5);
-      // hooked claw
-      ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(fx + (i === 0 ? -8 : 8), fy - 4);
-      inkStroke(ctx, white, 2.5);
-      if (!far && !white) {
-        ctx.fillStyle = '#6f7f2e'; ctx.beginPath(); ctx.arc(kx, ky, 3, 0, TAU); ctx.fill();
-      }
+      const kx = hip[0] + (fx - hip[0]) * 0.42 + (i - 1) * 10, ky = -98 - (i === 1 ? 8 : 0) + Math.sin(ph) * 4;
+      const c = far ? '#151a08' : '#323b16';
+      branch(ctx, [hip, [(hip[0] + kx) / 2, (hip[1] + ky) / 2 - 4], [kx, ky]], far ? 9 : 12, far ? 6 : 8, c, white, 2.2);
+      branch(ctx, [[kx, ky], [(kx + fx) / 2 + (fx > kx ? 4 : -4), (ky + fy) / 2], [fx, fy]], far ? 6 : 8, 2.5, c, white, 2.2);
+      // knee joint, tibia spines and hooked claw
+      ctx.beginPath(); ctx.arc(kx, ky, far ? 4 : 5, 0, TAU); fillInk(ctx, far ? '#20260d' : '#4b571f', white, 2);
+      ctx.beginPath();
+      for (const u of [0.35, 0.6]) { const sx = kx + (fx - kx) * u, sy = ky + (fy - ky) * u; ctx.moveTo(sx, sy); ctx.lineTo(sx + (fx > kx ? 7 : -7), sy - 4); }
+      ctx.moveTo(fx, fy); ctx.lineTo(fx + (i === 0 ? -9 : 9), fy - 5);
+      inkStroke(ctx, white, 2.2);
     }
     void moving;
   }
@@ -701,6 +730,31 @@ export class Gnash extends Boss {
     }
   }
 
+  drawMandibles(ctx, white, P) {
+    // mandibles
+    const open = 0.08 + P.mand * 0.62;
+    for (const s of [-1, 1]) {
+      ctx.save();
+      ctx.translate(80, -56);
+      ctx.rotate(0.12 + s * open);
+      ctx.beginPath();
+      ctx.moveTo(-4, -6 * s);
+      ctx.quadraticCurveTo(30, -24 * s, 56, 8 * s);
+      ctx.quadraticCurveTo(36, -1 * s, 18, 1 * s);
+      ctx.quadraticCurveTo(6, 3 * s, -4, 7 * s);
+      ctx.closePath();
+      fillInk(ctx, '#cfc6a2', white, 2.5);
+      if (!white) {
+        ctx.fillStyle = '#2c3414';
+        ctx.beginPath(); ctx.moveTo(-2, -4 * s); ctx.quadraticCurveTo(16, -12 * s, 26, -6 * s); ctx.quadraticCurveTo(14, -2 * s, -2, 4 * s); ctx.fill();
+      }
+      // serrated inner edge
+      ctx.beginPath(); ctx.moveTo(16, 1 * s); ctx.lineTo(21, 7 * s); ctx.lineTo(26, 1 * s); ctx.lineTo(32, 8 * s); ctx.lineTo(38, 3 * s);
+      inkStroke(ctx, white, 1.8);
+      ctx.restore();
+    }
+  }
+
   drawHead(ctx, white, a, t) {
     const P = this.pose;
     ctx.save();
@@ -729,28 +783,6 @@ export class Gnash extends Boss {
     ctx.moveTo(66, -98); ctx.bezierCurveTo(70, -146, 40, -168 - sway, 12, -160 - sway);
     inkStroke(ctx, white, 2.5);
     if (!white) { ctx.fillStyle = '#c7e04a'; for (const [x, y] of [[-22, -132 + sway], [12, -160 - sway]]) { ctx.beginPath(); ctx.arc(x, y, 3, 0, TAU); ctx.fill(); } }
-    // mandibles
-    const open = 0.08 + P.mand * 0.62;
-    for (const s of [-1, 1]) {
-      ctx.save();
-      ctx.translate(84, -64);
-      ctx.rotate(s * open);
-      ctx.beginPath();
-      ctx.moveTo(-4, -6 * s);
-      ctx.quadraticCurveTo(26, -20 * s, 48, 6 * s);
-      ctx.quadraticCurveTo(32, -1 * s, 18, 1 * s);
-      ctx.quadraticCurveTo(6, 3 * s, -4, 7 * s);
-      ctx.closePath();
-      fillInk(ctx, '#cfc6a2', white, 2.5);
-      if (!white) {
-        ctx.fillStyle = '#2c3414';
-        ctx.beginPath(); ctx.moveTo(-2, -4 * s); ctx.quadraticCurveTo(16, -12 * s, 26, -6 * s); ctx.quadraticCurveTo(14, -2 * s, -2, 4 * s); ctx.fill();
-      }
-      // serrated inner edge
-      ctx.beginPath(); ctx.moveTo(16, 1 * s); ctx.lineTo(21, 7 * s); ctx.lineTo(26, 1 * s); ctx.lineTo(32, 8 * s); ctx.lineTo(38, 3 * s);
-      inkStroke(ctx, white, 1.8);
-      ctx.restore();
-    }
     if (!white && P.throat > 0.05) glow(ctx, 92, -64, 40 * P.throat, '200,240,80', 0.6 * P.throat);
     // pale crown-mask
     const mx = 68, my = -78;
@@ -789,6 +821,7 @@ export class Gnash extends Boss {
         ctx.beginPath(); ctx.moveTo(mx - 16, my - 36); ctx.lineTo(mx - 12, my - 22); ctx.lineTo(mx - 18, my - 14); ctx.moveTo(mx - 6, my + 24); ctx.lineTo(mx - 2, my + 14); ctx.lineTo(mx - 8, my + 10); ctx.stroke();
       }
     }
+    this.drawMandibles(ctx, white, P);
     ctx.restore();
   }
 }

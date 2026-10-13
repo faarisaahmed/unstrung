@@ -311,8 +311,8 @@ export class Game {
         o.x = p.cx + Math.cos(o.a) * 42; o.y = p.cy + Math.sin(o.a) * 30;
         for (const e of this.entities) {
           if (!e.isEnemy || e.dead || !e.hittable) continue;
-          const hb = e.hurtbox ? e.hurtbox() : e.rect();
-          if (o.x > hb.x && o.x < hb.x + hb.w && o.y > hb.y && o.y < hb.y + hb.h) {
+          const hbs = e.hurtboxes ? e.hurtboxes() : [e.hurtbox ? e.hurtbox() : e.rect()];
+          if (hbs.some((hb) => hb && o.x > hb.x && o.x < hb.x + hb.w && o.y > hb.y && o.y < hb.y + hb.h)) {
             const last = o.hit.get(e) || 0;
             if (this.time - last > 0.6) { o.hit.set(e, this.time); e.hurt(4, Math.sign(e.cx - p.cx) || 1, 'spell'); }
           }
