@@ -51,8 +51,27 @@ export class Spindle extends Interactable {
     p.b.x = this.cx - p.b.w / 2; p.b.vx = 0;
     g.rest(this);
     g.fx.ring(this.cx, this.cy, 10, 70, 0.6, 'rgba(255,240,210,0.8)', 3);
+    // resting heals and saves; the Knot menu only opens if you ask for it (Inventory while resting)
     this.resting = true;
-    g.app.openBench(this);
+    g.restSpindle = this;
+    g.fx.text(this.cx, this.y - 40, 'Rested', '#efe6cf', 15);
+  }
+  update(dt) {
+    super.update(dt);
+    if (this.resting && !this.near()) { this.resting = false; if (this.game.restSpindle === this) this.game.restSpindle = null; }
+    this.prompt = this.resting ? 'E  Restring Knots' : 'Rest';
+  }
+  drawPrompt(ctx) {
+    if (!this.resting) return super.drawPrompt(ctx);
+    if (this.promptA < 0.02) return;
+    ctx.globalAlpha = this.promptA;
+    const x = this.cx, y = this.y - 26 + Math.sin(this.game.time * 3) * 2;
+    ctx.font = '13px "IM Fell English", Georgia, serif';
+    const w = ctx.measureText(this.prompt).width + 22;
+    ctx.fillStyle = 'rgba(8,8,12,0.7)'; ctx.fillRect(x - w / 2, y - 12, w, 22);
+    ctx.fillStyle = '#e8c98a'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(this.prompt, x, y);
+    ctx.globalAlpha = 1;
   }
   draw(ctx, t) {
     const x = this.cx, y = this.y + this.h;

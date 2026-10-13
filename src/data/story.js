@@ -106,7 +106,7 @@ export const TIPS = [
   'Hold Focus while rolling to Buff a Coat back. Rolling fast and Bonking wind up your Spin.',
   'When you fall, your Glints stay behind in a Tangle. Touch it to take them back.',
   'Die again before you reach your Tangle, and those Glints are gone for good.',
-  'Rest at a Spindle to heal, save, and tie on new Knots.',
+  'Rest at a Spindle to heal and save. While resting, press E to tie on new Knots.',
   'Cracked walls can be Bonked open. Many secrets are only one wall away.',
   'Mother Bobbin sells a Lantern. The deep catacombs are very dark without one.',
   'Bring Pale Tin to the Tinsmith. A polished shell Bonks harder.',

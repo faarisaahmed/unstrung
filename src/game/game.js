@@ -480,7 +480,13 @@ export class Game {
       const inp = this.input;
       if (inp.pressed('pause')) { inp.eatAll(); this.app.openPause(); return; }
       if (inp.pressed('map')) { inp.eatAll(); this.app.openMap(); return; }
-      if (inp.pressed('inventory')) { inp.eatAll(); this.app.openInventory(); return; }
+      if (inp.pressed('inventory')) {
+        inp.eatAll();
+        const rs = this.restSpindle;
+        if (rs && rs.resting && this.entities.includes(rs) && rs.near()) this.app.openBench(rs);
+        else this.app.openInventory();
+        return;
+      }
     }
     if (!p.dead) p.update(dt);
 

@@ -60,7 +60,7 @@ export class InventoryScreen {
         const id = KNOT_ORDER[s[1]];
         const kn = this.save.knots;
         if (!kn.owned.includes(id)) { sfx('deny'); return; }
-        if (!this.bench) { sfx('deny'); this.flashMsg = 'Knots can only be restrung at a Spindle.'; this.flashT = 1.6; return; }
+        if (!this.bench) { sfx('deny'); this.flashMsg = 'Rest at a Spindle, then press E to restring Knots.'; this.flashT = 1.6; return; }
         const i = kn.equipped.indexOf(id);
         if (i >= 0) { kn.equipped.splice(i, 1); sfx('menuClose'); }
         else if (this.usedNotches() + KNOTS[id].cost <= this.save.notches) { kn.equipped.push(id); sfx('confirm'); }
