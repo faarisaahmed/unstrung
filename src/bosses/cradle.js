@@ -1027,7 +1027,7 @@ export class HollowThread extends Boss {
     this.hd = -Math.PI / 2;        // heading
     this.sp = 0;                   // speed
     this.path = [];
-    this.nSeg = 30; this.gap = 15;
+    this.nSeg = 36; this.gap = 16;
     this.segs = [];
     this.hist = [];
     this.bindT = 0;
@@ -1349,8 +1349,8 @@ export class HollowThread extends Boss {
     this.sfx('screech'); this.sfx('bossRoar');
     this.fx.ring(this.cx, this.cy, 10, 600, 1.0, 'rgba(210,170,255,0.9)', 8);
     this.fx.burst(this.cx, this.cy, 40, { color: '#05030a', speed: 480, size: 5, life: 1.1, shape: 'shard', g: 0 });
-    if (n >= 3) { this.maskOpen = 1; this.nSeg = 38; this.speedMul *= 1.12; }
-    else { this.crack = 1; this.nSeg = 34; this.speedMul *= 1.08; }
+    if (n >= 3) { this.maskOpen = 1; this.crack = 1; this.nSeg = 46; this.speedMul *= 1.12; }
+    else { this.crack = 1; this.nSeg = 41; this.speedMul *= 1.08; }
     yield* this.frames(1.2, (k) => { this.hd += 0.25; this.setC(this.cx + Math.cos(this.hd) * 4, this.cy + Math.sin(this.hd) * 4); });
     this.harmless = false;
   }
@@ -1433,7 +1433,7 @@ export class HollowThread extends Boss {
     const N = pts.length;
     for (let i = N - 1; i > 0; i--) {
       const a = pts[i], b = pts[i - 1];
-      const w = 4 + 15 * (1 - i / N);
+      const w = 4 + 20 * (1 - i / N);
       ctx.strokeStyle = white ? '#fff' : '#05030a'; ctx.lineWidth = w; ctx.lineCap = 'round';
       ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
     }
@@ -1474,7 +1474,7 @@ export class HollowThread extends Boss {
     let d = a; while (d > Math.PI) d -= TAU; while (d < -Math.PI) d += TAU;
     const rot = clamp(d, -1.0, 1.0) * 0.45 + (lim ? 0.5 : 0);
     ctx.save();
-    ctx.translate(x, y); ctx.rotate(rot);
+    ctx.translate(x, y); ctx.rotate(rot); ctx.scale(1.3, 1.3);
     if (!white) glow(ctx, 0, 0, 80, this.maskOpen ? '255,255,255' : VOID, 0.35 + 0.25 * (this.maskFlash || 0));
     this.maskFlash = Math.max(0, (this.maskFlash || 0) - DT * 1.5);
     const split = this.maskOpen ? 7 + Math.sin(t * 6) * 2 : 0;

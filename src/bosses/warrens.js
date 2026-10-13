@@ -529,7 +529,7 @@ export class Gnash extends Boss {
   }
 
   bodyBox() {
-    if (this.sink > 0.5) return null;
+    if (this.sink > 0.5) return { x: -9999, y: -9999, w: 1, h: 1 }; // underground: nothing to hit
     return { x: this.x + 14, y: this.y + 14 + this.sink * this.h, w: this.w - 28, h: this.h - 14 };
   }
 
@@ -997,7 +997,7 @@ export class StingerCourt extends Boss {
     const atk = this.pickAttack(k);
     k.turnN++;
     yield* atk.call(this, k);
-    yield* this.drift(k, this.rand(0.45, 0.85) / (this.phase >= 3 ? 1.25 : 1) + (this.phase >= 2 ? 0.25 : 0));
+    yield* this.drift(k, this.rand(0.45, 0.85) + (this.phase >= 2 ? 0.3 : 0) + (this.phase >= 3 ? 0.4 : 0));
   }
 
   pickAttack(k) {
@@ -1313,7 +1313,7 @@ export class StingerCourt extends Boss {
 
   // ---------------- combat plumbing (several bodies, one life)
   hurtboxes() { return this.mode === 'fight' ? this.activeKnights().map((k) => this.kbox(k)) : []; }
-  hurtbox() { const a = this.activeKnights()[0]; return a ? this.kbox(a) : null; }
+  hurtbox() { const a = this.activeKnights()[0]; return a ? this.kbox(a) : { x: -9999, y: -9999, w: 1, h: 1 }; }
   hitboxes() { return [...this.knights.filter((k) => k.role === 'active').map((k) => this.kbox(k)), ...this.hits]; }
   onBonk(dmg, dir, p) {
     const ab = p.attackBox();

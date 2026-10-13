@@ -225,7 +225,7 @@ export class Gearwright extends Boss {
   corePos() { return { x: this.mx, y: this.shoulderY() + 98 * this.S }; }
   shoulderJoint(s) { return { x: this.mx + s * 206 * this.S, y: this.shoulderY() + 18 * this.S }; }
   homeOf(f) { return { x: this.mx + f.side * this.reach, y: this.G - 236 + Math.sin(this.anim * 1.8 + f.side) * 7 }; }
-  syncRect() { const sy = this.shoulderY(); this.x = this.mx - 120; this.y = sy - 90; this.w = 240; this.h = 260; }
+  syncRect() { const sy = this.shoulderY(); this.x = this.mx - 120; this.w = 240; this.h = 260; this.y = Math.min(sy - 90, this.G - 80 - this.h / 2); }
   fistBox(f, inset = 8) {
     const rotd = Math.abs(Math.sin(f.ang)) > 0.7;
     const w = (rotd ? f.h : f.w) - inset * 2, h = ((rotd ? f.w : f.h) * (rotd ? 1 : f.squash)) - inset * 2;
