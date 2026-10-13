@@ -2,7 +2,7 @@
 // reward entries are item specs passed to grantItem().
 export const BOSS_INFO = {
   gnarlknot: { name: 'Gnarlknot', epithet: 'The Tangled Warden', area: 'fray', hp: 150, reward: [{ item: 'notch' }] },
-  mossmother: { name: 'Mother Mossbug', epithet: 'Who Keeps the Hollow Warm', area: 'hollows', hp: 260, reward: [{ item: 'ability', id: 'sap' }] },
+  mossmother: { name: 'Grandmother Burr', epithet: 'Who Clings to Everything', area: 'hollows', hp: 260, reward: [{ item: 'ability', id: 'sap' }] },
   brassbeetle: { name: 'Brass Beetle', epithet: 'Bellmaker\'s Folly', area: 'hollows', hp: 320, optional: true, reward: [{ item: 'knot', id: 'hardshell' }] },
   petalmaw: { name: 'Petalmaw', epithet: 'The Hungry Bloom', area: 'gardens', hp: 380, reward: [{ item: 'ability', id: 'dash' }] },
   glassmoths: { name: 'Twin Glassmoths', epithet: 'Lumen & Lacuna', area: 'gardens', hp: 420, optional: true, reward: [{ item: 'knot', id: 'quickknot' }, { item: 'notch' }] },
@@ -10,8 +10,8 @@ export const BOSS_INFO = {
   ossuaryknight: { name: 'Ossuary Knight', epithet: 'Last of the Wax Guard', area: 'catacombs', hp: 560, optional: true, reward: [{ item: 'knot', id: 'heavyknot' }, { item: 'ore' }] },
   sporecap: { name: 'Sporecap Elder', epithet: 'The Softest Voice', area: 'hushwood', hp: 520, reward: [{ item: 'ability', id: 'glide' }] },
   hush: { name: 'Hush', epithet: 'The Owl Without a Sound', area: 'hushwood', hp: 600, optional: true, reward: [{ item: 'knot', id: 'firefly' }, { item: 'ring' }] },
-  gearwright: { name: 'Gearwright Colossus', epithet: 'Engine of the Bastion', area: 'bastion', hp: 700, reward: [{ item: 'ability', id: 'magnet' }] },
-  choir: { name: 'The Automaton Choir', epithet: 'Seven Voices, One Song', area: 'bastion', hp: 720, optional: true, reward: [{ item: 'knot', id: 'kinbeads' }, { item: 'notch' }] },
+  gearwright: { name: 'The Treadle Colossus', epithet: 'Who Sews Without Thread', area: 'bastion', hp: 700, reward: [{ item: 'ability', id: 'magnet' }] },
+  choir: { name: 'The Tin Choir', epithet: 'Seven Voices, One Song', area: 'bastion', hp: 720, optional: true, reward: [{ item: 'knot', id: 'kinbeads' }, { item: 'notch' }] },
   gullet: { name: 'Gullet', epithet: 'The Cistern Leviathan', area: 'cistern', hp: 800, reward: [{ item: 'ability', id: 'shell' }] },
   brinematron: { name: 'Brine Matron', epithet: 'Mother of Tides', area: 'cistern', hp: 820, optional: true, reward: [{ item: 'knot', id: 'deepmend' }, { item: 'bearing' }] },
   vitrius: { name: 'Vitrius', epithet: 'The Glassblower', area: 'kilns', hp: 950, reward: [{ item: 'ability', id: 'pound' }, { item: 'greatBead', id: 'kilns' }] },

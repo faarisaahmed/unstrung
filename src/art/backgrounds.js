@@ -526,31 +526,6 @@ function bell(ctx, R, x, y, s, color, P, o = {}) {
   ctx.restore();
   return h;
 }
-function gear(ctx, R, x, y, r, teeth, color, P, spokes = 5) {
-  const p = new Path2D(), pts = [], st = TAU / teeth, j = r * 0.012;
-  const rot = R() * TAU;
-  for (let i = 0; i < teeth; i++) {
-    const a = rot + i * st;
-    const rr = (q, f) => [x + Math.cos(a + st * q) * r * f + (R() - 0.5) * j, y + Math.sin(a + st * q) * r * f + (R() - 0.5) * j];
-    pts.push(rr(0, 1), rr(0.12, 1), rr(0.22, 1.13), rr(0.48, 1.13), rr(0.58, 1), rr(0.85, 1));
-  }
-  addWob(p, R, pts, 0.6, 14);
-  // spoked holes
-  const ri = r * 0.26, ro = r * 0.74, sw = r * 0.09;
-  for (let k = 0; k < spokes; k++) {
-    const a0 = rot + k * TAU / spokes, a1 = a0 + TAU / spokes;
-    const gi = sw / ri, go = sw / ro, hp = [];
-    for (let i = 0; i <= 8; i++) { const a = a0 + go + (a1 - a0 - 2 * go) * i / 8; hp.push([x + Math.cos(a) * ro, y + Math.sin(a) * ro]); }
-    for (let i = 8; i >= 0; i--) { const a = a0 + gi + (a1 - a0 - 2 * gi) * i / 8; hp.push([x + Math.cos(a) * ri, y + Math.sin(a) * ri]); }
-    addWob(p, R, hp, 0.8, 12);
-  }
-  p.moveTo(x + r * 0.08, y); p.arc(x, y, r * 0.08, 0, TAU);
-  fillShape(ctx, R, p, color, P, { rule: 'evenodd', box: [x - r, y - r, r * 2, r * 2], hatch: [0.8, 6], sw: r * 0.12 });
-  ctx.strokeStyle = P.line; ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.arc(x, y, r * 0.86, 0, TAU); ctx.stroke();
-  ctx.beginPath(); ctx.arc(x, y, r * 0.16, 0, TAU); ctx.stroke();
-  for (let k = 0; k < 10; k++) { const a = k * TAU / 10 + rot; ctx.fillStyle = P.rim; ctx.beginPath(); ctx.arc(x + Math.cos(a) * r * 0.8, y + Math.sin(a) * r * 0.8, 1.5 + r * 0.008, 0, TAU); ctx.fill(); }
-}
 // a two-faced crystal shard
 function shard(ctx, R, x, base, h, w, ang, cA, cB, edge) {
   ctx.save(); ctx.translate(x, base); ctx.rotate(ang);
@@ -1041,62 +1016,73 @@ const PAINTERS = {
     }
   },
 
-  // Cogwork Bastion: layered clockwork, pistons, pipes and girders.
-  gears(ctx, R, d, P) {
+  // The Pinworks: the guild's forge-ruin. Forests of colossal dressmaker pins and chained needles,
+  // all leaning toward the fallen lodestone; horseshoe magnets haloed in iron-filing field lines;
+  // tomato-pincushion mountains, cast-iron treadle frames and the orange breath of quench troughs.
+  pinworks(ctx, R, d, P) {
+    const fade = [0.6, 0.42, 0.74][d];
+    const red = mix('#c4372b', P.col, fade), silver = mix('#c9d2dc', P.col, fade + 0.06);
+    const heads = ['#b8392d', '#c98a45', '#5d7d9f', '#cfc8b8', '#b8392d'].map((c) => mix(c, P.col, fade + [0.12, 0.2, 0.08][d]));
+    const head = (r) => heads[Math.floor(r() * heads.length)];
+    const thread = mix('#c4372b', P.col, fade + 0.1);
+    const forge = (a) => `rgba(255,140,60,${(a * [0.55, 1, 0.8][d]).toFixed(3)})`;
+    const lean = (r) => 0.22 + (r() - 0.45) * 0.6; // the pull of the lodestone
     if (d === 0) {
-      for (const x of spread(R, 3)) at(ctx, R, x, 120, (r, x) => {
-        const w = 120 + r() * 80;
-        const p = wobPath(r, [[x - w / 2, H + 20], [x - w / 2 + 10, 100], [x - w / 2 - 10, 80], [x - w / 2 + 20, 40], [x + w / 2 - 20, 40], [x + w / 2 + 10, 80], [x + w / 2 - 10, 100], [x + w / 2, H + 20]], 2, 12);
-        fillShape(ctx, r, p, P.col, P, { box: [x - w, 0, w * 2, H], hatch: [Math.PI / 2, 9] });
-        ctx.save(); ctx.clip(p);
-        for (let yy = 140; yy < H; yy += 90) truss(ctx, r, x - w / 2, x + w / 2, yy, 70, P.line, 1.5);
-        ctx.restore();
+      for (let i = 0; i < 4; i++) at(ctx, R, R() * W, 340, (r, x) => glow(ctx, x, H - 140 - r() * 140, 280 + r() * 160, forge(0.09)));
+      // a great magnet hung in the haze, its field drawn out in filings
+      at(ctx, R, R() * W, 460, (r, x) => {
+        const y = 300 + r() * 80, s = 120, a = (r() - 0.5) * 0.3;
+        filings(ctx, r, magnetPoles(x, y, s, a), 440, P.rimA(0.16), 1.6);
+        chain(ctx, x + 30, -10, x + Math.sin(a) * s, y - Math.cos(a) * s, 16, P.col, 3);
+        magnet(ctx, r, x, y, s, a, P, red, silver);
       });
-      for (let i = 0; i < 5; i++) at(ctx, R, R() * W, 360, (r, x) => gear(ctx, r, x, 200 + r() * 600, 140 + r() * 200, 14 + Math.floor(r() * 14), P.col, P, 6));
+      // treadle ironwork looming in the haze: the stands the guild's machines once rode on
+      for (const x of spread(R, 2, 0.4)) at(ctx, R, x, 420, (r, x) => treadle(ctx, r, x, H - 110, 520 + r() * 120, P, P.col, red));
+      // pincushion mountains bristling with pins
+      for (const x of spread(R, 3, 0.5)) at(ctx, R, x, 480, (r, x) => pincushion(ctx, r, x, H - 100, 300 + r() * 140, 240 + r() * 120, P, mix(P.col, red, 0.25), head));
+      // the distant pin forest
+      for (let i = 0; i < 18; i++) at(ctx, R, R() * W, 160, (r, x) => pin(ctx, r, x, H - 90 - r() * 30, 280 + r() * 420, lean(r), 6 + r() * 4, 10 + r() * 6, P, P.col, head(r)));
+      for (let i = 0; i < 2; i++) at(ctx, R, R() * W, 260, (r, x) => hangNeedle(ctx, r, x, 160 + r() * 160, 360 + r() * 160, 0.2 + (r() - 0.5) * 0.4, 16, P, P.col, thread));
     } else if (d === 1) {
-      // interlocking gear trains
-      for (const x of spread(R, 3)) at(ctx, R, x, 320, (r, x) => {
-        let gx = x, gy = 260 + r() * 360, gr = 70 + r() * 90;
-        for (let k = 0; k < 3; k++) {
-          gear(ctx, r, gx, gy, gr, Math.max(8, Math.round(gr / 9)), P.col, P, 4 + Math.floor(r() * 3));
-          const nr = 40 + r() * 80, a = (r() - 0.5) * 2.2 + (r() < 0.5 ? 0 : Math.PI);
-          gx += Math.cos(a) * (gr + nr) * 1.02; gy += Math.sin(a) * (gr + nr) * 1.02; gr = nr;
-        }
-      });
-      // pistons
-      for (let i = 0; i < 3; i++) at(ctx, R, R() * W, 60, (r, x) => {
-        const top = 120 + r() * 200, hh = 180 + r() * 120, w = 46 + r() * 20;
-        for (const sg of [-1, 1]) wline(ctx, r, [[x + sg * w * 0.3, -10], [x + sg * w * 0.3, top]], P.col, 8);
-        truss(ctx, r, x - w * 0.45, x + w * 0.45, top - 60, 24, P.col, 2);
-        fillShape(ctx, r, wobPath(r, rectPts(x - w / 2, top, w, hh), 1, 8), P.col, P, { box: [x - w / 2, top, w, hh], hatch: [0, 8] });
-        for (let k = 0; k < 4; k++) { ctx.fillStyle = P.col; ctx.fillRect(x - w / 2 - 6, top + 10 + k * hh / 4, w + 12, 6); }
-        const rod = 140 + r() * 200;
-        wline(ctx, r, [[x, top + hh], [x, top + hh + rod]], P.col, 12);
-        ctx.strokeStyle = P.rim; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x - 3, top + hh); ctx.lineTo(x - 3, top + hh + rod); ctx.stroke();
-        fillShape(ctx, r, wobPath(r, rectPts(x - w * 0.7, top + hh + rod, w * 1.4, 30), 1, 8), P.col, P, {});
-      });
-      // pipes with elbows and flanges
-      for (let i = 0; i < 3; i++) at(ctx, R, R() * W, 360, (r, x) => pipe(ctx, r, x, P, 18 + r() * 12));
-      // catwalk
+      // magnets with their filing halos: one hung on a chain, one stood poles-up on the floor
       at(ctx, R, R() * W, 420, (r, x) => {
-        const y = 600 + r() * 120;
-        truss(ctx, r, x - 400, x + 400, y, 40, P.col, 3);
-        ctx.strokeStyle = P.col; ctx.lineWidth = 2; ctx.beginPath();
-        for (let xx = x - 400; xx <= x + 400; xx += 40) { ctx.moveTo(xx, y); ctx.lineTo(xx, y - 40); }
-        ctx.moveTo(x - 400, y - 40); ctx.lineTo(x + 400, y - 40); ctx.stroke();
-        for (let k = 0; k < 2; k++) { const lx = x - 300 + k * 600; glow(ctx, lx, y - 60, 50, P.acc(0.2)); ctx.fillStyle = P.acc(0.6); ctx.beginPath(); ctx.arc(lx, y - 60, 5, 0, TAU); ctx.fill(); }
+        const y = 200 + r() * 120, s = 82 + r() * 20, a = (r() - 0.5) * 0.5;
+        filings(ctx, r, magnetPoles(x, y, s, a), 340, P.rimA(0.34), 1.5);
+        chain(ctx, x - 20, -10, x + Math.sin(a) * s, y - Math.cos(a) * s, 14, P.col, 3);
+        magnet(ctx, r, x, y, s, a, P, red, silver);
       });
+      at(ctx, R, R() * W, 360, (r, x) => {
+        const s = 64 + r() * 14, y = H - 125 - s;
+        filings(ctx, r, magnetPoles(x, y, s, Math.PI), 280, P.rimA(0.32), 1.4);
+        magnet(ctx, r, x, y, s, Math.PI, P, red, silver);
+      });
+      // chained needles threaded with red
+      for (let i = 0; i < 3; i++) at(ctx, R, R() * W, 260, (r, x) => hangNeedle(ctx, r, x, 170 + r() * 260, 280 + r() * 180, 0.15 + (r() - 0.5) * 0.6, 18, P, P.col, thread));
+      // coils of wire hung to temper
+      for (let i = 0; i < 3; i++) at(ctx, R, R() * W, 60, (r, x) => coil(ctx, r, x, 60 + r() * 60, 18 + r() * 14, 140 + r() * 200, 8 + Math.floor(r() * 7), P.col, P));
+      // groves of pins stuck into the floor
+      for (let i = 0; i < 6; i++) at(ctx, R, R() * W, 200, (r, x) => {
+        const n = 2 + Math.floor(r() * 3);
+        for (let k = 0; k < n; k++) pin(ctx, r, x + (r() - 0.5) * 140, H - 140 + r() * 20, 180 + r() * 300, lean(r), 6 + r() * 4, 8 + r() * 5, P, P.col, head(r));
+      });
+      // quench troughs breathing forge light
+      for (let i = 0; i < 2; i++) at(ctx, R, R() * W, 200, (r, x) => trough(ctx, r, x, H - 140, 150 + r() * 80, P, P.col, forge));
+      for (let i = 0; i < 2; i++) at(ctx, R, R() * W, 120, (r, x) => anvil(ctx, r, x, H - 140, 80 + r() * 30, P, P.col));
+      for (let i = 0; i < 46; i++) at(ctx, R, R() * W, 10, (r, x) => { ctx.fillStyle = forge(0.45 + r() * 0.4); ctx.fillRect(x, H - 160 - r() * 600, 2, 2); });
     } else {
-      at(ctx, R, R() * W, 360, (r, x) => gear(ctx, r, x, H - 80, 300, 30, P.col, P, 6));
-      for (let i = 0; i < 3; i++) at(ctx, R, R() * W, 50, (r, x) => {
-        wline(ctx, r, [[x, -10], [x, 260 + r() * 300]], P.col, 26);
-        ctx.strokeStyle = P.rim; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x - 9, 0); ctx.lineTo(x - 9, 400); ctx.stroke();
-        for (let k = 0; k < 3; k++) { ctx.fillStyle = P.col; ctx.fillRect(x - 20, 80 + k * 110, 40, 12); }
-      });
+      // near: a few colossal dark pins and a needle swinging close to the eye
+      for (let i = 0; i < 2; i++) at(ctx, R, R() * W, 220, (r, x) => pin(ctx, r, x, H - 80, 420 + r() * 200, lean(r) * 0.6, 14 + r() * 6, 24 + r() * 10, P, P.col, head(r)));
+      at(ctx, R, R() * W, 380, (r, x) => hangNeedle(ctx, r, x, 120 + r() * 120, 640, 0.25, 22, P, P.col, thread));
+      for (let i = 0; i < 2; i++) at(ctx, R, R() * W, 60, (r, x) => coil(ctx, r, x, -10, 26, 220 + r() * 160, 9, P.col, P));
       for (let i = 0; i < 3; i++) at(ctx, R, R() * W, 40, (r, x) => {
-        const y = 200 + r() * 260;
+        const y = 160 + r() * 260;
         chain(ctx, x, -10, x, y, 22, P.col, 5);
         ctx.strokeStyle = P.col; ctx.lineWidth = 9; ctx.beginPath(); ctx.arc(x + 14, y + 20, 18, Math.PI * 0.95, Math.PI * 0.1, true); ctx.stroke();
+      });
+      at(ctx, R, R() * W, 200, (r, x) => trough(ctx, r, x, H - 90, 240, P, P.col, forge));
+      // filings bristling up off the floor toward the pull
+      for (let i = 0; i < 16; i++) at(ctx, R, R() * W, 60, (r, x) => {
+        for (let k = 0; k < 14; k++) { const a = 0.3 + (r() - 0.5) * 0.7, l = 10 + r() * 34, bx = x + (r() - 0.5) * 80; wline(ctx, r, [[bx, H - 70], [bx + Math.sin(a) * l, H - 70 - Math.cos(a) * l]], P.col, 2 + r() * 2); }
       });
     }
   },
@@ -1856,28 +1842,232 @@ function shroom(ctx, R, x, base, h, w, P, color, detail) {
     for (let k = 0; k < 4; k++) { const dx = tx + (R() - 0.5) * cw * 1.6, len = 20 + R() * h * 0.3; wline(ctx, R, [[dx, gy], [dx, gy + len]], P.line, 1); glow(ctx, dx, gy + len, 8, P.acc(0.4)); }
   }
 }
-function pipe(ctx, R, x, P, w) {
-  const pts = [[x, -20]];
-  let cx = x, cy = 100 + R() * 300;
-  pts.push([cx, cy]);
-  for (let k = 0; k < 3; k++) {
-    if (k % 2 === 0) cx += (R() < 0.5 ? -1 : 1) * (100 + R() * 220); else cy += 100 + R() * 250;
-    pts.push([cx, cy]);
-  }
-  pts.push([cx, H + 20]);
-  ctx.strokeStyle = P.col; ctx.lineWidth = w; ctx.lineJoin = 'round';
-  ctx.stroke(wobPath(R, pts, 0.8, 12, false));
-  ctx.save(); ctx.translate(-w * 0.25, -w * 0.25); ctx.strokeStyle = P.rim; ctx.lineWidth = 1.5; ctx.stroke(wobPath(R, pts, 0.8, 12, false)); ctx.restore();
-  // flanges
-  ctx.fillStyle = P.col;
-  for (let i = 0; i < pts.length - 1; i++) {
-    const [ax, ay] = pts[i], [bx, by] = pts[i + 1], L = Math.hypot(bx - ax, by - ay);
-    for (let s = 60; s < L - 20; s += 90 + R() * 80) {
-      const t = s / L, fx = ax + (bx - ax) * t, fy = ay + (by - ay) * t;
-      if (ax === bx) ctx.fillRect(fx - w * 0.75, fy - 4, w * 1.5, 8); else ctx.fillRect(fx - 4, fy - w * 0.75, 8, w * 1.5);
+// ---- Pinworks props ----
+// a dressmaker pin stuck point-first into the ground, glass head up. ang leans it (0 = upright).
+function pin(ctx, R, x, base, len, ang, w, hr, P, color, headCol) {
+  ctx.save(); ctx.translate(x, base); ctx.rotate(ang);
+  const shaft = wobPath(R, [[-w * 0.5, -len], [w * 0.5, -len], [w * 0.42, 40], [0, 80], [-w * 0.42, 40]], 0.7, 16);
+  fillShape(ctx, R, shaft, color, P, { box: [-w, -len, w * 2, len + 80], shade: false, rx: -w * 0.22, ry: 0, rw: Math.max(1.2, w * 0.2), mottleN: 4 });
+  ctx.strokeStyle = P.ink; ctx.lineWidth = Math.max(1, w * 0.18);
+  ctx.beginPath(); ctx.moveTo(w * 0.32, -len); ctx.lineTo(w * 0.28, 40); ctx.stroke();
+  const hy = -len - hr * 0.8;
+  ctx.restore();
+  // the head is drawn unrotated so its light stays top-left
+  const hx = x + Math.sin(ang) * -hy, hyw = base + Math.cos(ang) * hy;
+  glassBead(ctx, hx, hyw, hr, headCol, P);
+}
+function glassBead(ctx, x, y, r, col, P) {
+  ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+  ctx.save(); ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.clip();
+  ctx.fillStyle = 'rgba(0,0,0,0.32)'; ctx.beginPath(); ctx.arc(x + r * 0.45, y + r * 0.5, r * 1.05, 0, TAU); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.08)'; ctx.beginPath(); ctx.arc(x + r * 0.35, y + r * 0.55, r * 0.35, 0, TAU); ctx.fill();
+  ctx.restore();
+  ctx.fillStyle = 'rgba(255,255,255,' + [0.16, 0.38, 0.2][P.d] + ')';
+  ctx.beginPath(); ctx.ellipse(x - r * 0.38, y - r * 0.4, r * 0.3, r * 0.17, -0.7, 0, TAU); ctx.fill();
+  ctx.strokeStyle = P.ink; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.stroke();
+}
+// horseshoe magnet: arch at (x,y), legs of length 1.15s run "down" (rotated by ang)
+function magnetPoles(x, y, s, ang) {
+  const L = s * 1.15, c = Math.cos(ang), sn = Math.sin(ang);
+  const w = (lx, ly) => [x + lx * c - ly * sn, y + lx * sn + ly * c];
+  return [[...w(-0.75 * s, L), 1], [...w(0.75 * s, L), -1]];
+}
+function magnet(ctx, R, x, y, s, ang, P, red, silver) {
+  const L = s * 1.15, ri = s * 0.5;
+  ctx.save(); ctx.translate(x, y); ctx.rotate(ang);
+  const pts = [[-s, L], [-s, 0]];
+  for (let k = 1; k < 18; k++) { const a = Math.PI + k / 18 * Math.PI; pts.push([Math.cos(a) * s, Math.sin(a) * s]); }
+  pts.push([s, 0], [s, L], [ri, L], [ri, 0]);
+  for (let k = 17; k >= 1; k--) { const a = Math.PI + k / 18 * Math.PI; pts.push([Math.cos(a) * ri, Math.sin(a) * ri]); }
+  pts.push([-ri, 0], [-ri, L]);
+  const p = wobPath(R, pts, 1.1, 10);
+  fillShape(ctx, R, p, red, P, { box: [-s, -s, s * 2, s + L], hatch: [0.9, 7], sw: s * 0.14, sx: 0, sy: -s * 0.06, rimCol: 'rgba(255,190,170,' + [0.12, 0.3, 0.12][P.d] + ')' });
+  ctx.save(); ctx.clip(p);
+  const ty = L - s * 0.4;
+  ctx.fillStyle = silver; ctx.fillRect(-s - 4, ty, s * 2 + 8, s * 0.5);
+  ctx.fillStyle = 'rgba(255,255,255,' + [0.1, 0.3, 0.12][P.d] + ')';
+  for (const lx of [-s, ri]) ctx.fillRect(lx + s * 0.07, ty + 3, s * 0.08, s * 0.34);
+  ctx.strokeStyle = P.ink; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-s, ty); ctx.lineTo(s, ty); ctx.stroke();
+  // a soft sheen sweeping round the crown
+  ctx.strokeStyle = 'rgba(255,220,200,' + [0.05, 0.13, 0.05][P.d] + ')'; ctx.lineWidth = s * 0.12;
+  ctx.beginPath(); ctx.arc(0, 0, s * 0.8, Math.PI * 1.12, Math.PI * 1.5); ctx.stroke();
+  ctx.restore();
+  ctx.strokeStyle = P.ink; ctx.lineWidth = 2; ctx.stroke(p);
+  ctx.restore();
+}
+// iron filings combed into the field lines of a pair of poles: traced lines broken into short
+// hairs, plus loose filings scattered thickest near the poles. Alpha fades out to radius rad.
+function filings(ctx, R, poles, rad, color, lw = 1.3) {
+  const [N, S] = poles, cx = (N[0] + S[0]) / 2, cy = (N[1] + S[1]) / 2;
+  const field = (x, y) => {
+    let ex = 0, ey = 0;
+    for (const [px, py, q] of poles) { const dx = x - px, dy = y - py, r2 = dx * dx + dy * dy + 60, r3 = r2 * Math.sqrt(r2); ex += q * dx / r3; ey += q * dy / r3; }
+    const l = Math.hypot(ex, ey) || 1; return [ex / l, ey / l];
+  };
+  const base = ctx.globalAlpha;
+  ctx.strokeStyle = color; ctx.lineCap = 'round';
+  const dash = (x, y, fx, fy, l) => {
+    const f = Math.max(0, 1 - Math.hypot(x - cx, y - cy) / rad);
+    if (f <= 0) return;
+    ctx.globalAlpha = base * Math.min(1, f * 1.6);
+    ctx.beginPath(); ctx.moveTo(x - fx * l * 0.5, y - fy * l * 0.5); ctx.lineTo(x + fx * l * 0.5, y + fy * l * 0.5); ctx.stroke();
+  };
+  ctx.lineWidth = lw;
+  const n = 30;
+  for (let i = 0; i < n; i++) {
+    const a = (i + R() * 0.6) / n * TAU;
+    let x = N[0] + Math.cos(a) * 10, y = N[1] + Math.sin(a) * 10, run = 0;
+    for (let s = 0; s < 700; s++) {
+      const [fx, fy] = field(x, y);
+      run += 3;
+      if (run > 5 + R() * 4) { run = 0; dash(x + (R() - 0.5) * 2, y + (R() - 0.5) * 2, fx + (R() - 0.5) * 0.25, fy + (R() - 0.5) * 0.25, 3 + R() * 4); }
+      x += fx * 3; y += fy * 3;
+      if (Math.hypot(x - S[0], y - S[1]) < 10 || Math.hypot(x - cx, y - cy) > rad) break;
     }
   }
-  if (R() < 0.5) { const [vx, vy] = pts[2]; ctx.strokeStyle = P.col; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(vx, vy - w * 1.4, w * 0.6, 0, TAU); ctx.moveTo(vx, vy); ctx.lineTo(vx, vy - w * 0.8); ctx.stroke(); }
+  ctx.lineWidth = lw * 0.8;
+  for (let i = 0; i < 900; i++) {
+    const a = R() * TAU, rr = Math.pow(R(), 0.8) * rad, x = cx + Math.cos(a) * rr, y = cy + Math.sin(a) * rr;
+    const dm = Math.min(Math.hypot(x - N[0], y - N[1]), Math.hypot(x - S[0], y - S[1]));
+    if (R() > Math.exp(-dm / (rad * 0.3))) continue;
+    const [fx, fy] = field(x, y);
+    dash(x, y, fx, fy, 2 + R() * 4);
+  }
+  ctx.globalAlpha = base;
+}
+// a tomato pincushion the size of a hill, pins driven in all over it
+function pincushion(ctx, R, x, base, w, h, P, color, head) {
+  const k = 6 + Math.floor(R() * 2), pts = [];
+  for (let i = 0; i <= 48; i++) {
+    const a = Math.PI + i / 48 * Math.PI, m = Math.abs(Math.sin((a - Math.PI) * k));
+    const rr = 0.93 + 0.07 * Math.sqrt(m);
+    pts.push([x + Math.cos(a) * w * rr, base + Math.sin(a) * h * rr]);
+  }
+  pts.push([x + w, base + 200], [x - w, base + 200]);
+  // pins first, so the cushion swallows their points
+  const np = 9 + Math.floor(R() * 6);
+  for (let i = 0; i < np; i++) {
+    const a = Math.PI * 1.08 + R() * Math.PI * 0.84, px = x + Math.cos(a) * w * 0.86, py = base + Math.sin(a) * h * 0.86;
+    pin(ctx, R, px, py, h * (0.35 + R() * 0.3), a + Math.PI / 2 + (R() - 0.5) * 0.5 + 0.15, 5 + R() * 3, 9 + R() * 6, P, P.col, head(R));
+  }
+  const p = wobPath(R, pts, 2, 12);
+  fillShape(ctx, R, p, color, P, { box: [x - w, base - h, w * 2, h + 200], hatch: [1.3, 9], mottleN: 18, sw: 30, sy: -16 });
+  // creases between the lobes, curving like meridians
+  ctx.save(); ctx.clip(p);
+  for (let j = 1; j < k; j++) {
+    const c = Math.cos(Math.PI - j * Math.PI / k), tx = x, ty = base - h * 0.95;
+    const ex = x + c * w * 0.98, ey = base + 10, mx = x + c * w * 1.12, my = base - h * 0.75;
+    wline(ctx, R, qpts(tx, ty, mx, my, ex, ey, 16), P.ink, 6);
+    wline(ctx, R, qpts(tx + 4, ty + 4, mx + 8, my, ex + 8, ey, 16), P.rimA(0.05 + P.d * 0.02), 3);
+  }
+  ctx.restore();
+  // the felt calyx on the crown
+  for (let j = 0; j < 6; j++) {
+    const a = j / 6 * TAU + R() * 0.3, l = w * (0.18 + R() * 0.08);
+    ribbon(ctx, R, qpts(x, base - h * 0.98, x + Math.cos(a) * l * 0.6, base - h - 8, x + Math.cos(a) * l, base - h * 0.98 + Math.sin(a) * l * 0.25 + 6, 10), 14, 1, P.dark);
+  }
+  ribbon(ctx, R, qpts(x, base - h, x + 6, base - h - 30, x + 20, base - h - 44, 8), 8, 4, P.dark);
+}
+// a needle slung on two chains, red thread hanging from its eye. The eye end is at -len/2.
+function hangNeedle(ctx, R, x, y, len, ang, w, P, color, thread) {
+  const c = Math.cos(ang), s = Math.sin(ang), at2 = (t) => [x + c * len * t, y + s * len * t];
+  for (const t of [-0.28, 0.24]) { const [cx, cy] = at2(t); chain(ctx, cx - 60 + R() * 40, -10, cx, cy - w * 0.4, 10 + P.d * 4, color, 2 + P.d); }
+  ctx.save(); ctx.translate(x, y); ctx.rotate(ang);
+  const p = new Path2D();
+  addWob(p, R, [[-len / 2 + w * 0.3, -w * 0.5], [len * 0.25, -w * 0.48], [len / 2, 0], [len * 0.25, w * 0.48], [-len / 2 + w * 0.3, w * 0.5], [-len / 2 - w * 0.25, w * 0.2], [-len / 2 - w * 0.25, -w * 0.2]], 0.8, 14);
+  const eye = -len / 2 + w * 1.7;
+  p.moveTo(eye + w, 0); p.ellipse(eye, 0, w, w * 0.16, 0, 0, TAU);
+  fillShape(ctx, R, p, color, P, { rule: 'evenodd', box: [-len / 2 - w, -w, len + w, w * 2], hatch: [0.02, 5], shade: false, rx: 0, ry: -w * 0.18, rw: Math.max(1.5, w * 0.18) });
+  ctx.strokeStyle = P.ink; ctx.lineWidth = Math.max(1.5, w * 0.2); ctx.beginPath(); ctx.moveTo(-len / 2, w * 0.3); ctx.lineTo(len * 0.3, w * 0.3); ctx.stroke();
+  ctx.restore();
+  const ex = x + c * eye, ey = y + s * eye;
+  const tw = [2, 3, 5][P.d];
+  ribbon(ctx, R, qpts(ex, ey, ex - 20, ey + 60, ex - 10 + (R() - 0.5) * 50, ey + 110 + R() * 80, 12), tw, tw * 0.5, thread);
+  const tx = ex - 120 - R() * 200;
+  ribbon(ctx, R, sag(ex, ey, tx, ey + 160 + R() * 200, 80 + R() * 60, 22), tw, tw * 0.4, thread);
+}
+// a hanging coil of wire
+function coil(ctx, R, x, y0, r, len, turns, color, P) {
+  const N = turns * 24, pts = [];
+  for (let i = 0; i <= N; i++) { const t = i / N, a = t * turns * TAU; pts.push([x + Math.cos(a) * r, y0 + 30 + t * len + Math.sin(a) * r * 0.32]); }
+  wline(ctx, R, [[x, y0], [x, y0 + 30 - r * 0.3]], color, 3);
+  ctx.strokeStyle = color; ctx.lineWidth = 3 + P.d * 1.5; ctx.beginPath(); pts.forEach((q, i) => (i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]))); ctx.stroke();
+  ctx.strokeStyle = P.rimA(0.08 + P.d * 0.05); ctx.lineWidth = 1.2;
+  for (let i = 0; i < N; i++) { const a = i / N * turns * TAU; if (Math.sin(a) > 0.2 && Math.cos(a) < 0) { ctx.beginPath(); ctx.moveTo(pts[i][0], pts[i][1] - 1); ctx.lineTo(pts[i + 1][0], pts[i + 1][1] - 1); ctx.stroke(); } }
+  const [lx, ly] = pts[N];
+  wline(ctx, R, qpts(lx, ly, lx + 30, ly + 40, lx + (R() - 0.5) * 60, ly + 80 + R() * 80, 10), color, 2.5);
+}
+// a cast-iron treadle stand: lattice legs, spoked handwheel, treadle plate, and the machine's arm
+function treadle(ctx, R, x, base, s, P, color, red) {
+  const legs = [x - s * 0.5, x + s * 0.42], ty = base - s * 0.92;
+  const fil = mix(color, P.style.rim, 0.06);
+  for (const lx of legs) {
+    const p = new Path2D();
+    addWob(p, R, [[lx - s * 0.2, base + 30], [lx - s * 0.2, base - s * 0.04], [lx - s * 0.08, base - s * 0.12], [lx - s * 0.07, ty], [lx + s * 0.07, ty], [lx + s * 0.08, base - s * 0.12], [lx + s * 0.2, base - s * 0.04], [lx + s * 0.2, base + 30]], 1, 12);
+    const win = [[lx - s * 0.11, base - s * 0.1], [lx - s * 0.04, ty + s * 0.08], [lx + s * 0.04, ty + s * 0.08], [lx + s * 0.11, base - s * 0.1]];
+    addWob(p, R, win, 0.8, 10);
+    fillShape(ctx, R, p, color, P, { rule: 'evenodd', box: [lx - s * 0.2, ty, s * 0.4, s], sw: 8 });
+    // lattice and scroll rings in the window
+    const wp = wobPath(R, win, 0.8, 10);
+    ctx.save(); ctx.clip(wp);
+    ctx.strokeStyle = fil; ctx.lineWidth = Math.max(2, s * 0.012);
+    ctx.beginPath();
+    for (let o = -s; o < s; o += s * 0.07) { ctx.moveTo(lx + o, base); ctx.lineTo(lx + o + s * 0.5, base - s); ctx.moveTo(lx + o, base); ctx.lineTo(lx + o - s * 0.5, base - s); }
+    ctx.stroke();
+    for (let k = 0; k < 4; k++) { ctx.lineWidth = Math.max(2, s * 0.014); ctx.beginPath(); ctx.arc(lx, base - s * (0.22 + k * 0.17), s * 0.04, 0, TAU); ctx.stroke(); }
+    ctx.restore();
+  }
+  // stretcher, table plank (cracked and tilted), and the treadle plate
+  wline(ctx, R, [[legs[0], base - s * 0.42], [legs[1], base - s * 0.42]], color, s * 0.025);
+  ctx.save(); ctx.translate(x, ty); ctx.rotate(-0.04 + (R() - 0.5) * 0.04);
+  fillShape(ctx, R, wobPath(R, rectPts(-s * 0.78, -s * 0.06, s * 1.5, s * 0.06), 1, 10), color, P, { box: [-s * 0.8, -s * 0.07, s * 1.6, s * 0.08], hatch: [0.02, 5], sw: 6, sy: -4 });
+  ctx.restore();
+  const plate = wobPath(R, [[x - s * 0.36, base - s * 0.06], [x + s * 0.26, base - s * 0.14], [x + s * 0.28, base - s * 0.09], [x - s * 0.34, base - s * 0.01]], 0.8, 10);
+  fillShape(ctx, R, plate, color, P, { box: [x - s * 0.4, base - s * 0.16, s * 0.7, s * 0.16], hatch: [0.8, 5], sw: 4 });
+  // handwheel: a flywheel with curved spokes (no teeth)
+  const wx = legs[1] + s * 0.2, wy = base - s * 0.5, wr = s * 0.27;
+  ctx.strokeStyle = color; ctx.lineWidth = s * 0.035; ctx.beginPath(); ctx.arc(wx, wy, wr, 0, TAU); ctx.stroke();
+  ctx.strokeStyle = P.rim; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(wx, wy, wr - s * 0.012, Math.PI * 1.05, Math.PI * 1.6); ctx.stroke();
+  const rot = R() * TAU;
+  for (let k = 0; k < 5; k++) {
+    const a = rot + k * TAU / 5, b = a + 0.5;
+    ribbon(ctx, R, qpts(wx + Math.cos(a) * wr * 0.15, wy + Math.sin(a) * wr * 0.15, wx + Math.cos(a + 0.45) * wr * 0.6, wy + Math.sin(a + 0.45) * wr * 0.6, wx + Math.cos(b) * wr, wy + Math.sin(b) * wr, 10), s * 0.03, s * 0.016, color);
+  }
+  ctx.fillStyle = color; ctx.beginPath(); ctx.arc(wx, wy, s * 0.045, 0, TAU); ctx.fill();
+  ctx.fillStyle = P.rim; ctx.beginPath(); ctx.arc(wx - 2, wy - 2, s * 0.012, 0, TAU); ctx.fill();
+  // pitman rod from the plate to the wheel's crank, and the drive belt up to the table
+  wline(ctx, R, [[x + s * 0.24, base - s * 0.12], [wx + wr * 0.35, wy + wr * 0.3]], color, s * 0.016);
+  wline(ctx, R, [[wx - wr * 0.9, wy - wr * 0.3], [x + s * 0.3, ty - s * 0.2]], color, 2.5);
+  // the machine's arm on the table, its needle bar still down
+  const ay = ty - s * 0.06;
+  const arm = wobPath(R, [[x + s * 0.34, ay], [x + s * 0.34, ay - s * 0.42], [x + s * 0.28, ay - s * 0.48], [x - s * 0.36, ay - s * 0.46], [x - s * 0.42, ay - s * 0.4], [x - s * 0.42, ay - s * 0.27], [x - s * 0.32, ay - s * 0.24], [x + s * 0.12, ay - s * 0.3], [x + s * 0.16, ay - s * 0.08], [x + s * 0.2, ay]], 1.2, 12);
+  fillShape(ctx, R, arm, color, P, { box: [x - s * 0.45, ay - s * 0.5, s * 0.85, s * 0.5], hatch: [0.1, 6], sw: 12 });
+  // a faded red guild-stripe along the arm
+  ctx.save(); ctx.clip(arm); ctx.strokeStyle = rgba(mix(red, color, 0.3), 0.7); ctx.lineWidth = s * 0.014;
+  ctx.beginPath(); ctx.moveTo(x - s * 0.38, ay - s * 0.36); ctx.lineTo(x + s * 0.28, ay - s * 0.39); ctx.stroke(); ctx.restore();
+  wline(ctx, R, [[x - s * 0.37, ay - s * 0.26], [x - s * 0.37, ay - s * 0.08]], color, s * 0.022);
+  wline(ctx, R, [[x - s * 0.37, ay - s * 0.08], [x - s * 0.37, ay - s * 0.01]], P.rim, 1.5);
+}
+// a quench trough breathing forge light and steam
+function trough(ctx, R, x, base, w, P, color, forge) {
+  const h = w * 0.32;
+  glow(ctx, x, base - h, w * 1.1, forge(0.28));
+  for (let k = 0; k < 4; k++) ribbon(ctx, R, qpts(x - w * 0.3 + R() * w * 0.6, base - h, x + (R() - 0.5) * 80, base - h - 120, x + (R() - 0.5) * 140, base - h - 220 - R() * 140, 14), 10 + R() * 12, 30, P.rimA(0.025 + P.d * 0.01), 0.6);
+  const p = wobPath(R, [[x - w / 2, base - h], [x + w / 2, base - h], [x + w / 2 - 10, base + 30], [x - w / 2 + 10, base + 30]], 1, 10);
+  fillShape(ctx, R, p, color, P, { box: [x - w / 2, base - h, w, h + 30], hatch: [0.05, 6], sw: 8 });
+  ctx.fillStyle = P.rim;
+  for (let k = 0; k < 6; k++) { ctx.beginPath(); ctx.arc(x - w / 2 + 10 + k * (w - 20) / 5, base - h + 9, 2.2, 0, TAU); ctx.fill(); }
+  ctx.fillStyle = forge(0.85); ctx.beginPath(); ctx.ellipse(x, base - h + 1, w / 2 - 6, 4, 0, 0, TAU); ctx.fill();
+  ctx.fillStyle = 'rgba(255,230,170,' + [0.3, 0.7, 0.5][P.d] + ')'; ctx.fillRect(x - w * 0.3, base - h, w * 0.5, 1.5);
+  // tongs leaning on the rim
+  wline(ctx, R, [[x + w / 2 - 20, base - h - 50], [x + w / 2 + 14, base + 10]], color, 4);
+  wline(ctx, R, [[x + w / 2 - 6, base - h - 52], [x + w / 2 + 6, base + 10]], color, 4);
+}
+function anvil(ctx, R, x, base, s, P, color) {
+  const q = [[-0.4, 0.4], [0.4, 0.4], [0.32, 0.1], [0.18, 0.02], [0.18, -0.3], [0.5, -0.34], [0.55, -0.48], [-0.3, -0.48], [-0.82, -0.44], [-0.3, -0.33], [-0.18, -0.3], [-0.18, 0.02], [-0.32, 0.1]];
+  const p = wobPath(R, q.map(([a, b]) => [x + a * s, base - s * 0.4 + b * s]), 1, 10);
+  fillShape(ctx, R, p, color, P, { box: [x - s, base - s, s * 2, s * 1.2], hatch: [0.2, 6], sw: 8 });
+  ctx.strokeStyle = P.rimA(0.3); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x - s * 0.3, base - s * 0.87); ctx.lineTo(x + s * 0.54, base - s * 0.87); ctx.stroke();
 }
 function bottleKiln(ctx, R, x, base, w, h, P) {
   const neck = w * 0.22, sh = base - h * 0.45;

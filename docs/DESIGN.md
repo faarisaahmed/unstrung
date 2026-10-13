@@ -58,11 +58,11 @@ Pillars:
 | # | Ability | Source | Opens |
 |---|---|---|---|
 | 0 | Roll, Jump, Bonk (yarn whip), Buff | start | — |
-| 1 | **Sticky Sap**: wall cling & wall jump | Mother Mossbug (Hollows) | vertical shafts everywhere |
+| 1 | **Sticky Sap**: wall cling & wall jump | Grandmother Burr (Hollows) | vertical shafts everywhere |
 | 2 | **Pebble Dash**: horizontal dash | Petalmaw (Gardens) | long gaps |
 | 3 | **Shard Toss**: spell projectile | Wickwidow (Catacombs) | spell-switches, ranged |
 | 4 | **Dandelion**: hold jump to glide; rides updrafts | Sporecap Elder (Hushwood) | updraft chimneys, huge gaps |
-| 5 | **Lodestone**: cling & roll along magnetic (M) walls & ceilings | Gearwright Colossus (Bastion) | magnetic rails |
+| 5 | **Lodestone**: cling & roll along magnetic (M) walls & ceilings | Treadle Colossus (Bastion) | magnetic rails |
 | 6 | **Glass Shell**: swim through acid / ink | Gullet (Cistern) | ink lakes |
 | 7 | **Lead Heart**: ground pound; breaks cracked floors (G) | Vitrius (Kilns) | cracked floors |
 | 8 | **Comet Roll**: charged super-roll; smashes crystal (C) | Prism Warden (Mirrored Deep) | crystal walls, huge horizontal gaps |
@@ -78,12 +78,12 @@ Pillars:
 | id | Area | Theme / palette | Main boss → reward | Optional bosses |
 |---|---|---|---|---|
 | fray | The Fray | tutorial, frayed cloth caves, pale blue-grey | Gnarlknot → path opens | — |
-| hollows | Mossbell Hollows | hub caverns, moss and old bells, teal | Mother Mossbug → Sticky Sap | Brass Beetle |
+| hollows | Mossbell Hollows | hub caverns, moss and old bells, teal | Grandmother Burr → Sticky Sap | Brass Beetle |
 | town | Spindletown | surface town in the rain, warm lamps | — (shops, NPCs) | Rollmaster Trio (late) |
 | gardens | Glasswing Gardens | overgrown glass greenhouse, green and gold | Petalmaw → Pebble Dash | Twin Glassmoths |
 | catacombs | Tallow Catacombs | candle-wax crypts, amber on black | Wickwidow → Shard Toss | Ossuary Knight |
 | hushwood | Hushwood | silent fungal forest, violet spores | Sporecap Elder → Dandelion | Hush |
-| bastion | Cogwork Bastion | brass gears and magnets, copper | Gearwright Colossus → Lodestone | Automaton Choir |
+| bastion | The Pinworks | pin-and-needle forge, giant magnets, blued steel and rust | Treadle Colossus → Lodestone | Tin Choir |
 | cistern | Brine Cistern | flooded reservoir, ink-water, deep blue | Gullet → Glass Shell | Brine Matron |
 | kilns | Ashen Kilns | glass furnaces, ember red | Vitrius → Lead Heart + Great Bead | Cinder Twins |
 | mirror | Mirrored Deep | crystal caverns, pink-white prisms | Prism Warden → Comet Roll + Great Bead | The Reflection |

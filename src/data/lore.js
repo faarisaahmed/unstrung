@@ -167,32 +167,32 @@ export const LORE = {
     ],
   },
 
-  // ---------- Cogwork Bastion: engineering logs ----------
+  // ---------- The Pinworks: the pinsmiths' ledger ----------
   bastion_1: {
-    title: 'Guild Log, Entry 1',
+    title: 'Pinsmiths\' Ledger, Entry 1',
     pages: [
-      'Commission accepted: one fortress, to guard the bead that fell here. Specifications: impregnable, eternal, polished.',
-      'Note from the Guildmaster: "No falling."',
+      'The bead that fell here is a lodestone. Everything iron leans toward it. We have built the Works around it, and every needle forged here comes out already pointing home.',
+      'Note from the Mastersmith: "Mind your fingers."',
     ],
   },
   bastion_2: {
-    title: 'Guild Log, Entry 212',
+    title: 'Pinsmiths\' Ledger, Entry 212',
     pages: [
-      'Bead stolen. Unknown party. Fortress unaffected.',
-      'Guildmaster rules that construction will continue. A fortress need not guard anything to be a very good fortress.',
+      'Bead stolen. Unknown party. The needles have stopped pointing anywhere.',
+      'The Mastersmith rules that forging will continue. A pin need not point anywhere to be a very good pin.',
     ],
   },
   bastion_3: {
-    title: 'Guild Log, Entry 4,079',
+    title: 'Pinsmiths\' Ledger, Entry 4,079',
     pages: [
-      'The great clock has stopped at the hour of the Falling. Repairs ordered.',
-      'Addendum: repairs cancelled. The Guildmaster says it is the only clock in the Bastion that is right.',
+      'The great treadle has stopped mid-stitch, on the night of the Falling. Repairs ordered.',
+      'Addendum: repairs cancelled. The Mastersmith says it is the only stitch in the Works that was ever finished.',
     ],
   },
   bastion_4: {
-    title: 'Guild Log, Final Entry',
+    title: 'Pinsmiths\' Ledger, Final Entry',
     pages: [
-      'The Guild has gone. The machines have not been told. The Choir still sings the shift-change every morning.',
+      'The Guild has gone. The machines have not been told. The Tin Choir still sings the shift-change every morning.',
       'Whoever reads this: tell them they may stop. We never could.',
     ],
   },

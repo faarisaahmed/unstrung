@@ -7,7 +7,7 @@ export const AREAS = {
   gardens: { name: 'Glasswing Gardens', sub: 'The greenhouse of the moths', music: 'gardens' },
   catacombs: { name: 'Tallow Catacombs', sub: 'Where the wax remembers', music: 'catacombs' },
   hushwood: { name: 'Hushwood', sub: 'Speak softly', music: 'hushwood' },
-  bastion: { name: 'Cogwork Bastion', sub: 'The engine that guards nothing', music: 'bastion' },
+  bastion: { name: 'The Pinworks', sub: 'Where every needle was forged', music: 'bastion' },
   cistern: { name: 'Brine Cistern', sub: 'The drowned reservoir', music: 'cistern' },
   kilns: { name: 'Ashen Kilns', sub: 'The glassmakers\' furnace', music: 'kilns' },
   mirror: { name: 'Mirrored Deep', sub: 'Every bead, twice', music: 'mirror' },

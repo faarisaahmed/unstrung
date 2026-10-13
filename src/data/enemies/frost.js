@@ -31,10 +31,10 @@ export default [
     art: { body: 'moth', c1: '#dff4ff', c2: '#9ad8ee', eye: '#ffffff', wing: 'moth', glow: true, centered: true }, weight: 1,
     journal: 'Frost forms on its wings in the shape of the lamp it was flying toward when the shrine went cold. They flutter in loose rings around nothing at all.', kills: 25 },
 
-  { id: 'frost_votive', name: 'Votive Bell', area: 'frost', hp: 60, dmg: 1, glints: 12, size: [36, 40],
+  { id: 'frost_votive', name: 'Votive Lantern', area: 'frost', hp: 60, dmg: 1, glints: 12, size: [36, 40],
     behavior: 'sentinel', params: { open: 1.6, closed: 2.2, speed: 240, count: 3, spread: 0.32, color: '#bff6ff', projArt: 'shard' },
-    art: { body: 'bell', c1: '#5d7f92', c2: '#d8f6ff', c3: '#eefcff', eye: '#7fe6ff', glow: true }, weight: 99,
-    journal: 'A shrine bell rimed shut. When it opens, it does not ring; it sheds slivers of the cold it has been holding. Strike it while it gapes, or come down on it hard.', kills: 10 },
+    art: { body: 'lantern', c1: '#5d7f92', c2: '#d8f6ff', c3: '#eefcff', eye: '#7fe6ff', glow: true }, weight: 99,
+    journal: 'A shrine lantern rimed shut. When its shutters open, it gives no light; it sheds slivers of the cold it has been holding. Strike it while it gapes, or come down on it hard.', kills: 10 },
 
   { id: 'frost_yeti', name: 'Hoarfell', area: 'frost', hp: 90, dmg: 2, glints: 22, size: [64, 58],
     behavior: 'stalker', params: { speed: 165, jump: 760 },

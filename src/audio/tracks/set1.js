@@ -1,5 +1,5 @@
 // Music set 1: The Fray, Spindletown, Mossbell Hollows, Glasswing Gardens, Tallow Catacombs,
-// Hushwood, Cogwork Bastion, Gnarlknot, the early-boss theme and the victory stinger.
+// Hushwood, the Pinworks, Gnarlknot, the early-boss theme and the victory stinger.
 // Every track quotes Bead's Theme (5-1-3-2-1: `A4 . D5 . F5 E5 D5` in D minor), transposed / re-harmonized.
 
 // ---------------------------------------------------------------- notation helpers
@@ -504,7 +504,7 @@ const hushwood = {
   loop: 1,
 };
 
-// ================================================================ COGWORK BASTION
+// ================================================================ THE PINWORKS
 // G minor, 112 bpm. Marimba gears turning in 3+3+3+3+2+2, strings and bass hammering 3+3+2,
 // taiko and rim ticks; a heroic saw hook in 3+3+2 that crowns itself with Bead's Theme (bar 13).
 const BA = {

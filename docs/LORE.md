@@ -63,7 +63,7 @@ and every creature in it is, in some distant way, made of the Moon.
 
 - **Lesser beads** made the small places: the moss and bells of **Mossbell Hollows**, the glass
   greenhouse of **Glasswing Gardens**, the wax crypts of **Tallow Catacombs**, the sleeping
-  **Hushwood**, the **Brine Cistern**, the clockwork **Cogwork Bastion**.
+  **Hushwood**, the **Brine Cistern**, the needle-forge of **the Pinworks**.
 - **The six Great Beads** fell deepest and burned hottest, and each became the heart of a great
   kingdom. Each was claimed by a **Keeper** who loved it, and each Keeper's love went wrong in its own
   way.
@@ -166,14 +166,14 @@ strand, there was a single bead. Now there are two."*
   to tell the Moon a knight tried, and curls up for the last time. After that he is a still, grey
   ball, and looks, at last, very much like a bead.
 - **Bellkeeper Tull** (`bellkeeper`, Hollows): a deaf old beetle who still rings the Hollows' bells by
-  feel, so the Mossbug's children sleep. Hints at the Brass Beetle.
+  feel, so Grandmother Burr's children sleep. Hints at the Brass Beetle.
 - **Pell the Mothmaid** (`mothmaid`, Gardens): a glasswing gardener tending a greenhouse with no sun.
   Her sisters became the Twin Glassmoths, Lumen and Lacuna.
 - **The Chandler** (`chandler`, Catacombs): a melting candle who keeps the crypt lights. Warns Bead
   about the dark below and the Lantern.
 - **Hushling** (`hushling`, Hushwood): a small mushroom who only whispers, so as not to wake the
   Elder. Afraid of the owl.
-- **Tinkerbot Nine** (`tinkerbot`, Bastion): a tiny automaton of the vanished Guild, still awaiting
+- **Tinkerbot Nine** (`tinkerbot`, the Pinworks): a tiny automaton of the vanished Guild, still awaiting
   orders. Bead gives it some, eventually.
 - **Old Brine** (`diver`, Cistern): a hermit crab in a diving helmet, the last Pumpkeeper.
 - **Brother Cullet** (`glassmonk`, Kilns): a monk of the Blown Flame, Vitrius's last disciple, who

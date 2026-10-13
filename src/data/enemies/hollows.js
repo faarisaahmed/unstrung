@@ -11,15 +11,15 @@ export default [
     art: { body: 'beetle', c1: '#1f3b36', c2: '#5f9c8c', c3: '#d8cfb2', eye: '#bff5df', horn: 2 },
     journal: 'It digs by running headfirst at the walls, and it has run at so many walls it can no longer tell them from visitors.', kills: 15 },
 
-  { id: 'hollows_clapper', name: 'Clapperling', area: 'hollows', hp: 18, dmg: 1, glints: 5, size: [30, 34],
+  { id: 'hollows_clapper', name: 'Acornhop', area: 'hollows', hp: 18, dmg: 1, glints: 5, size: [30, 34],
     behavior: 'hopper', params: { interval: 1.5, vx: 150, vy: 600 },
-    art: { body: 'bell', c1: '#7a6a3a', c2: '#c9e8b0', eye: '#fff4c0' },
-    journal: 'A handbell that grew legs and forgot its ringer. Every hop is a dull clank, every clank a question nobody answers.', kills: 15 },
+    art: { body: 'acorn', c1: '#8a6a3a', c2: '#5d7a3e', eye: '#fff4c0' },
+    journal: 'An acorn that sprouted legs instead of roots. Every hop is a dull clonk of its cap, every clonk a question nobody answers.', kills: 15 },
 
-  { id: 'hollows_chimelet', name: 'Chimelet', area: 'hollows', hp: 10, dmg: 1, glints: 3, size: [22, 24],
+  { id: 'hollows_chimelet', name: 'Fluffwisp', area: 'hollows', hp: 10, dmg: 1, glints: 3, size: [22, 24],
     behavior: 'flyer', params: { speed: 90, sight: 320 },
-    art: { body: 'bell', c1: '#4c7a6a', c2: '#e8f5c8', eye: '#bff5df', glow: true, centered: true },
-    journal: 'Tiny bells that drift in the dark, humming a note too low to hear. They ring true only when they strike something.', kills: 20 },
+    art: { body: 'seedpuff', c1: '#e8f5e0', c2: '#6f8f7a', eye: '#2a3a30', glow: true, centered: true },
+    journal: 'Seed-puffs that drift in the dark, humming a note too low to hear. They only find their voice when they strike something.', kills: 20 },
 
   { id: 'hollows_dripling', name: 'Dripling', area: 'hollows', hp: 8, dmg: 1, glints: 2, size: [26, 22],
     behavior: 'dropper', params: { range: 46, speed: 55 },

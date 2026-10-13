@@ -749,7 +749,7 @@ export default [
     legend: {
       a: { e: 'spindle' },
       b: { e: 'deco', kind: 'lamp' },
-      c: { e: 'deco', kind: 'sign', text: 'Cogwork lift (east)' },
+      c: { e: 'deco', kind: 'sign', text: 'Pinworks lift (east)' },
       d: { e: 'enemy', id: 'hollows_mossgrub' },
       e: { e: 'enemy', id: 'hollows_mossmoth' },
     },

@@ -34,7 +34,8 @@ for (const id of rooms) {
     const modes = [b.mode];
     for (const f of [0.6, 0.3]) { g.player.invuln = 999; if (b.mode === 'fight') b.hurt(Math.max(1, b.hp - b.maxHp * f), 1, 'x'); await wait(2500); modes.push(b.mode + ':p' + b.phase); }
     g.player.invuln = 999;
-    if (b.mode === 'fight') b.hurt(b.hp + 10, 1, 'x');
+    // some bosses only take damage at certain moments (e.g. the Choir's lowered lead): keep trying
+    for (let i = 0; i < 12 && b.mode === 'fight'; i++) { g.player.invuln = 999; b.hurt(b.hp + 10, 1, 'x'); await wait(500); }
     await wait(3500);
     return `${b.id} ${modes.join(',')} -> ${b.mode}${b.dead ? ' dead' : ''}`;
   });

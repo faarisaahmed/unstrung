@@ -1,8 +1,8 @@
-// Bosses of area 'hollows': Mother Mossbug (main) and the Brass Beetle (optional).
+// Bosses of area 'hollows': Grandmother Burr (main) and the Brass Beetle (optional).
 import { Boss, registerMinion } from './boss.js';
 import { TAU, clamp } from '../core/math.js';
 import { TILE } from '../core/constants.js';
-import { INK, eye } from '../art/creatures.js';
+import { INK, eye, registerPainter } from '../art/creatures.js';
 import { registerProjectileArt } from '../entities/projectile.js';
 
 // ------------------------------------------------------------------ shared helpers
@@ -34,31 +34,64 @@ const tileOf = (v) => Math.floor(v / TILE);
 const MM_SCALE = 1.2;
 const BB_SCALE = 1.3;
 
-// ------------------------------------------------------------------ projectile art
-registerProjectileArt('mm_spore', (ctx, p, t) => {
-  const r = p.r, x = p.cx, y = p.cy + Math.sin(p.age * 5 + p.x * 0.03) * 2;
-  glowDot(ctx, x, y, r * 2.8, p.o.color || '#bff5df', 0.35);
-  ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.lineCap = 'round';
-  for (let i = 0; i < 10; i++) {
-    const a = i / 10 * TAU + p.age * 1.5;
-    ctx.beginPath(); ctx.moveTo(x + Math.cos(a) * r * 0.8, y + Math.sin(a) * r * 0.8);
-    ctx.lineTo(x + Math.cos(a) * r * 1.35, y + Math.sin(a) * r * 1.35); ctx.stroke();
+// a hooked burr spine: a shaft from (x, y) along angle a whose tip curls back into a little barb
+function hook(ctx, x, y, a, len, w, col, K, curl = 1) {
+  const dx = Math.cos(a), dy = Math.sin(a), px = -dy * curl, py = dx * curl;
+  const tx = x + dx * len, ty = y + dy * len;
+  const path = () => {
+    ctx.beginPath(); ctx.moveTo(x, y);
+    ctx.quadraticCurveTo(x + dx * len * 0.6 + px * len * 0.1, y + dy * len * 0.6 + py * len * 0.1, tx, ty);
+    const b = Math.min(len * 0.26, 7);
+    ctx.quadraticCurveTo(tx + px * b + dx * b * 0.3, ty + py * b + dy * b * 0.3, tx + px * b * 1.1 - dx * b * 0.7, ty + py * b * 1.1 - dy * b * 0.7);
+    ctx.stroke();
+  };
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  if (K) { ctx.strokeStyle = K; ctx.lineWidth = w + 2; path(); }
+  ctx.strokeStyle = col; ctx.lineWidth = w; path();
+}
+
+// a little burr seed: hooked spiny ball, optionally with a tuft of down
+function burrSeed(ctx, r, rot, body, tip, fluff) {
+  ctx.save(); ctx.rotate(rot);
+  if (fluff) {
+    ctx.lineCap = 'round';
+    // a little parachute of down
+    for (let i = -4; i <= 4; i++) {
+      const a = -Math.PI / 2 + i * 0.27, L = r * (2.5 - Math.abs(i) * 0.1);
+      const ex = Math.cos(a) * L, ey = Math.sin(a) * L - r * 0.3;
+      ctx.strokeStyle = 'rgba(250,244,226,0.9)'; ctx.lineWidth = Math.max(0.9, r * 0.11);
+      ctx.beginPath(); ctx.moveTo(0, -r * 0.6); ctx.quadraticCurveTo(ex * 0.4, -r * 0.6 + ey * 0.5, ex, ey);
+      for (const d of [-0.6, 0, 0.6]) { ctx.moveTo(ex, ey); ctx.lineTo(ex + Math.cos(a + d) * r * 0.5, ey + Math.sin(a + d) * r * 0.5); }
+      ctx.stroke();
+    }
   }
-  ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(x, y, r + 1.5, 0, TAU); ctx.fill();
-  ctx.fillStyle = p.o.fill || '#5fae88'; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
-  ctx.fillStyle = 'rgba(220,255,236,0.75)';
-  for (const [dx, dy, s] of [[-0.3, -0.3, 0.3], [0.35, 0.1, 0.16], [-0.05, 0.4, 0.13]]) { ctx.beginPath(); ctx.arc(x + dx * r, y + dy * r, r * s, 0, TAU); ctx.fill(); }
+  const n = r > 8 ? 11 : 8;
+  for (let i = 0; i < n; i++) { const a = (i / n) * TAU + 0.2; hook(ctx, Math.cos(a) * r * 0.55, Math.sin(a) * r * 0.55, a, r * 0.75, Math.max(1, r * 0.15), tip, INK, i % 2 ? 1 : -1); }
+  ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(0, 0, r * 0.78 + 1.6, 0, TAU); ctx.fill();
+  ctx.fillStyle = body; ctx.beginPath(); ctx.arc(0, 0, r * 0.78, 0, TAU); ctx.fill();
+  ctx.fillStyle = 'rgba(30,18,8,0.4)'; ctx.beginPath(); ctx.arc(0, 0, r * 0.78, -0.3, Math.PI * 0.95); ctx.arc(-r * 0.2, -r * 0.2, r * 0.7, Math.PI * 0.85, -0.2, true); ctx.fill();
+  ctx.strokeStyle = tip; ctx.lineWidth = Math.max(0.8, r * 0.1);
+  for (let i = 0; i < 4; i++) { const a = i * 1.7; ctx.beginPath(); ctx.arc(Math.cos(a) * r * 0.32, Math.sin(a) * r * 0.32, r * 0.18, a, a + 2.4); ctx.stroke(); }
+  ctx.fillStyle = 'rgba(255,240,205,0.6)'; ctx.beginPath(); ctx.ellipse(-r * 0.3, -r * 0.35, r * 0.2, r * 0.12, -0.6, 0, TAU); ctx.fill();
+  ctx.restore();
+}
+
+// ------------------------------------------------------------------ projectile art
+// burr seeds shaken loose from Grandmother Burr's down: they float on their fluff
+registerProjectileArt('mm_spore', (ctx, p) => {
+  const r = p.r, x = p.cx, y = p.cy + Math.sin(p.age * 5 + p.x * 0.03) * 2;
+  glowDot(ctx, x, y, r * 2.6, p.o.color || '#f3ead2', 0.3);
+  ctx.save(); ctx.translate(x, y);
+  burrSeed(ctx, r, Math.sin(p.age * 3 + p.x * 0.01) * 0.4, p.o.fill || '#8a6634', '#d2ae6a', r > 8);
+  ctx.restore();
 });
 
+// old dried burr clumps knocked down from the roots
 registerProjectileArt('mm_pebble', (ctx, p) => {
-  ctx.save(); ctx.translate(p.cx, p.cy); ctx.rotate(p.age * 6);
-  ctx.fillStyle = INK; ctx.beginPath();
-  for (let i = 0; i < 7; i++) { const a = i / 7 * TAU, rr = p.r * (1.1 + (i % 2) * 0.25); ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); }
-  ctx.fill();
-  ctx.fillStyle = p.o.color || '#4f6e64'; ctx.beginPath();
-  for (let i = 0; i < 7; i++) { const a = i / 7 * TAU, rr = p.r * (0.85 + (i % 2) * 0.25); ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); }
-  ctx.fill();
-  ctx.fillStyle = '#7fbf8c'; ctx.beginPath(); ctx.arc(-p.r * 0.2, -p.r * 0.45, p.r * 0.45, Math.PI, 0); ctx.fill();
+  ctx.save(); ctx.translate(p.cx, p.cy);
+  burrSeed(ctx, p.r * 1.1, p.age * 6, p.o.color || '#5a4326', '#a8864c', false);
+  ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(-p.r * 0.15, -p.r * 0.55, p.r * 0.48, Math.PI * 1.05, -0.05); ctx.fill();
+  ctx.fillStyle = '#7f9a58'; ctx.beginPath(); ctx.arc(-p.r * 0.15, -p.r * 0.5, p.r * 0.38, Math.PI * 1.05, -0.05); ctx.fill();
   ctx.restore();
 });
 
@@ -86,14 +119,52 @@ registerProjectileArt('bb_shard', (ctx, p) => {
 });
 
 // ------------------------------------------------------------------ minions
-registerMinion({
-  id: 'mm_broodling', name: 'Mossbug Broodling', hp: 8, dmg: 1, size: [28, 18],
-  behavior: 'crawler', params: { speed: 72, noLedge: true },
-  art: { body: 'grub', c1: '#3c6457', c2: '#7fbf8c', c3: '#ece4cf', eye: '#bff5df', mask: true, segs: 3 },
-  journal: 'Mother Mossbug\'s littlest. They hatch hungry and warm, and follow anything that rolls.', kills: 10,
+// Burrling: a tiny prickly burr baby in a knitted bonnet, toddling on two nubs
+registerPainter('burrling', (ctx, e, t, A) => {
+  const ph = (e.anim || 0) * 14, bob = Math.abs(Math.sin(ph)) * 1.6;
+  const r = 9.5, cy = -r - 3 - bob;
+  const K = INK;
+  // stubby feet
+  for (const s of [-1, 1]) {
+    const fx = s * 4 + Math.sin(ph + (s > 0 ? 0 : Math.PI)) * 2.5;
+    ctx.fillStyle = A.c3 || '#e9dcc0'; ctx.strokeStyle = K; ctx.lineWidth = 1.8;
+    ctx.beginPath(); ctx.ellipse(fx, -2.2, 3.6, 2.4, 0, 0, TAU); ctx.fill(); ctx.stroke();
+  }
+  ctx.save(); ctx.translate(0, cy);
+  // hooks all round, bristling as it runs
+  const n = 13, L = 6.5 + bob;
+  for (let i = 0; i < n; i++) { const a = (i / n) * TAU + Math.sin(t * 6 + i) * 0.05; hook(ctx, Math.cos(a) * r * 0.75, Math.sin(a) * r * 0.75, a, L, 1.4, A.c2 || '#c9a25e', K, i % 2 ? 1 : -1); }
+  ctx.fillStyle = K; ctx.beginPath(); ctx.arc(0, 0, r + 1.8, 0, TAU); ctx.fill();
+  ctx.fillStyle = A.c1 || '#8a6634'; ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); ctx.fill();
+  ctx.save(); ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); ctx.clip();
+  ctx.fillStyle = 'rgba(30,18,8,0.42)'; ctx.beginPath(); ctx.arc(-3, -3, r * 1.05, 0, TAU); ctx.arc(0, 0, r * 1.4, 0, TAU, true); ctx.fill();
+  ctx.restore();
+  // knitted bonnet tied under the chin
+  ctx.fillStyle = A.c3 || '#e9dcc0'; ctx.strokeStyle = K; ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.arc(-1, -1, r + 1.5, Math.PI * 0.95, Math.PI * 1.75); ctx.quadraticCurveTo(-1, -3, -5, 5); ctx.closePath(); ctx.fill(); ctx.stroke();
+  if (A.c3 !== '#ffffff') {
+    ctx.strokeStyle = 'rgba(160,90,100,0.7)'; ctx.lineWidth = 1;
+    for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.arc(-1, -1, r - 1 - k * 2.5, Math.PI * 1.05, Math.PI * 1.65); ctx.stroke(); }
+    ctx.fillStyle = '#c96f7e'; ctx.beginPath(); ctx.arc(-6, 5, 1.8, 0, TAU); ctx.fill();
+  }
+  // big shiny eyes and a tiny pout
+  for (const [ex, er] of [[2, 2.8], [7.2, 2.5]]) {
+    ctx.fillStyle = K; ctx.beginPath(); ctx.arc(ex, -0.5, er, 0, TAU); ctx.fill();
+    ctx.fillStyle = A.eye || '#fff4dc'; ctx.beginPath(); ctx.arc(ex - 0.8, -1.4, er * 0.45, 0, TAU); ctx.fill();
+  }
+  ctx.strokeStyle = K; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(5, 4.4, 1.4, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke();
+  ctx.fillStyle = 'rgba(230,120,120,0.45)'; ctx.beginPath(); ctx.arc(8.5, 2.5, 1.6, 0, TAU); ctx.fill();
+  ctx.restore();
 });
 
-// =================================================================== MOTHER MOSSBUG
+registerMinion({
+  id: 'mm_broodling', name: 'Burrling', hp: 8, dmg: 1, size: [28, 18],
+  behavior: 'crawler', params: { speed: 72, noLedge: true },
+  art: { body: 'burrling', c1: '#8a6634', c2: '#d2ae6a', c3: '#e9dcc0', eye: '#fff4dc' },
+  journal: 'Grandmother Burr\'s littlest. They hatch prickly and warm, and stick to anything that rolls.', kills: 10,
+});
+
+// =================================================================== GRANDMOTHER BURR
 // First real boss: Bead has only jump, Bonk, pogo and Mend. Huge telegraphs, everything jumpable.
 export class MossMother extends Boss {
   constructor(game, tx, ty, spec) {
@@ -119,18 +190,18 @@ export class MossMother extends Boss {
     if (this.blink < -3 - Math.random() * 3) this.blink = 0.14;
     const g = this.game;
     if (this.mode === 'dormant' || this.dead) return;
-    // vents puffing
+    // seed-down puffing from her bun
     if (P.puff > 0.4 && Math.random() < 0.5) {
       const [vx, vy] = this.toWorld(-12, -this.lift() - 98);
-      g.fx.burst(vx, vy, 1, { color: '#9fe0c4', speed: 90, angle: -Math.PI / 2, spread: 1.2, size: 4, life: 0.6, g: -60, glow: true });
+      g.fx.burst(vx, vy, 1, { color: '#f3ead2', speed: 90, angle: -Math.PI / 2, spread: 1.2, size: 4, life: 0.6, g: -60, glow: true });
     }
     // charging dust
     if (this.dashing && Math.random() < 0.7) {
-      g.fx.burst(this.cx - this.facing * this.w * 0.4, this.groundY - 4, 1, { color: '#5f7d72', speed: 160, angle: -Math.PI / 2 - this.facing * 0.9, spread: 0.8, size: 4, life: 0.5 });
+      g.fx.burst(this.cx - this.facing * this.w * 0.4, this.groundY - 4, 1, { color: '#6b5a3e', speed: 160, angle: -Math.PI / 2 - this.facing * 0.9, spread: 0.8, size: 4, life: 0.5 });
     }
-    // drifting spore motes from the moss
+    // drifting seed-down
     if (Math.random() < 0.05) {
-      g.fx.burst(this.cx + this.rand(-50, 50), this.y + 10, 1, { color: '#bff5df', speed: 20, angle: -Math.PI / 2, spread: 1, size: 2, life: 1.4, g: -15, glow: true, front: false });
+      g.fx.burst(this.cx + this.rand(-50, 50), this.y + 10, 1, { color: '#f3ead2', speed: 20, angle: -Math.PI / 2, spread: 1, size: 2, life: 1.4, g: -15, glow: true, front: false });
     }
   }
 
@@ -141,7 +212,7 @@ export class MossMother extends Boss {
   onStart() { this.pt.wake = 1; this.pt.rear = 1; this.pt.jaw = 1; }
   introUpdate(dt, t) {
     if (t > 0.5 && t < 0.55) { this.sfx('screech'); this.shake(5, 0.8); }
-    if (t > 0.5 && Math.random() < 0.3) this.fx.burst(this.cx + this.facing * 60, this.y + 30, 1, { color: '#9fe0c4', speed: 140, size: 3, life: 0.6, glow: true });
+    if (t > 0.5 && Math.random() < 0.3) this.fx.burst(this.cx + this.facing * 60, this.y + 30, 1, { color: '#f3ead2', speed: 140, size: 3, life: 0.6, glow: true });
     if (t > 1.7) { this.pt.rear = 0; this.pt.jaw = 0; }
   }
 
@@ -189,9 +260,9 @@ export class MossMother extends Boss {
       this.p.squash = 1.1; this.pt.squash = 0;
       this.sfx('slam'); this.shake(9, 0.4);
       this.zone(this.x - 24, this.groundY - 26, this.w + 48, 26, 0.12);
-      for (const s of [-1, 1]) this.fx.burst(this.cx + s * this.w * 0.45, this.groundY - 4, 10, { color: '#5f7d72', speed: 260, angle: -Math.PI / 2 + s * 0.9, spread: 0.9, size: 4, life: 0.6 });
-      this.fx.burst(this.cx, this.y + 20, 8, { color: '#7fbf8c', speed: 180, size: 3, life: 0.8, g: 500 });
-      if (this.phase >= 2) { this.shockwave(this.cx - this.w / 2, -1, 340, 28, { color: 'rgba(159,224,196,0.85)' }); this.shockwave(this.cx + this.w / 2, 1, 340, 28, { color: 'rgba(159,224,196,0.85)' }); }
+      for (const s of [-1, 1]) this.fx.burst(this.cx + s * this.w * 0.45, this.groundY - 4, 10, { color: '#6b5a3e', speed: 260, angle: -Math.PI / 2 + s * 0.9, spread: 0.9, size: 4, life: 0.6 });
+      this.fx.burst(this.cx, this.y + 20, 8, { color: '#8aa65a', speed: 180, size: 3, life: 0.8, g: 500 });
+      if (this.phase >= 2) { this.shockwave(this.cx - this.w / 2, -1, 340, 28, { color: 'rgba(226,206,160,0.85)' }); this.shockwave(this.cx + this.w / 2, 1, 340, 28, { color: 'rgba(226,206,160,0.85)' }); }
       yield i < n - 1 ? 0.3 : 0.8 - this.phase * 0.08;
     }
   }
@@ -203,7 +274,7 @@ export class MossMother extends Boss {
     this.tele = 0.7;
     this.sfx('screech');
     for (let i = 0; i < 3; i++) {
-      this.fx.burst(this.cx - this.facing * 50, this.groundY - 4, 4, { color: '#5f7d72', speed: 150, angle: -Math.PI / 2 - this.facing * 0.7, spread: 0.6, size: 3.5, life: 0.4 });
+      this.fx.burst(this.cx - this.facing * 50, this.groundY - 4, 4, { color: '#6b5a3e', speed: 150, angle: -Math.PI / 2 - this.facing * 0.7, spread: 0.6, size: 3.5, life: 0.4 });
       yield 0.23;
     }
     this.pt.rear = 0; this.pt.charge = 1; this.pt.jaw = 0.3;
@@ -214,16 +285,16 @@ export class MossMother extends Boss {
     if (r === 'wall') {
       this.shake(10, 0.45); this.sfx('slam');
       const wx = this.facing > 0 ? this.x + this.w : this.x;
-      this.fx.burst(wx, this.cy, 14, { color: '#7fbf8c', speed: 280, size: 3.5, life: 0.6 });
+      this.fx.burst(wx, this.cy, 14, { color: '#8aa65a', speed: 280, size: 3.5, life: 0.6 });
       this.dazed = 1.0;
       if (this.phase >= 2) {
-        // the bump shakes loose mossy pebbles from the ceiling (they fall from high up = readable)
+        // the bump shakes old dried burrs loose from the ceiling (they fall from high up = readable)
         const xs = [this.player.cx, this.player.cx + this.rand(130, 200), this.player.cx - this.rand(130, 200)];
         if (this.phase >= 3) xs.push(this.player.cx + this.rand(-420, 420));
         for (const x of xs) {
           const px = clamp(x, this.arena.x + 20, this.arena.x + this.arena.w - 20);
-          this.fx.burst(px, this.arena.y + 4, 6, { color: '#5f7d72', speed: 90, angle: Math.PI / 2, spread: 1, size: 3, life: 0.6 });
-          this.fire(px, this.arena.y + 12, 0, 40, { gravity: 820, art: 'mm_pebble', r: 10, life: 3, color: '#4f6e64' });
+          this.fx.burst(px, this.arena.y + 4, 6, { color: '#6b5a3e', speed: 90, angle: Math.PI / 2, spread: 1, size: 3, life: 0.6 });
+          this.fire(px, this.arena.y + 12, 0, 40, { gravity: 820, art: 'mm_pebble', r: 10, life: 3, color: '#5a4326' });
           this.marks.push({ x: px, t: 1.1, max: 1.1 });
         }
       }
@@ -235,7 +306,7 @@ export class MossMother extends Boss {
     }
   }
 
-  // SPORE PUFFS: vents swell, then floaty spores arc up and drift down. Bonk them back!
+  // SEED PUFFS: her down bun swells, then floaty burr seeds arc up and drift down. Bonk them back!
   *spores() {
     this.facePlayer();
     this.pt.puff = 1;
@@ -245,14 +316,14 @@ export class MossMother extends Boss {
     const n = 3 + this.phase;
     const [vx, vy] = this.toWorld(-12, -this.lift() - 98);
     this.sfx('burst');
-    this.fx.burst(vx, vy, 14, { color: '#9fe0c4', speed: 160, angle: -Math.PI / 2, spread: 1.6, size: 5, life: 0.8, g: -40, glow: true });
+    this.fx.burst(vx, vy, 14, { color: '#f3ead2', speed: 160, angle: -Math.PI / 2, spread: 1.6, size: 5, life: 0.8, g: -40, glow: true });
     const dir = this.dirTo();
     for (let i = 0; i < n; i++) {
       const spread = (i / (n - 1) - 0.5) * 2;
       const burst = this.phase >= 3;
       this.fire(vx, vy, dir * 90 + spread * 230 + this.rand(-30, 30), this.rand(-470, -390), {
-        gravity: 260, art: 'mm_spore', r: 11, life: 6, color: '#bff5df', parry: true,
-        onDie: burst ? (p) => { if (p.cy > this.groundY - 40 && this.mode === 'fight') this.fireRing(p.cx, p.cy - 6, 5, 150, { art: 'mm_spore', r: 6, life: 0.9, a0: Math.PI, color: '#bff5df' }); } : null,
+        gravity: 260, art: 'mm_spore', r: 11, life: 6, color: '#f3ead2', parry: true,
+        onDie: burst ? (p) => { if (p.cy > this.groundY - 40 && this.mode === 'fight') this.fireRing(p.cx, p.cy - 6, 5, 150, { art: 'mm_spore', r: 6, life: 0.9, a0: Math.PI, color: '#f3ead2' }); } : null,
       });
     }
     yield 0.45;
@@ -260,7 +331,7 @@ export class MossMother extends Boss {
     yield 0.7;
   }
 
-  // BROOD: the shell lifts and broodlings tumble out
+  // BROOD: the shawl lifts and Burrlings tumble out
   *brood() {
     this.facePlayer();
     this.pt.birth = 1;
@@ -284,7 +355,7 @@ export class MossMother extends Boss {
     yield 0.8;
   }
 
-  // SHELL-SPIN (phase 3): withdraws and ricochets across the hollow, wall to wall
+  // BURR-ROLL (phase 3): tucks into a bristling ball and ricochets across the hollow, wall to wall
   *spin() {
     this.facePlayer();
     this.pt.withdraw = 1;
@@ -317,8 +388,8 @@ export class MossMother extends Boss {
     this.tele = 0.9;
     this.crack = n - 1;
     this.speedMul *= 1.08;
-    this.fx.burst(this.cx, this.y + 30, 24, { color: '#7fbf8c', speed: 300, size: 4, life: 0.9 });
-    this.fx.ring(this.cx, this.cy, 20, 200, 0.6, 'rgba(191,245,223,0.8)', 5);
+    this.fx.burst(this.cx, this.y + 30, 24, { color: '#8aa65a', speed: 300, size: 4, life: 0.9 });
+    this.fx.ring(this.cx, this.cy, 20, 200, 0.6, 'rgba(240,228,196,0.8)', 5);
     if (n === 3) this.queue.push(this.brood, this.spin);
   }
 
@@ -330,20 +401,20 @@ export class MossMother extends Boss {
   }
 
   drawExtra(ctx, t) {
-    // growing shadows where loosened pebbles will land
+    // growing shadows where loosened burrs will land
     for (const m of this.marks) {
       const k = 1 - m.t / m.max;
       ctx.fillStyle = `rgba(0,0,0,${0.2 + 0.35 * k})`;
       ctx.beginPath(); ctx.ellipse(m.x, this.groundY - 2, 6 + 12 * k, 3 + 2 * k, 0, 0, TAU); ctx.fill();
-      ctx.strokeStyle = `rgba(191,245,223,${0.5 * k})`; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.strokeStyle = `rgba(240,228,196,${0.5 * k})`; ctx.lineWidth = 1.5; ctx.stroke();
     }
     // dazed stars
     if (this.dazed > 0 && this.mode === 'fight') {
       for (let i = 0; i < 3; i++) {
         const a = t * 5 + i * TAU / 3;
         const x = this.cx + this.facing * 40 + Math.cos(a) * 26, y = this.y - 8 + Math.sin(a) * 7;
-        glowDot(ctx, x, y, 10, '#bff5df', 0.5);
-        ctx.fillStyle = '#efffe8'; ctx.beginPath();
+        glowDot(ctx, x, y, 10, '#f3ead2', 0.5);
+        ctx.fillStyle = '#fff6dc'; ctx.beginPath();
         for (let k = 0; k < 8; k++) { const r = k % 2 ? 1.6 : 4.5, b = k / 8 * TAU + t * 3; ctx.lineTo(x + Math.cos(b) * r, y + Math.sin(b) * r); }
         ctx.fill();
       }
@@ -360,236 +431,312 @@ export class MossMother extends Boss {
       const air = Math.max(0, this.groundY - by);
       const k = 1 / (1 + air / 200);
       ctx.fillStyle = `rgba(0,0,0,${0.4 * k})`;
-      ctx.beginPath(); ctx.ellipse(cx, this.groundY - 2, 104 * k, 12 * k, 0, 0, TAU); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(cx, this.groundY - 2, 92 * k, 12 * k, 0, 0, TAU); ctx.fill();
     }
     ctx.save();
     ctx.translate(cx, by);
     ctx.scale(f * S, S);
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     if (this.spinning) { this.drawBall(ctx, t, C, K, white); ctx.restore(); return; }
 
     const lift = this.lift();
     const breath = Math.sin(t * 2.2) * 0.025;
     // pivot around the rear when rearing / ducking into a charge
     const tilt = -P.rear * 0.2 + P.charge * 0.07;
-    ctx.translate(-66, 0); ctx.rotate(tilt); ctx.translate(66, 0);
+    ctx.translate(-50, 0); ctx.rotate(tilt); ctx.translate(50, 0);
+    const R = 54;
+    // her hooks stand on end when she winds up, charges or curls
+    const bristle = clamp(Math.max(P.charge, P.rear * 0.7, P.squash * 0.5, P.withdraw, P.puff * 0.35), 0, 1);
 
-    // ---- many little legs in a rippling wave (far row first)
+    // ---- stubby legs in knitted stockings (far pair first)
     const air = this.airborne;
     const legRow = (far) => {
-      for (let i = 0; i < 7; i++) {
-        const ax = -58 + i * 18 + (far ? 6 : 0);
-        const ph = this.walkPh - i * 0.9 + (far ? Math.PI : 0);
-        const step = this.moving ? Math.sin(ph) * 7 : Math.sin(t * 2 + i * 0.8) * 1.2;
+      for (const [i, lx] of far ? [[0, -32], [2, 12]] : [[1, -12], [3, 32]]) {
+        const ph = this.walkPh * 0.85 + (i % 2) * Math.PI;
+        const step = this.moving ? Math.sin(ph) * 7 : 0;
         const up = this.moving ? Math.max(0, Math.cos(ph)) * 5 : 0;
-        const top = -lift + 2;
-        const foot = air ? [ax - 6, -lift * 0.35] : [ax + step + 4, -up];
-        const knee = [ax + 9 + step * 0.4, top + (foot[1] - top) * 0.4 - 4];
-        limb(ctx, [[ax, top], knee, foot], far ? 3.5 : 4.5, C(far ? '#17292a' : '#2f4b43'), K);
-        if (!white && !far) { ctx.fillStyle = '#cfc5a8'; ctx.beginPath(); ctx.arc(foot[0] + 1, foot[1] - 1, 2, 0, TAU); ctx.fill(); }
+        const top = -lift - 6;
+        const foot = air ? [lx - 5, -lift * 0.3] : [lx + step, -up - 3];
+        limb(ctx, [[lx, top], [lx + step * 0.4, (top + foot[1]) / 2], foot], 11, C(far ? '#9c8a74' : '#e3d5b8'), K);
+        if (!white) {
+          ctx.strokeStyle = far ? '#6e3d46' : '#a8566a'; ctx.lineWidth = 3;
+          for (const k of [0.35, 0.65]) { const y = top + (foot[1] - top) * k, x = lx + (foot[0] - lx) * k; ctx.beginPath(); ctx.moveTo(x - 4.5, y); ctx.lineTo(x + 4.5, y); ctx.stroke(); }
+        }
+        // little round boot
+        ctx.fillStyle = C(far ? '#2e2018' : '#4a3122'); ctx.strokeStyle = K; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.ellipse(foot[0] + 3, foot[1] + 0.5, 8, 5, 0, 0, TAU); ctx.fill(); ctx.stroke();
+        if (!white && !far) { ctx.fillStyle = 'rgba(255,230,190,0.35)'; ctx.beginPath(); ctx.ellipse(foot[0] + 1, foot[1] - 2, 3.5, 1.4, 0, 0, TAU); ctx.fill(); }
       }
     };
     legRow(true);
 
-    // pale ribbed belly peeking under the rim
-    ctx.beginPath(); ctx.ellipse(-4, -lift + 1, 76, 9, 0, 0, TAU);
-    ctx.fillStyle = C('#b9ae92'); ctx.fill(); ctx.strokeStyle = K; ctx.lineWidth = 3; ctx.stroke();
-
-    // head behind the shell while withdrawing
-    if (P.withdraw > 0.4) this.drawHead(ctx, t, C, K, white, lift);
-
-    // ---- shell: segmented woodlouse dome under a thick moss blanket
+    // ---- the burr herself: a ball of hooked spines, squashing from the base
     ctx.save();
-    ctx.translate(-6, -lift - 2);
-    ctx.scale(1 + P.squash * 0.1 + P.birth * 0.03, 1 - P.squash * 0.13 + breath + P.birth * 0.07);
-    const RX = 80, RY = 98;
-    const domeY = (x) => -RY * Math.sqrt(Math.max(0, 1 - (x / RX) ** 2));
-    const dome = () => { ctx.beginPath(); ctx.ellipse(0, 0, RX, RY, 0, Math.PI, TAU); ctx.quadraticCurveTo(0, 12, -RX, 0); ctx.closePath(); };
-    // moss fringe bumps (drawn first, so only their outer halves show beyond the dome)
-    const bumps = [];
-    for (let i = 0; i <= 16; i++) {
-      const a = Math.PI * (1.12 + i * 0.0475);
-      const wob = Math.sin(i * 2.7) * 3;
-      bumps.push([Math.cos(a) * (RX - 4 + wob), Math.sin(a) * (RY - 4 + wob), 10 + ((i * 7) % 5) + Math.sin(t * 2 + i) * 0.5]);
-    }
-    ctx.fillStyle = K;
-    for (const [x, y, r] of bumps) { ctx.beginPath(); ctx.arc(x, y, r + 3, 0, TAU); ctx.fill(); }
-    bumps.forEach(([x, y, r], i) => { ctx.fillStyle = C(i % 3 ? '#3f7a52' : '#4f8a5e'); ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill(); });
-    // dome
-    dome();
-    if (white) ctx.fillStyle = '#fff';
-    else { const gr = ctx.createLinearGradient(0, -RY, 0, 8); gr.addColorStop(0, '#3e6d5f'); gr.addColorStop(1, '#122823'); ctx.fillStyle = gr; }
-    ctx.fill(); ctx.strokeStyle = K; ctx.lineWidth = 4; ctx.stroke();
-    if (!white) {
-      ctx.save(); dome(); ctx.clip();
-      // plate seams with pale leading-edge highlights
-      for (const x of [-56, -30, -4, 22, 48]) {
-        const ty = domeY(x);
-        ctx.strokeStyle = 'rgba(191,245,223,0.16)'; ctx.lineWidth = 6;
-        ctx.beginPath(); ctx.moveTo(x + 7, 2); ctx.quadraticCurveTo(x + 13, ty * 0.5, x + 5, ty); ctx.stroke();
-        ctx.strokeStyle = INK; ctx.lineWidth = 2.5;
-        ctx.beginPath(); ctx.moveTo(x + 2, 2); ctx.quadraticCurveTo(x + 8, ty * 0.5, x, ty); ctx.stroke();
+    ctx.translate(0, -lift - 2);
+    ctx.scale(1 + P.squash * 0.1 + P.birth * 0.03, 1 - P.squash * 0.13 + breath + P.birth * 0.05);
+    ctx.translate(0, -R);
+    this.drawBurr(ctx, t, C, K, white, R, bristle, 0);
+    this.drawShawl(ctx, t, C, K, white, R);
+    // fluffy white bun of seed-down on her crown, a crochet hook stuck through it
+    {
+      const o = 1 + P.puff * 0.55, bx = -10, byy = -R - 2;
+      if (!white && P.puff > 0.1) glowDot(ctx, bx, byy - 6, 34 * P.puff, '#fff3d8', 0.5);
+      ctx.strokeStyle = K; ctx.lineWidth = 5.5;
+      ctx.beginPath(); ctx.moveTo(bx - 22, byy - 14); ctx.lineTo(bx + 18, byy + 6); ctx.stroke();
+      ctx.strokeStyle = C('#c9a25e'); ctx.lineWidth = 3; ctx.stroke();
+      for (let i = 0; i < 15; i++) {
+        const a = -Math.PI / 2 + (i / 14 - 0.5) * 3, L = (17 + (i * 5) % 7) * o;
+        ctx.strokeStyle = C('rgba(250,244,226,0.9)'); ctx.lineWidth = 1.4;
+        ctx.beginPath(); ctx.moveTo(bx, byy); ctx.quadraticCurveTo(bx + Math.cos(a) * L * 0.6 + Math.sin(t * 2 + i) * 1.5, byy + Math.sin(a) * L * 0.5, bx + Math.cos(a) * L, byy - 4 + Math.sin(a) * L);
+        ctx.stroke();
+        const ex = bx + Math.cos(a) * L, ey = byy - 4 + Math.sin(a) * L;
+        ctx.beginPath(); for (const d of [-0.7, 0, 0.7]) { ctx.moveTo(ex, ey); ctx.lineTo(ex + Math.cos(a + d) * 4, ey + Math.sin(a + d) * 4); } ctx.stroke();
       }
-      // moss blanket over the top
-      ctx.beginPath(); ctx.moveTo(-RX - 5, -RY - 10);
-      for (let i = 0; i <= 20; i++) {
-        const x = -RX + i * (RX * 2 / 20);
-        const y = domeY(x) * 0.6 + Math.sin(i * 1.9) * 5 + (i % 2) * 4;
-        ctx.lineTo(x, Math.min(y, -6));
-      }
-      ctx.lineTo(RX + 5, -RY - 10); ctx.closePath();
-      ctx.fillStyle = '#3f7a52'; ctx.fill();
-      ctx.strokeStyle = INK; ctx.lineWidth = 2.5; ctx.stroke();
-      ctx.fillStyle = '#5f9c6c';
-      for (let i = 0; i < 14; i++) { const x = -66 + i * 10 + Math.sin(i * 3) * 4; ctx.beginPath(); ctx.arc(x, domeY(x) * 0.8 - 6 + Math.sin(i * 5) * 6, 5 + (i % 3) * 2, 0, TAU); ctx.fill(); }
-      ctx.fillStyle = '#8fd0a0';
-      for (let i = 0; i < 12; i++) { const x = -60 + i * 11; ctx.beginPath(); ctx.arc(x, domeY(x) * 0.9 - 2 + Math.sin(i * 7) * 4, 2.5 + (i % 2), 0, TAU); ctx.fill(); }
-      ctx.restore();
-      // highlights on the fringe bumps
-      bumps.forEach(([x, y, r]) => { ctx.fillStyle = '#7fbf8c'; ctx.beginPath(); ctx.arc(x - 2, y - 2, r * 0.45, Math.PI, TAU); ctx.fill(); });
-      // tiny pale flowers
-      for (const i of [3, 8, 13]) {
-        const [x, y] = bumps[i];
-        for (let k = 0; k < 5; k++) { const a = k / 5 * TAU + t * 0.4; ctx.fillStyle = '#f2eedc'; ctx.beginPath(); ctx.arc(x + Math.cos(a) * 3.2, y - 6 + Math.sin(a) * 3.2, 2.2, 0, TAU); ctx.fill(); }
-        ctx.fillStyle = '#e8c86a'; ctx.beginPath(); ctx.arc(x, y - 6, 1.8, 0, TAU); ctx.fill();
-      }
-    } else {
-      // keep the flash silhouette solid over the fringe
-      bumps.forEach(([x, y, r]) => { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill(); });
-    }
-    // brood pods nestled in the moss (back half)
-    for (const [px, py, s] of [[-50, -58, 1], [-26, -78, 0.85], [-64, -30, 0.8]]) {
-      const sw = s * (1 + P.birth * 0.4 + Math.sin(t * 3 + px) * 0.05);
-      ctx.beginPath(); ctx.ellipse(px, py, 11 * sw, 9 * sw, -0.5, 0, TAU);
-      ctx.fillStyle = C('rgba(232,226,200,0.95)'); ctx.fill(); ctx.strokeStyle = K; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = C('#efe6d0'); ctx.strokeStyle = K; ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      for (let i = 0; i <= 14; i++) { const a = (i / 14) * TAU, rr = (11 + (i % 2) * 1.6) * o; i ? ctx.lineTo(bx + Math.cos(a) * rr, byy - 4 + Math.sin(a) * rr * 0.85) : ctx.moveTo(bx + Math.cos(a) * rr, byy - 4 + Math.sin(a) * rr * 0.85); }
+      ctx.closePath(); ctx.fill(); ctx.stroke();
       if (!white) {
-        ctx.strokeStyle = 'rgba(60,100,87,0.9)'; ctx.lineWidth = 2.5;
-        ctx.beginPath(); ctx.arc(px, py, 5 * sw, 0.5 + t * 0.8, 4 + t * 0.8); ctx.stroke();
-        glowDot(ctx, px + 2, py - 1, 10 * sw, '#bff5df', 0.25 + P.birth * 0.5);
+        ctx.fillStyle = 'rgba(150,130,100,0.35)'; ctx.beginPath(); ctx.ellipse(bx + 2, byy, 9 * o, 4 * o, 0, 0, Math.PI); ctx.fill();
+        ctx.strokeStyle = 'rgba(160,140,110,0.6)'; ctx.lineWidth = 1;
+        for (const k of [-0.5, 0.4, 1.4]) { ctx.beginPath(); ctx.arc(bx, byy - 4, 6 * o, k, k + 1.4); ctx.stroke(); }
       }
+      // the hook's head pokes out in front of the bun
+      ctx.strokeStyle = K; ctx.lineWidth = 5.5; ctx.beginPath(); ctx.moveTo(bx + 4, byy - 2); ctx.lineTo(bx + 18, byy + 6); ctx.stroke();
+      ctx.strokeStyle = C('#c9a25e'); ctx.lineWidth = 3; ctx.stroke();
+      hook(ctx, bx + 18, byy + 6, 0.5, 5, 2.6, C('#c9a25e'), K, -1);
     }
-    // spore vents (chimneys poking through the moss)
-    for (const [vx, vy] of [[-12, -96], [16, -93]]) {
-      const o = 1 + P.puff * 0.7;
-      ctx.beginPath(); ctx.moveTo(vx - 6 * o, vy + 8); ctx.lineTo(vx - 5 * o, vy); ctx.lineTo(vx + 5 * o, vy); ctx.lineTo(vx + 6 * o, vy + 8); ctx.closePath();
-      ctx.fillStyle = C('#5f9c8c'); ctx.fill(); ctx.strokeStyle = K; ctx.lineWidth = 2; ctx.stroke();
-      ctx.beginPath(); ctx.ellipse(vx, vy, 5 * o, 2.5 * o, 0, 0, TAU); ctx.fillStyle = C('#cfe9dc'); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = C('#0b1614'); ctx.beginPath(); ctx.ellipse(vx, vy, 3 * o, 1.4 * o, 0, 0, TAU); ctx.fill();
-      if (!white && P.puff > 0.1) glowDot(ctx, vx, vy - 4, 20 * P.puff, '#bff5df', 0.6);
-    }
-    // hanging moss strands off the rim
-    ctx.lineCap = 'round';
-    for (let i = 0; i < 6; i++) {
-      const x = -66 + i * 25 + (i % 2) * 6, L = 6 + ((i * 13) % 9) + P.squash * 4;
-      const sw = Math.sin(t * 2.4 + i * 1.3) * 3 + (this.moving ? -4 : 0);
-      ctx.strokeStyle = K; ctx.lineWidth = 4;
-      ctx.beginPath(); ctx.moveTo(x, -4); ctx.quadraticCurveTo(x + sw * 0.5, L * 0.6, x + sw, L); ctx.stroke();
-      ctx.strokeStyle = C('#4d8a5e'); ctx.lineWidth = 2; ctx.stroke();
-    }
-    // the old bell she carries, hanging off her rump
-    const ba = Math.sin(t * 2.6) * 0.35 + (this.moving ? 0.3 : 0);
-    ctx.save(); ctx.translate(-76, -12); ctx.rotate(ba);
-    ctx.strokeStyle = K; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, 14); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(-4, 14); ctx.quadraticCurveTo(-5, 24, -9, 28); ctx.lineTo(9, 28); ctx.quadraticCurveTo(5, 24, 4, 14); ctx.closePath();
-    ctx.fillStyle = C('#a07a3a'); ctx.fill(); ctx.lineWidth = 2; ctx.stroke();
-    if (!white) { ctx.fillStyle = 'rgba(95,160,140,0.8)'; ctx.beginPath(); ctx.arc(-2, 22, 2.5, 0, TAU); ctx.fill(); }
-    ctx.fillStyle = C('#5f9c8c'); ctx.beginPath(); ctx.arc(0, 30, 2.5, 0, TAU); ctx.fill();
-    ctx.restore();
+    this.drawFace(ctx, t, C, K, white, R);
     ctx.restore();
 
-    if (P.withdraw <= 0.4) this.drawHead(ctx, t, C, K, white, lift);
     legRow(false);
     ctx.restore();
   }
-  drawHead(ctx, t, C, K, white, lift) {
-    const P = this.p;
-    const sc = 1 - P.withdraw * 0.45;
-    const hx = 76 - P.withdraw * 58 + P.charge * 6, hy = -lift - 38 - P.rear * 8 + P.charge * 12 + Math.sin(t * 2.2) * 1.5;
-    ctx.save(); ctx.translate(hx, hy); ctx.scale(sc, sc);
-    // antennae sweeping back over the shell
-    for (const s of [0, 1]) {
-      const sw = Math.sin(t * 1.8 + s * 1.7) * 6;
-      const ex = -30 - s * 22 + sw, ey = -60 - s * 6 - P.rear * 14;
-      ctx.strokeStyle = K; ctx.lineWidth = 4; ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.moveTo(4 - s * 8, -24); ctx.bezierCurveTo(14 - s * 6, -52, -8 - s * 10 + sw, -66, ex, ey); ctx.stroke();
-      ctx.strokeStyle = C('#2f4b43'); ctx.lineWidth = 1.8; ctx.stroke();
-      if (!white) glowDot(ctx, ex, ey, 9, '#bff5df', 0.5 * P.wake + 0.1);
-      ctx.fillStyle = C('#bff5df'); ctx.beginPath(); ctx.arc(ex, ey, 3, 0, TAU); ctx.fill();
+
+  // the ball of burr: hooked spines behind, a wobbly brown body, moss tufts. Origin at its centre.
+  drawBurr(ctx, t, C, K, white, R, bristle, rot) {
+    // two layers of hooks: a dark, longer back row and a lighter front row, shorter underneath
+    for (const back of [true, false]) {
+      const n = back ? 30 : 36;
+      for (let i = 0; i < n; i++) {
+        const a = ((i + (back ? 0.5 : 0)) / n) * TAU + Math.sin(t * 3 + i * 1.7) * 0.02 + rot;
+        const under = Math.max(0, Math.sin(a - rot)) * (rot ? 0 : 0.45);
+        const len = (back ? 17 : 11) + ((i * 7) % 5) * 1.4;
+        hook(ctx, Math.cos(a) * R * 0.8, Math.sin(a) * R * 0.8, a + (i % 2 ? 0.1 : -0.1), (R * 0.2 + len * (1 + bristle * 0.6)) * (1 - under), back ? 2.6 : 2.2,
+          C(back ? '#4e3a20' : i % 3 ? '#8a6a3a' : '#a8844c'), K, (i % 2 ? 1 : -1) * (1 - bristle * 0.5));
+      }
     }
-    // fur hood
-    ctx.beginPath();
-    for (let i = 0; i <= 16; i++) {
-      const a = i / 16 * TAU, r = (i % 2 ? 30 : 35) + Math.sin(t * 3 + i) * 0.8;
-      ctx.lineTo(Math.cos(a) * r - 6, Math.sin(a) * r * 0.9 + 2);
-    }
-    ctx.closePath(); ctx.fillStyle = C('#20352f'); ctx.fill(); ctx.strokeStyle = K; ctx.lineWidth = 3; ctx.stroke();
-    // mandibles (far one darker)
-    const jaw = P.jaw;
-    for (const s of [0, 1]) {
-      ctx.save(); ctx.translate(8 + s * 10, 20 - s * 2); ctx.rotate(0.25 + jaw * (s ? 0.55 : -0.35));
-      ctx.beginPath(); ctx.moveTo(-6, -2); ctx.quadraticCurveTo(14, -4, 20, 10); ctx.quadraticCurveTo(8, 4, -4, 6); ctx.closePath();
-      ctx.fillStyle = C(s ? '#d8cfb6' : '#9c947f'); ctx.fill(); ctx.strokeStyle = K; ctx.lineWidth = 2; ctx.stroke();
+    const ball = () => {
+      ctx.beginPath();
+      for (let i = 0; i <= 24; i++) {
+        const a = (i / 24) * TAU;
+        const rr = R * (1 + 0.035 * Math.sin(i * 3.7) + 0.025 * Math.sin(i * 1.3));
+        i ? ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr) : ctx.moveTo(Math.cos(a) * rr, Math.sin(a) * rr);
+      }
+      ctx.closePath();
+    };
+    ball(); ctx.fillStyle = C('#6e5530'); ctx.fill();
+    if (!white) {
+      ctx.save(); ball(); ctx.clip();
+      // olive mottling, then a carpet of little hooks
+      ctx.fillStyle = 'rgba(122,112,56,0.5)';
+      for (const [x, y, r] of [[-20, -18, 20], [18, 22, 16], [-28, 24, 13], [26, -30, 12]]) { ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill(); }
+      for (let i = 0; i < 34; i++) {
+        const rr = R * 0.95 * Math.sqrt((i + 0.5) / 34), a = i * 2.39996 + rot;
+        hook(ctx, Math.cos(a) * rr, Math.sin(a) * rr, a + 1.1, 7, 1.6, i % 2 ? '#a8864c' : '#8c6c3c', 'rgba(26,18,10,0.55)', i % 2 ? 1 : -1);
+      }
+      // painted shadow crescent + light hatching on the dark side
+      ctx.fillStyle = 'rgba(20,12,6,0.45)';
+      ctx.beginPath(); ctx.arc(0, 0, R * 1.1, -0.35, Math.PI * 0.95); ctx.arc(-R * 0.25, -R * 0.3, R * 1.12, Math.PI * 0.88, -0.3, true); ctx.fill();
+      ctx.strokeStyle = 'rgba(20,12,6,0.35)'; ctx.lineWidth = 1.2;
+      for (let i = 0; i < 9; i++) { const a = 0.1 + i * 0.3, x = Math.cos(a) * R * 0.86, y = Math.sin(a) * R * 0.86; ctx.beginPath(); ctx.moveTo(x - 4, y + 4); ctx.lineTo(x + 3, y - 5); ctx.stroke(); }
+      ctx.strokeStyle = 'rgba(232,206,150,0.55)'; ctx.lineWidth = 2.4;
+      ctx.beginPath(); ctx.arc(0, 0, R * 0.8, -2.65, -1.75); ctx.stroke();
       ctx.restore();
     }
-    // pale mask
-    ctx.save(); ctx.translate(6, -2); ctx.scale(0.86, 1);
-    const r = 25;
-    ctx.beginPath();
-    ctx.moveTo(-r, 2);
-    ctx.quadraticCurveTo(-r - 2, -r * 0.9, -r * 0.62, -r * 1.05);
-    ctx.quadraticCurveTo(-r * 0.6, -r * 1.45, -r * 0.35, -r * 1.5);   // little ear-nub
-    ctx.quadraticCurveTo(-r * 0.3, -r * 1.15, 0, -r * 1.15);
-    ctx.quadraticCurveTo(r * 0.3, -r * 1.15, r * 0.35, -r * 1.5);
-    ctx.quadraticCurveTo(r * 0.6, -r * 1.45, r * 0.62, -r * 1.05);
-    ctx.quadraticCurveTo(r + 2, -r * 0.9, r, 2);
-    ctx.quadraticCurveTo(r * 0.75, r * 0.95, 0, r * 1.05);
-    ctx.quadraticCurveTo(-r * 0.75, r * 0.95, -r, 2);
-    ctx.fillStyle = C('#ede6d4'); ctx.fill(); ctx.strokeStyle = K; ctx.lineWidth = 3; ctx.stroke();
-    if (!white) {
-      // brow shading + eye holes
-      ctx.fillStyle = 'rgba(160,150,130,0.35)';
-      ctx.beginPath(); ctx.ellipse(0, r * 0.65, r * 0.55, r * 0.25, 0, 0, TAU); ctx.fill();
-      const open = this.mode === 'dormant' ? 0.15 : this.blink > 0 ? 0.2 : 1;
-      ctx.fillStyle = INK;
-      for (const s of [-1, 1]) {
-        ctx.save(); ctx.translate(s * r * 0.42, -r * 0.05); ctx.rotate(s * -0.25);
-        ctx.beginPath(); ctx.ellipse(0, 0, r * 0.25, r * 0.42 * open, 0, 0, TAU); ctx.fill();
-        ctx.restore();
-        if (open > 0.5) eye(ctx, s * r * 0.42 + 1, -r * 0.02, 3.2 + this.crack * 0.6, this.crack >= 2 ? '#e8fff4' : '#bff5df', true);
-      }
-      // cracks
-      ctx.strokeStyle = INK; ctx.lineWidth = 1.6;
-      if (this.crack >= 1) { ctx.beginPath(); ctx.moveTo(r * 0.1, -r * 1.12); ctx.lineTo(r * 0.02, -r * 0.7); ctx.lineTo(r * 0.16, -r * 0.48); ctx.stroke(); }
-      if (this.crack >= 2) { ctx.beginPath(); ctx.moveTo(-r * 0.92, r * 0.2); ctx.lineTo(-r * 0.6, r * 0.38); ctx.lineTo(-r * 0.62, r * 0.66); ctx.moveTo(-r * 0.6, r * 0.38); ctx.lineTo(-r * 0.3, r * 0.45); ctx.stroke(); }
+    // brushy ink outline: pressure heavier on the shadow side, with stray barbs
+    ctx.strokeStyle = K;
+    for (let i = 0; i < 28; i++) {
+      const a0 = (i / 28) * TAU, a1 = a0 + (TAU / 28) * 1.2;
+      ctx.lineWidth = 3 + 2.2 * Math.max(0, Math.sin(a0 + 0.6));
+      const rr = R * (1 + 0.035 * Math.sin(i * 3.7 * 24 / 28));
+      ctx.beginPath(); ctx.arc(0, 0, rr, a0, a1); ctx.stroke();
     }
-    ctx.restore();
-    ctx.restore();
+    // moss tufts
+    for (const [a, s] of [[0.15, 0.7], [1.75, 0.9], [2.45, 0.75]]) {
+      const ax = Math.cos(a + rot) * R * 0.9, ay = Math.sin(a + rot) * R * 0.9;
+      const blobs = [[0, 0, 8], [-7, 3, 6], [7, 2, 6.5], [1, -5, 5.5]];
+      ctx.fillStyle = K; for (const [x, y, r] of blobs) { ctx.beginPath(); ctx.arc(ax + x * s, ay + y * s, (r + 2.2) * s, 0, TAU); ctx.fill(); }
+      blobs.forEach(([x, y, r], k) => { ctx.fillStyle = C(k % 2 ? '#5f8a4a' : '#6f9a52'); ctx.beginPath(); ctx.arc(ax + x * s, ay + y * s, r * s, 0, TAU); ctx.fill(); });
+      if (!white) {
+        ctx.fillStyle = '#a8c870';
+        for (const [x, y] of [[-2, -3], [-8, 1], [5, -1]]) { ctx.beginPath(); ctx.arc(ax + x * s, ay + y * s, 1.6 * s, 0, TAU); ctx.fill(); }
+        ctx.fillStyle = 'rgba(20,30,12,0.4)'; ctx.beginPath(); ctx.arc(ax + 2 * s, ay + 3 * s, 6 * s, 0.1, Math.PI - 0.1); ctx.fill();
+      }
+    }
   }
 
-  drawBall(ctx, t, C, K, white) {
-    const R = 50;
-    ctx.save(); ctx.translate(0, -R - 2); ctx.rotate(this.spinAng);
-    // moss bumps all around
-    const n = 14;
-    ctx.fillStyle = K;
-    for (let i = 0; i < n; i++) { const a = i / n * TAU; ctx.beginPath(); ctx.arc(Math.cos(a) * (R - 4), Math.sin(a) * (R - 4), 12.5, 0, TAU); ctx.fill(); }
-    for (let i = 0; i < n; i++) { const a = i / n * TAU; ctx.fillStyle = C(i % 2 ? '#4d8a5e' : '#5f9c6c'); ctx.beginPath(); ctx.arc(Math.cos(a) * (R - 4), Math.sin(a) * (R - 4), 10, 0, TAU); ctx.fill(); }
-    ctx.beginPath(); ctx.arc(0, 0, R - 6, 0, TAU);
-    if (white) ctx.fillStyle = '#fff';
-    else { const gr = ctx.createRadialGradient(-12, -12, 4, 0, 0, R); gr.addColorStop(0, '#4b7d6d'); gr.addColorStop(1, '#16302a'); ctx.fillStyle = gr; }
-    ctx.fill(); ctx.strokeStyle = K; ctx.lineWidth = 3.5; ctx.stroke();
+  // a knitted plum shawl with a doily edge, draped over her back, tasselled at the point
+  drawShawl(ctx, t, C, K, white, R) {
+    const P = this.p;
+    const aF = -0.98, aB = 2.72;
+    const Fx = Math.cos(aF) * (R + 3), Fy = Math.sin(aF) * (R + 3);
+    const lift = P.birth * 14;
+    const Tx = -R * 1.04 - lift * 0.4, Ty = R * 0.78 - lift;
+    const c2 = [-R * 0.2, R * 0.45 - lift * 0.5], c1 = [R * 0.18, -R * 0.2];
+    const shawl = () => {
+      ctx.beginPath(); ctx.moveTo(Fx, Fy);
+      ctx.arc(0, 0, R + 3, aF, aB, true);
+      ctx.lineTo(Tx, Ty);
+      ctx.bezierCurveTo(c2[0], c2[1], c1[0], c1[1], Fx, Fy);
+      ctx.closePath();
+    };
+    // doily scallops along the hem (drawn first, so only their lace edge shows past the hem)
+    const hem = [];
+    for (let i = 0; i <= 12; i++) {
+      const k = i / 12, u = 1 - k;
+      const x = u * u * u * Tx + 3 * u * u * k * c2[0] + 3 * u * k * k * c1[0] + k * k * k * Fx;
+      const y = u * u * u * Ty + 3 * u * u * k * c2[1] + 3 * u * k * k * c1[1] + k * k * k * Fy;
+      hem.push([x, y]);
+    }
+    ctx.fillStyle = K; for (const [x, y] of hem) { ctx.beginPath(); ctx.arc(x, y, 6.6, 0, TAU); ctx.fill(); }
+    ctx.fillStyle = C('#ece0c4'); for (const [x, y] of hem) { ctx.beginPath(); ctx.arc(x, y, 4.6, 0, TAU); ctx.fill(); }
+    shawl(); ctx.fillStyle = C('#9a4f5c'); ctx.fill();
     if (!white) {
-      ctx.strokeStyle = 'rgba(10,20,20,0.75)'; ctx.lineWidth = 2;
-      for (const k of [-0.5, 0, 0.5]) { ctx.beginPath(); ctx.ellipse(0, 0, R - 8, (R - 8) * Math.abs(k) + 3, k * 2, 0, TAU); ctx.stroke(); }
-      for (const [px, py] of [[-16, -18], [20, 8], [-6, 24]]) {
-        ctx.fillStyle = 'rgba(232,226,200,0.9)'; ctx.beginPath(); ctx.ellipse(px, py, 8, 6, 0.3, 0, TAU); ctx.fill();
-        glowDot(ctx, px, py, 10, '#bff5df', 0.4);
+      ctx.save(); shawl(); ctx.clip();
+      // knit rows of little V stitches
+      ctx.strokeStyle = 'rgba(70,24,36,0.55)'; ctx.lineWidth = 1.2; ctx.beginPath();
+      for (let row = 0, y = -R - 8; y < R + 8; y += 6, row++) {
+        for (let x = -R - 12 + (row % 2) * 3; x < R + 8; x += 6) { ctx.moveTo(x - 2.2, y - 2); ctx.lineTo(x, y + 1.2); ctx.lineTo(x + 2.2, y - 2); }
+      }
+      ctx.stroke();
+      // a darker cable stripe and a painted shadow toward the hem
+      ctx.strokeStyle = 'rgba(214,160,150,0.55)'; ctx.lineWidth = 3; ctx.setLineDash([5, 4]);
+      ctx.beginPath(); ctx.arc(0, 0, R * 0.78, -1.15, 2.6, true); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = 'rgba(40,10,22,0.38)';
+      ctx.beginPath(); ctx.moveTo(Tx, Ty); ctx.bezierCurveTo(c2[0], c2[1], c1[0], c1[1], Fx, Fy); ctx.lineTo(Fx - 16, Fy - 4); ctx.bezierCurveTo(c1[0] - 18, c1[1] - 16, c2[0] - 16, c2[1] - 16, Tx - 6, Ty - 18); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,214,214,0.3)'; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.arc(0, 0, R - 1, -2.7, -1.6); ctx.stroke();
+      ctx.restore();
+      // lace holes in the doily edge
+      ctx.fillStyle = '#5a3a3a';
+      for (let i = 0; i < hem.length; i++) {
+        const [x, y] = hem[i], [x2, y2] = hem[Math.min(hem.length - 1, i + 1)], [x1, y1] = hem[Math.max(0, i - 1)];
+        let nx = -(y2 - y1), ny = x2 - x1; const L = Math.hypot(nx, ny) || 1; nx /= L; ny /= L;
+        if (nx + ny < 0) { nx = -nx; ny = -ny; }
+        ctx.beginPath(); ctx.arc(x + nx * 2.6, y + ny * 2.6, 1.3, 0, TAU); ctx.fill();
       }
     }
+    shawl(); ctx.strokeStyle = K; ctx.lineWidth = 3; ctx.stroke();
+    // little burr babies riding under the hem (they wriggle before tumbling out)
+    for (const [bx, byy, s] of [[-R * 0.5, R * 0.62, 1], [-R * 0.16, R * 0.5, 0.85]]) {
+      const pop = P.birth * 9 * s, wig = Math.sin(t * (4 + P.birth * 14) + bx) * (0.6 + P.birth * 2);
+      ctx.save(); ctx.translate(bx + wig, byy - pop); ctx.scale(s * (0.75 + P.birth * 0.25), s * (0.75 + P.birth * 0.25));
+      for (let i = 0; i < 9; i++) { const a = (i / 9) * TAU; hook(ctx, Math.cos(a) * 6, Math.sin(a) * 6, a, 5, 1.4, C('#c9a25e'), K, i % 2 ? 1 : -1); }
+      ctx.fillStyle = C('#8a6634'); ctx.strokeStyle = K; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(0, 0, 8, 0, TAU); ctx.fill(); ctx.stroke();
+      if (!white) { ctx.fillStyle = INK; for (const ex of [1.5, 5]) { ctx.beginPath(); ctx.arc(ex, -1, 1.5, 0, TAU); ctx.fill(); } ctx.fillStyle = '#fff4dc'; for (const ex of [1, 4.5]) { ctx.beginPath(); ctx.arc(ex, -1.6, 0.6, 0, TAU); ctx.fill(); } }
+      ctx.restore();
+    }
+    // tassel at the point
+    const sw = Math.sin(t * 2.6) * 4 + (this.moving ? -6 : 0) + P.charge * -6;
+    ctx.strokeStyle = K; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(Tx, Ty); ctx.quadraticCurveTo(Tx + sw * 0.3, Ty + 6, Tx + sw * 0.6, Ty + 10); ctx.stroke();
+    const tx = Tx + sw * 0.6, ty = Ty + 10;
+    ctx.fillStyle = C('#ece0c4'); ctx.strokeStyle = K; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(tx, ty, 4, 0, TAU); ctx.fill(); ctx.stroke();
+    for (let k = -2; k <= 2; k++) {
+      ctx.strokeStyle = K; ctx.lineWidth = 3.4; ctx.beginPath(); ctx.moveTo(tx + k * 1.6, ty + 3); ctx.lineTo(tx + k * 2.6 + sw * 0.3, ty + 15); ctx.stroke();
+      ctx.strokeStyle = C(k % 2 ? '#c96f7e' : '#ece0c4'); ctx.lineWidth = 1.6; ctx.stroke();
+    }
+  }
+
+  // round spectacles, bushy brows over sleepy lids: kind, but she will not be hurried
+  drawFace(ctx, t, C, K, white, R) {
+    const P = this.p;
+    const fx = R * 0.5, fy = R * 0.06 - P.charge * 4;
+    const shut = this.mode === 'dormant' || this.blink > 0 || P.withdraw > 0.3;
+    const cross = clamp(this.crack + P.rear * 1.5 + P.charge * 1.5 + (this.tele > 0 ? 0.6 : 0), 0, 3);
+    // soft fawn muzzle
+    ctx.fillStyle = C('#a8865a');
+    ctx.beginPath(); ctx.ellipse(fx, fy + 6, 24, 21, 0, 0, TAU); ctx.fill();
+    if (!white) {
+      ctx.fillStyle = 'rgba(40,24,10,0.3)'; ctx.beginPath(); ctx.ellipse(fx + 3, fy + 15, 18, 9, 0, 0, Math.PI); ctx.fill();
+      ctx.strokeStyle = 'rgba(22,16,10,0.6)'; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.ellipse(fx, fy + 6, 24, 21, 0, 0.3, 2.6); ctx.stroke();
+      // rosy cheeks
+      ctx.fillStyle = 'rgba(214,104,104,0.4)';
+      for (const x of [fx - 15, fx + 16]) { ctx.beginPath(); ctx.ellipse(x, fy + 9, 5.5, 3.5, 0, 0, TAU); ctx.fill(); }
+    }
+    const slip = this.crack >= 2 ? 3 : 0;
+    const eyes = [[fx - 10, fy - 2, 8.5], [fx + 10, fy - 2, 7.6]];
+    for (const [ex, ey, lr] of eyes) {
+      // eye: a beady dark bead under a heavy, sleepy lid
+      if (!white) {
+        if (shut) {
+          ctx.strokeStyle = INK; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.arc(ex, ey - 1, 4, 0.3, Math.PI - 0.3); ctx.stroke();
+        } else {
+          ctx.fillStyle = INK; ctx.beginPath(); ctx.ellipse(ex, ey, 3.8, 4.4, 0, 0, TAU); ctx.fill();
+          ctx.fillStyle = this.tele > 0 ? '#ffd88a' : '#fff4dc'; ctx.beginPath(); ctx.arc(ex - 1.2, ey - 1.6, 1.3, 0, TAU); ctx.fill();
+          ctx.fillStyle = '#7a5c34'; ctx.strokeStyle = INK; ctx.lineWidth = 1.6;
+          ctx.beginPath(); ctx.ellipse(ex, ey, 4.6, 5, 0, Math.PI * 1.04, Math.PI * 1.96); ctx.lineTo(ex + 4.6, ey - 1.2 + cross * 0.4); ctx.lineTo(ex - 4.6, ey - 1.2 + cross * 0.4); ctx.closePath(); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(ex - 4.8, ey - 1 + cross * 0.4); ctx.lineTo(ex + 4.8, ey - 1 + cross * 0.4); ctx.stroke();
+        }
+      }
+      // spectacles: gold wire rims, a sliver of glass glint
+      const sx = ex, sy = ey + slip;
+      ctx.strokeStyle = K; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(sx, sy, lr, 0, TAU); ctx.stroke();
+      ctx.strokeStyle = C('#d9b25c'); ctx.lineWidth = 2; ctx.stroke();
+      if (!white) {
+        ctx.fillStyle = 'rgba(210,232,240,0.18)'; ctx.beginPath(); ctx.arc(sx, sy, lr - 1, 0, TAU); ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.75)'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(sx, sy, lr - 2.6, -2.5, -1.7); ctx.stroke();
+      }
+    }
+    // bridge + temple arm hooked back into her spines
+    ctx.strokeStyle = K; ctx.lineWidth = 3.6;
+    ctx.beginPath(); ctx.moveTo(fx - 2, fy - 3 + slip); ctx.quadraticCurveTo(fx, fy - 6 + slip, fx + 2.4, fy - 3 + slip); ctx.moveTo(fx - 18.5, fy - 4 + slip); ctx.lineTo(fx - 32, fy - 9); ctx.stroke();
+    ctx.strokeStyle = C('#d9b25c'); ctx.lineWidth = 1.6; ctx.stroke();
+    if (!white && this.crack >= 1) {
+      const [ex, ey, lr] = eyes[1];
+      ctx.strokeStyle = 'rgba(255,255,255,0.85)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(ex - lr * 0.7, ey + slip - lr * 0.5); ctx.lineTo(ex, ey + slip + 1); ctx.lineTo(ex + lr * 0.4, ey + slip + lr * 0.8); ctx.moveTo(ex, ey + slip + 1); ctx.lineTo(ex + lr * 0.8, ey + slip - 1); ctx.stroke();
+    }
+    // bushy white brows that knit together when she is cross
+    for (const [s, ex] of [[-1, eyes[0][0]], [1, eyes[1][0]]]) {
+      const inner = -s, y0 = fy - 13;
+      const yi = y0 + cross * 1.6, yo = y0 - 1.5 - cross * 0.8;
+      const x0 = ex + inner * 7, x1 = ex - inner * 8;
+      ctx.strokeStyle = K; ctx.lineWidth = 6.5; ctx.beginPath(); ctx.moveTo(x0, yi); ctx.quadraticCurveTo(ex, y0 - 4, x1, yo); ctx.stroke();
+      ctx.strokeStyle = C('#efe6d0'); ctx.lineWidth = 3.6; ctx.stroke();
+      if (!white) { ctx.strokeStyle = '#efe6d0'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(x1, yo); ctx.lineTo(x1 - inner * 4, yo - 3); ctx.moveTo(ex - inner * 3, y0 - 2); ctx.lineTo(ex - inner * 4, y0 - 6); ctx.stroke(); }
+    }
+    // a seed-knob nose
+    ctx.fillStyle = C('#7a5530'); ctx.strokeStyle = K; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.ellipse(fx + 1, fy + 6, 4.6, 3.8, 0, 0, TAU); ctx.fill(); ctx.stroke();
+    if (!white) { ctx.fillStyle = 'rgba(255,230,190,0.55)'; ctx.beginPath(); ctx.arc(fx - 0.5, fy + 4.6, 1.4, 0, TAU); ctx.fill(); }
+    // mouth: a pursed little frown, or an indignant 'O' with one brave tooth
+    const jaw = P.jaw;
+    if (jaw > 0.15) {
+      ctx.fillStyle = C('#2a1410'); ctx.strokeStyle = K; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(fx + 1, fy + 15 + jaw * 2, 4 + jaw * 2, 2 + jaw * 5, 0, 0, TAU); ctx.fill(); ctx.stroke();
+      if (!white) { ctx.fillStyle = '#f4ead2'; ctx.fillRect(fx - 1, fy + 13 + jaw * 2 - jaw * 4, 3, 3.2); }
+    } else if (!white) {
+      ctx.strokeStyle = INK; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(fx - 5, fy + 17); ctx.quadraticCurveTo(fx + 1, fy + 13, fx + 7, fy + 17); ctx.stroke();
+    }
+  }
+
+  // tucked up and rolling: shawl wrapped tight, every hook bristling
+  drawBall(ctx, t, C, K, white) {
+    const R = 50;
+    ctx.save(); ctx.translate(0, -R - 2);
+    this.drawBurr(ctx, t, C, K, white, R, 1, this.spinAng);
+    ctx.rotate(this.spinAng);
+    this.drawShawl(ctx, t, C, K, white, R);
     ctx.restore();
     // motion streaks
     if (!white && this.dashing) {
-      ctx.strokeStyle = 'rgba(191,245,223,0.5)'; ctx.lineWidth = 3;
-      for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(0, -R - 2, R + 8 + i * 6, Math.PI * 0.6 + i * 0.1, Math.PI * 1.15 + i * 0.1); ctx.stroke(); }
+      ctx.strokeStyle = 'rgba(240,228,196,0.5)'; ctx.lineWidth = 3;
+      for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(0, -R - 2, R + 22 + i * 6, Math.PI * 0.6 + i * 0.1, Math.PI * 1.15 + i * 0.1); ctx.stroke(); }
     }
   }
 }

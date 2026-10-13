@@ -1,5 +1,5 @@
 // Foreground silhouettes: dark, soft-focus shapes that slide past in front of the play space with
-// strong parallax (roots, leaves, stalactites, grass, gears...). They frame the screen like a painting.
+// strong parallax (roots, leaves, stalactites, grass, pins...). They frame the screen like a painting.
 import { VIEW_W, VIEW_H } from '../core/constants.js';
 import { rng, hashStr, TAU } from '../core/math.js';
 import { mix } from './palettes.js';
@@ -10,7 +10,7 @@ const cache = new Map();
 const KIND = {
   threadcave: 'cave', bells: 'cave', crypt: 'cave', fungal: 'fungal', hive: 'cave', iceshrine: 'ice',
   looms: 'threads', void: 'threads', greenhouse: 'leaves', town: 'grass', clouds: 'grass', moonsky: 'grass',
-  dunes: 'grass', gears: 'gears', aqueduct: 'cave', furnace: 'cave', prisms: 'ice', library: 'threads', temple: 'threads',
+  dunes: 'grass', pinworks: 'pins', aqueduct: 'cave', furnace: 'cave', prisms: 'ice', library: 'threads', temple: 'threads',
 };
 
 export function getForeground(style) {
@@ -56,7 +56,7 @@ export function drawForeground(ctx, fg, camX, camY, roomH) {
 function paint(ctx, R, kind, col, style) {
   ctx.fillStyle = col; ctx.strokeStyle = col;
   const bottom = (x0, n, f) => { for (let i = 0; i < n; i++) f(x0 + R() * W, H); };
-  if (kind === 'cave' || kind === 'ice' || kind === 'threads' || kind === 'fungal' || kind === 'gears') {
+  if (kind === 'cave' || kind === 'ice' || kind === 'threads' || kind === 'fungal') {
     // hanging from the top: stalactites / roots / threads
     for (let i = 0; i < 26; i++) {
       const x = R() * W, len = 20 + R() * (R() < 0.15 ? 150 : 60), w = 8 + R() * 30;
@@ -88,12 +88,27 @@ function paint(ctx, R, kind, col, style) {
   if (kind === 'fungal') {
     bottom(0, 9, (x) => { const h = 40 + R() * 90, w = 30 + R() * 60; ctx.fillRect(x - 4, H - h, 8, h); ctx.beginPath(); ctx.ellipse(x, H - h, w, w * 0.35, 0, Math.PI, 0); ctx.fill(); });
   }
-  if (kind === 'gears') {
-    for (let i = 0; i < 7; i++) {
-      const x = R() * W, y = R() < 0.5 ? H + 20 : -20, r = 40 + R() * 70;
-      ctx.beginPath();
-      for (let k = 0; k < 24; k++) { const a = k / 24 * TAU, rr = k % 2 ? r : r * 1.15; ctx.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); }
-      ctx.fill();
+  if (kind === 'pins') {
+    // chains and hooks from the rafters, dangling needles, and great pins leaning in from below
+    for (let i = 0; i < 9; i++) {
+      const x = R() * W, len = 60 + R() * 200, s = 14 + R() * 6;
+      ctx.lineWidth = 4;
+      for (let y = -5; y < len; y += s * 0.9) { ctx.beginPath(); ctx.ellipse(x, y, (y / s) % 2 < 1 ? s * 0.28 : 2, s * 0.55, 0, 0, TAU); ctx.stroke(); }
+      if (R() < 0.5) { ctx.lineWidth = 8; ctx.beginPath(); ctx.arc(x + 12, len + 14, 14, Math.PI * 0.95, Math.PI * 0.1, true); ctx.stroke(); }
+      else { ctx.beginPath(); ctx.moveTo(x - 5, len); ctx.lineTo(x + 5, len); ctx.lineTo(x + 1, len + 110 + R() * 60); ctx.closePath(); ctx.fill(); }
+    }
+    for (let i = 0; i < 16; i++) {
+      const x = R() * W, len = 30 + R() * 90, w = 8 + R() * 26;
+      ctx.beginPath(); ctx.moveTo(x - w, -5);
+      ctx.quadraticCurveTo(x - w * 0.3, len * 0.6, x + (R() - 0.5) * 10, len);
+      ctx.quadraticCurveTo(x + w * 0.3, len * 0.6, x + w, -5); ctx.fill();
+    }
+    for (let i = 0; i < 6; i++) {
+      const x = R() * W, a = 0.25 + (R() - 0.4) * 0.7, len = 90 + R() * 130, w = 7 + R() * 6, hr = 16 + R() * 12;
+      ctx.save(); ctx.translate(x, H + 10); ctx.rotate(a);
+      ctx.beginPath(); ctx.moveTo(-w / 2, 0); ctx.lineTo(-w / 2, -len); ctx.lineTo(w / 2, -len); ctx.lineTo(w / 2, 0); ctx.fill();
+      ctx.beginPath(); ctx.arc(0, -len - hr * 0.8, hr, 0, TAU); ctx.fill();
+      ctx.restore();
     }
   }
   // grass / bristle tufts along the bottom, for every kind

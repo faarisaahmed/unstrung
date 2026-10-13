@@ -366,6 +366,29 @@ function wings(ctx, x, y, w, h, flap, fill, alpha = 0.8, style = 'moth', detail)
   ctx.globalAlpha = a0;
 }
 
+// Squash & stretch for hopper bodies: crouch while winding up, stretch in the air, squash with a
+// small overshoot on landing. Returns scale factors about the feet plus pose flags.
+function hopPose(e) {
+  const st = e.state, t = e.t ?? 9;
+  const air = e.grounded === false || st === 'air';
+  let sx = 1, sy = 1, land = 0, rise = 0;
+  if (air) {
+    rise = Math.max(-1, Math.min(1, -(e.vy || 0) / 500));
+    sy = 1 + (rise > 0 ? 0.12 * rise : 0.05 * -rise);
+    sx = 1 / Math.sqrt(sy);
+  } else if (st === 'tele') {
+    const k = Math.min(1, t / 0.3);
+    sy = 1 - 0.18 * k + Math.sin(t * 60) * 0.012 * k; sx = 1 + 0.13 * k;
+  } else if (t < 0.3) {
+    const d = t / 0.3, s = (1 - d) * Math.cos(d * Math.PI * 1.5);
+    land = 1 - d;
+    sy = 1 - 0.22 * s; sx = 1 + 0.17 * s;
+  } else {
+    sy = 1 + Math.sin((e.anim || 0) * 3) * 0.015;
+  }
+  return { sx, sy, air, land, rise };
+}
+
 // ------------------------------------------------------------------ painters
 export const PAINTERS = {
   // fuzzy lint ball with stubby legs
@@ -1396,6 +1419,495 @@ export const PAINTERS = {
       ctx.beginPath(); bodyP(ctx); ink(ctx, 1.4); ctx.stroke();
     }
     mask(ctx, w * 0.32, -h * 0.55, Math.min(w, h) * 0.2, A);
+  },
+  // ---------------------------------------------------------------- sewing-box & hearth oddments
+  // Rolling iron sewing button (roller). The button turns with e.roll; the eyes peeking over the
+  // rim stay upright.
+  button(ctx, e, t, A) {
+    const r = Math.min(e.w, e.h) * 0.47, an = e.anim || 0;
+    const rot = e.roll ?? an * (A.spin || 3);
+    const c1 = A.c1 || '#7f8a96', c2 = A.c2 || '#2a2f38', tc = A.c3 || '#c4473a';
+    ctx.save(); ctx.translate(0, A.centered ? 0 : -r);
+    // a stubby little head hiding behind the button: two hooded eyes peeking over the rim
+    const bob = Math.sin(an * 9) * r * 0.05;
+    form(ctx, c2, (c) => oval(c, r * 0.14, -r * 0.92 + bob, r * 0.6, r * 0.36, 0, 0.05), { lw: 1.8, sd: r * 0.08, rim: false });
+    for (const s of [-1, 1]) {
+      const ex = r * (0.16 + s * 0.27), ey = -r * 1.06 + bob, er = Math.max(1.8, r * (s < 0 ? 0.17 : 0.15));
+      eye(ctx, ex, ey, er, A.eye || '#ffb050', true, 'angry');
+      brush(ctx, [ex - er * 1.3, ey - er * 1.2 + (s < 0 ? -er * 0.3 : er * 0.1), ex, ey - er * 0.95, ex + er * 1.3, ey - er * 0.5], 2, 1.3);
+    }
+    // the button: raised rim + dished face, wobble rotates with the roll
+    const disc = (c) => { const m = c.getTransform(); c.rotate(rot); oval(c, 0, 0, r, r * 0.98, 0, 0.025, 4); c.setTransform(m); };
+    form(ctx, c1, disc, { sd: r * 0.2, lw: 2.2 });
+    const dish = shade(c1, 0.18);
+    ctx.fillStyle = dish; ctx.beginPath(); ctx.arc(0, 0, r * 0.7, 0, TAU); ctx.fill();
+    // painted light inside the dish is opposite the rim's (it is a hollow)
+    ctx.fillStyle = shade(c1, 0.38); ctx.beginPath(); ctx.arc(0, 0, r * 0.7, Math.PI * 1.05, Math.PI * 1.75); ctx.arc(r * 0.06, r * 0.08, r * 0.66, Math.PI * 1.75, Math.PI * 1.05, true); ctx.fill();
+    ink(ctx, Math.max(1, r * 0.08)); ctx.beginPath(); ctx.arc(0, 0, r * 0.7, Math.PI * 0.95, Math.PI * 1.85); ctx.stroke();
+    ink(ctx, Math.max(0.7, r * 0.04)); ctx.beginPath(); ctx.arc(0, 0, r * 0.7, Math.PI * 1.85, Math.PI * 2.95); ctx.stroke();
+    stroke(ctx, [r * 0.55, r * 0.6, r * 0.8, r * 0.25, r * 0.86, -r * 0.15], 1.4, lighten(c1, 0.45));
+    // four thread holes, turning
+    ctx.save(); ctx.rotate(rot);
+    const H = [];
+    for (let i = 0; i < 4; i++) { const a = i * TAU / 4 + Math.PI / 4; H.push([Math.cos(a) * r * 0.3, Math.sin(a) * r * 0.3]); }
+    const hr = Math.max(1.2, r * 0.12);
+    ctx.fillStyle = INK;
+    for (const [x, y] of H) { ctx.beginPath(); ctx.ellipse(x, y, hr, hr * 0.92, 0.4, 0, TAU); ctx.fill(); }
+    // a scrap of thread still stitched through two holes, with a frayed tail
+    const [a, b] = [H[0], H[1]];
+    brush(ctx, [a[0], a[1], (a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + r * 0.06, b[0], b[1]], 2.6, 2.6, INK, 0, 6);
+    brush(ctx, [a[0], a[1], (a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + r * 0.06, b[0], b[1]], 1.5, 1.5, tc, 0, 6);
+    ctx.restore();
+    // the tail hangs from the turning hole but trails behind, unrotated
+    const hx = H[1][0] * Math.cos(rot) - H[1][1] * Math.sin(rot), hy = H[1][0] * Math.sin(rot) + H[1][1] * Math.cos(rot);
+    const sway = Math.sin(an * 7) * r * 0.15;
+    const tail = [hx, hy, hx - r * 0.5, hy + r * 0.25, -r * 1.1, r * 0.25 + sway, -r * 1.45, r * 0.05 + sway * 1.4];
+    brush(ctx, tail, 2.6, 1, INK, 0, 10);
+    brush(ctx, tail, 1.5, 0.3, tc, 0, 10);
+    ctx.restore();
+  },
+
+  // Sewing-machine bobbin bolted to a bracket (spinner). Turns with e.ang; one eye on the hub.
+  bobbin(ctx, e, t, A) {
+    const w = e.w, h = e.h, an = e.anim || 0;
+    const r = Math.min(w, h) * 0.42, cy = A.centered ? 0 : -h * 0.56;
+    const c1 = A.c1 || '#9aa3ad', wc = A.c2 || '#c0462f', iron = A.c3 || shade(c1, 0.55);
+    const f = e.facing || 1;
+    const rot = e.ang !== undefined ? (f < 0 ? Math.PI - e.ang : e.ang) : an * (A.spin || 1);
+    if (!A.centered) {
+      // bracket: a riveted foot plate and an iron arm up to the axle
+      form(ctx, iron, (c) => { c.moveTo(-w * 0.07, cy); c.lineTo(w * 0.07, cy); c.lineTo(w * 0.1, -h * 0.1); c.lineTo(-w * 0.1, -h * 0.1); c.closePath(); }, { lw: 1.8, sd: w * 0.04, hatch: [-w * 0.1, cy, w * 0.2, -cy] });
+      form(ctx, iron, (c) => { c.moveTo(-w * 0.34, 0); c.quadraticCurveTo(-w * 0.3, -h * 0.13, -w * 0.12, -h * 0.13); c.lineTo(w * 0.12, -h * 0.13); c.quadraticCurveTo(w * 0.3, -h * 0.13, w * 0.34, 0); c.closePath(); }, { lw: 2, sd: h * 0.04 });
+      ctx.fillStyle = lighten(iron, 0.4);
+      for (const s of [-1, 1]) { ctx.beginPath(); ctx.arc(s * w * 0.22, -h * 0.05, Math.max(1, w * 0.035), 0, TAU); ctx.fill(); ink(ctx, 0.8); ctx.stroke(); }
+    }
+    ctx.save(); ctx.translate(0, cy);
+    // the flange (face-on), wobble turns with it
+    const disc = (c) => { const m = c.getTransform(); c.rotate(rot); oval(c, 0, 0, r, r, 0, 0.02, 5); c.setTransform(m); };
+    form(ctx, c1, disc, { sd: r * 0.2, lw: 2.2 });
+    ctx.strokeStyle = shade(c1, 0.3); ctx.lineWidth = Math.max(0.8, r * 0.06);
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.88, 0, TAU); ctx.stroke();
+    // five windows through the flange showing the wound red wire beneath
+    ctx.save(); ctx.rotate(rot);
+    const nH = 5, hr = r * 0.2;
+    const win = (c, a) => { const x = Math.cos(a) * r * 0.56, y = Math.sin(a) * r * 0.56; c.moveTo(x + hr, y); c.ellipse(x, y, hr, hr * 0.95, a, 0, TAU); };
+    ctx.beginPath(); for (let i = 0; i < nH; i++) win(ctx, i * TAU / nH); ctx.fillStyle = wc; ctx.fill();
+    ctx.save(); ctx.clip();
+    // windings (concentric) and the inner shadow of each window
+    ctx.strokeStyle = shade(wc, 0.45); ctx.lineWidth = 0.9;
+    for (let k = 0; k < 4; k++) { ctx.beginPath(); ctx.arc(0, 0, r * (0.4 + k * 0.085), 0, TAU); ctx.stroke(); }
+    ctx.restore();
+    ctx.restore();
+    ctx.save();
+    ctx.beginPath(); for (let i = 0; i < nH; i++) win(ctx, i * TAU / nH + rot); ctx.clip();
+    ctx.fillStyle = shade(wc, 0.5);
+    for (let i = 0; i < nH; i++) { const a = i * TAU / nH + rot, x = Math.cos(a) * r * 0.56, y = Math.sin(a) * r * 0.56; ctx.beginPath(); ctx.arc(x, y, hr, 0, TAU); ctx.arc(x - hr * 0.35, y - hr * 0.45, hr * 1.05, 0, TAU, true); ctx.fill(); }
+    ctx.restore();
+    ink(ctx, 1.1); ctx.beginPath(); for (let i = 0; i < nH; i++) win(ctx, i * TAU / nH + rot); ctx.stroke();
+    // a loose end of wire flicking off the rim
+    const la = rot + 0.9, lx = Math.cos(la) * r * 0.95, ly = Math.sin(la) * r * 0.95;
+    const wv = Math.sin(an * 6) * r * 0.12;
+    const P = [lx, ly, lx + Math.cos(la + 1.3) * r * 0.35, ly + Math.sin(la + 1.3) * r * 0.35 + wv, lx + Math.cos(la + 0.9) * r * 0.55, ly + Math.sin(la + 0.9) * r * 0.55 + wv];
+    brush(ctx, P, 2.4, 0.8, INK, 0, 7); brush(ctx, P, 1.3, 0.2, wc, 0, 7);
+    stroke(ctx, [-r * 0.8, -r * 0.1, -r * 0.7, -r * 0.6, -r * 0.25, -r * 0.82], 1.6, lighten(c1, 0.5));
+    // hub + axle nut, with the single eye looking out
+    form(ctx, lighten(c1, 0.15), (c) => oval(c, 0, 0, r * 0.34, r * 0.34, 0, 0.03), { lw: 1.8, sd: r * 0.08 });
+    const p = e.game && e.game.player;
+    let la2 = p && e.cx !== undefined ? Math.atan2(p.cy - e.cy, (p.cx - e.cx) * f) : 0.3;
+    if (!Number.isFinite(la2)) la2 = 0.3;
+    const tele = e.state === 'tele';
+    ctx.fillStyle = INK; ctx.beginPath(); ctx.ellipse(0, 0, r * 0.22, r * 0.2, 0, 0, TAU); ctx.fill();
+    eye(ctx, Math.cos(la2) * r * 0.07, Math.sin(la2) * r * 0.06, Math.max(1.6, r * (tele ? 0.16 : 0.13)), A.eye || '#ffd08a', true);
+    ctx.restore();
+  },
+
+  // Tin thimble on stubby feet (hopper): dimpled, eyes peering out of two dimples.
+  thimble(ctx, e, t, A) {
+    const w = e.w, h = e.h, an = e.anim || 0;
+    const P = hopPose(e);
+    const c1 = A.c1 || '#a9b1ba', c2 = A.c2 || '#5b636e';
+    // stubby feet (dangling in the air, planted otherwise)
+    const fy = P.air ? h * 0.04 : 0, fw = Math.max(2.4, w * 0.11);
+    for (const s of [-1, 1]) {
+      const fx = s * w * 0.2 * P.sx + (P.air ? -s * w * 0.03 : 0);
+      brush(ctx, [fx, -h * 0.12, fx + w * 0.02, -h * 0.06, fx + w * 0.04, fy - 1], fw, fw * 0.9, INK, 0, 5);
+      form(ctx, c2, (c) => oval(c, fx + w * 0.07, fy - fw * 0.45, fw * 0.95, fw * 0.55, 0, 0.05), { lw: 1.4, sd: 1, rim: false });
+    }
+    ctx.save(); ctx.translate(0, -h * 0.08); ctx.scale(P.sx, P.sy);
+    const H = h * 0.9, bw = w * 0.4, tw = w * 0.31;
+    const body = (c) => {
+      c.moveTo(-bw, 0);
+      c.lineTo(-tw, -H * 0.72);
+      c.bezierCurveTo(-tw * 0.95, -H * 1.04, tw * 0.95, -H * 1.04, tw, -H * 0.72);
+      c.lineTo(bw, 0);
+      c.quadraticCurveTo(0, H * 0.06, -bw, 0);
+      c.closePath();
+    };
+    form(ctx, c1, body, { sd: w * 0.12, lw: 2.2, hatch: [-bw, -H, bw * 2, H] });
+    // dimples: staggered rows of little pits, foreshortened toward the sides
+    ctx.save(); ctx.beginPath(); body(ctx); ctx.clip();
+    const dk = shade(c1, 0.45), lt = lighten(c1, 0.45);
+    const rows = 5;
+    for (let j = 0; j < rows; j++) {
+      const y = -H * (0.3 + j * 0.13), ww = bw + (tw - bw) * ((0.3 + j * 0.13) / 0.72);
+      const n = 5 - (j > 2 ? 1 : 0), off = (j % 2) * 0.5;
+      for (let i = 0; i < n; i++) {
+        const u = ((i + 0.5 + off) / (n + 0.5)) * 2 - 1, cx = u * ww * 0.88;
+        const rx = Math.max(0.6, w * 0.035 * Math.sqrt(1 - u * u * 0.8)), ry = w * 0.03;
+        if (j === 1 && (i === 2 || i === 3)) continue; // eye dimples drawn below
+        ctx.fillStyle = dk; ctx.beginPath(); ctx.ellipse(cx, y, rx, ry, 0, 0, TAU); ctx.fill();
+        ctx.fillStyle = lt; ctx.beginPath(); ctx.ellipse(cx + rx * 0.35, y + ry * 0.45, rx * 0.5, ry * 0.35, 0, 0, TAU); ctx.fill();
+      }
+    }
+    ctx.restore();
+    // rolled lip around the bottom
+    const lip = (c) => { c.moveTo(-bw * 1.04, -H * 0.02); c.quadraticCurveTo(0, H * 0.07, bw * 1.04, -H * 0.02); c.lineTo(bw * 0.98, -H * 0.15); c.quadraticCurveTo(0, -H * 0.08, -bw * 0.98, -H * 0.15); c.closePath(); };
+    form(ctx, c2, lip, { lw: 1.8, sd: H * 0.04 });
+    stroke(ctx, [-bw * 0.7, -H * 0.1, 0, -H * 0.05, bw * 0.6, -H * 0.09], 1, lighten(c2, 0.45));
+    // shine down the lit flank
+    stroke(ctx, [-tw * 0.75, -H * 0.78, -bw * 0.78, -H * 0.45, -bw * 0.8, -H * 0.22], 2, lighten(c1, 0.6));
+    // the two eye-dimples, larger and deeper, with glints inside
+    const blink = (an % 3.3) < 0.12;
+    for (const [ex, er] of [[w * 0.02, w * 0.085], [w * 0.21, w * 0.075]]) {
+      const ey = -H * 0.46;
+      ctx.fillStyle = INK; ctx.beginPath(); ctx.ellipse(ex, ey, er, er * 1.05, 0, 0, TAU); ctx.fill();
+      ctx.fillStyle = lt; ctx.beginPath(); ctx.ellipse(ex + er * 0.2, ey + er * 0.85, er * 0.7, er * 0.25, 0, 0, Math.PI); ctx.fill();
+      if (!blink) eye(ctx, ex + er * 0.15, ey - er * 0.05, Math.max(1.3, er * 0.55), A.eye || '#fff1c0', true);
+    }
+    ctx.restore();
+    if (P.land > 0.5) { // tiny clank lines on landing
+      ctx.strokeStyle = withAlpha(lighten(c1, 0.5), P.land); ctx.lineWidth = 1.2; ctx.lineCap = 'round';
+      ctx.beginPath();
+      for (const s of [-1, 1]) { ctx.moveTo(s * w * 0.48, -h * 0.25); ctx.lineTo(s * w * 0.62, -h * 0.32); ctx.moveTo(s * w * 0.5, -h * 0.1); ctx.lineTo(s * w * 0.66, -h * 0.1); }
+      ctx.stroke();
+    }
+  },
+
+  // An acorn on little legs (hopper). The cap lags the body: lifts in the air, clonks down on landing.
+  acorn(ctx, e, t, A) {
+    const w = e.w, h = e.h, an = e.anim || 0;
+    const P = hopPose(e);
+    const nut = A.c1 || '#8a6a3a', cap = A.c2 || '#5d7a3e';
+    const lw = Math.max(1.6, w * 0.06);
+    for (const s of [-1, 1]) {
+      const hx = s * w * 0.12, fx = hx + s * w * 0.05 + (P.air ? -w * 0.06 : 0) + (s > 0 ? w * 0.04 : 0);
+      const ky = P.air ? -h * 0.06 : -h * 0.1 * P.sy;
+      leg(ctx, hx, -h * 0.18, hx + s * w * 0.06, ky, fx, P.air ? h * 0.05 : 0, lw);
+      brush(ctx, [fx, P.air ? h * 0.05 : 0, fx + w * 0.05, P.air ? h * 0.05 : 0], lw * 0.9, lw * 0.4);
+    }
+    ctx.save(); ctx.translate(0, -h * 0.14); ctx.scale(P.sx, P.sy);
+    const H = h * 0.86, nw = w * 0.36;
+    const nutP = (c) => {
+      c.moveTo(-nw, -H * 0.58);
+      c.bezierCurveTo(-nw * 1.08, -H * 0.2, -nw * 0.5, -H * 0.02, 0, H * 0.04);
+      c.bezierCurveTo(nw * 0.5, -H * 0.02, nw * 1.08, -H * 0.2, nw, -H * 0.58);
+      c.quadraticCurveTo(0, -H * 0.66, -nw, -H * 0.58);
+      c.closePath();
+    };
+    form(ctx, nut, nutP, { sd: w * 0.13, lw: 2.2 });
+    // grain streaks + shine + the little point
+    stroke(ctx, [nw * 0.35, -H * 0.5, nw * 0.55, -H * 0.3, nw * 0.25, -H * 0.06], 1, shade(nut, 0.45));
+    stroke(ctx, [-nw * 0.1, -H * 0.48, nw * 0.05, -H * 0.3, -nw * 0.05, -H * 0.1], 0.8, shade(nut, 0.35));
+    stroke(ctx, [-nw * 0.7, -H * 0.45, -nw * 0.75, -H * 0.3, -nw * 0.45, -H * 0.15], 2, lighten(nut, 0.5));
+    brush(ctx, [0, H * 0.02, 0.5, H * 0.07, 0, H * 0.11], 2.2, 0.6);
+    // eyes just under the brim, in the cap's shadow
+    const capLift = P.air ? -H * 0.07 * Math.max(0.3, P.rise + 0.5) : -H * 0.12 * (P.land > 0 ? Math.max(0, Math.sin(P.land * Math.PI * 2)) : 0);
+    const tilt = P.air ? -0.12 : P.land > 0 ? Math.sin(P.land * Math.PI * 3) * 0.16 * P.land : Math.sin(an * 2) * 0.03;
+    ctx.save(); ctx.beginPath(); nutP(ctx); ctx.clip();
+    ctx.fillStyle = withAlpha(shade(nut, 0.6), 0.55); ctx.beginPath(); ctx.ellipse(0, -H * 0.56, nw * 1.1, H * 0.13, 0, 0, TAU); ctx.fill();
+    ctx.restore();
+    const blink = (an % 2.9) < 0.12;
+    for (const [ex, er] of [[w * 0.05, w * 0.08], [w * 0.22, w * 0.07]]) {
+      const ey = -H * 0.4;
+      form(ctx, A.eye || '#fff4c0', (c) => oval(c, ex, ey, er, blink ? er * 0.2 : er * 1.05, 0, 0.04), { lw: 1.2, sd: 0 });
+      if (!blink) eye(ctx, ex + er * 0.3, ey + er * 0.1, er * 0.55, INK);
+    }
+    // the cap: scaly cupule with a stem, bobbing on its own
+    ctx.save(); ctx.translate(0, -H * 0.58 + capLift); ctx.rotate(tilt);
+    const cw = nw * 1.18, ch = H * 0.3;
+    const capP = (c) => {
+      c.moveTo(-cw, ch * 0.12);
+      c.bezierCurveTo(-cw * 1.08, -ch * 0.6, -cw * 0.5, -ch, 0, -ch);
+      c.bezierCurveTo(cw * 0.5, -ch, cw * 1.08, -ch * 0.6, cw, ch * 0.12);
+      for (let i = 0; i < 7; i++) { const x0 = cw - (i + 1) * (cw * 2 / 7), xm = x0 + cw / 7; c.quadraticCurveTo(xm, ch * 0.42, x0, ch * 0.12); }
+      c.closePath();
+    };
+    brush(ctx, [0, -ch * 0.9, w * 0.02, -ch * 1.3, w * 0.08, -ch * 1.55], 3.4, 2.2, INK, 0, 6);
+    brush(ctx, [0, -ch * 0.9, w * 0.02, -ch * 1.3, w * 0.08, -ch * 1.55], 1.8, 1, shade(nut, 0.2), 0, 6);
+    form(ctx, cap, capP, { sd: ch * 0.3, lw: 2.2 });
+    // scale texture: rows of little hooked scallops
+    ctx.save(); ctx.beginPath(); capP(ctx); ctx.clip();
+    ctx.strokeStyle = shade(cap, 0.5); ctx.lineWidth = 0.9; ctx.lineCap = 'round';
+    ctx.beginPath();
+    for (let j = 0; j < 3; j++) {
+      const y = -ch * 0.62 + j * ch * 0.3, n = 4 + j, ww = cw * (0.55 + j * 0.2);
+      for (let i = 0; i < n; i++) { const x = -ww + (i + 0.5 + (j % 2) * 0.3) * (ww * 2 / n); ctx.moveTo(x - 2, y); ctx.quadraticCurveTo(x, y + 2.4, x + 2, y); }
+    }
+    ctx.stroke();
+    ctx.restore();
+    stroke(ctx, [-cw * 0.7, -ch * 0.1, -cw * 0.5, -ch * 0.65, -cw * 0.1, -ch * 0.85], 1.4, lighten(cap, 0.45));
+    ctx.restore();
+    ctx.restore();
+  },
+
+  // Dandelion seed-puff (flyer, centered): a halo of swaying white filaments round a little seed.
+  seedpuff(ctx, e, t, A) {
+    const w = e.w, h = e.h, an = e.anim || 0;
+    const R = Math.min(w, h) * 0.6, fc = A.c1 || '#e8f5e0', sc = A.c2 || '#6f8f7a';
+    const bob = Math.sin(an * 2.2) * R * 0.08;
+    ctx.save(); ctx.translate(0, bob);
+    if (A.glow) {
+      const g = ctx.createRadialGradient(0, 0, R * 0.1, 0, 0, R * 1.35);
+      g.addColorStop(0, withAlpha(fc, 0.35)); g.addColorStop(1, withAlpha(fc, 0));
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, R * 1.35, 0, TAU); ctx.fill();
+    }
+    // filaments: inked underline pass, then the white hairs, each tipped with a tiny tuft
+    const n = 18, F = [];
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * TAU + Math.sin(an * 1.7 + i * 1.3) * 0.09 + (i % 2) * 0.05;
+      const L = R * (0.88 + 0.14 * Math.sin(i * 2.3 + 0.4));
+      const bend = Math.sin(an * 2.4 + i * 0.8) * 0.18;
+      F.push([Math.cos(a) * R * 0.2, Math.sin(a) * R * 0.2, Math.cos(a + bend * 0.5) * L * 0.6, Math.sin(a + bend * 0.5) * L * 0.6, Math.cos(a + bend) * L, Math.sin(a + bend) * L, a + bend]);
+    }
+    const pass = (col, lw, tuft) => {
+      ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.lineCap = 'round';
+      ctx.beginPath();
+      for (const [x0, y0, x1, y1, x2, y2, a] of F) {
+        ctx.moveTo(x0, y0); ctx.quadraticCurveTo(x1, y1, x2, y2);
+        // a wisp of fluff splaying from the tip
+        for (const d of [-0.7, 0.7]) { ctx.moveTo(x2, y2); ctx.lineTo(x2 + Math.cos(a + d) * tuft, y2 + Math.sin(a + d) * tuft); }
+      }
+      ctx.stroke();
+    };
+    pass('rgba(22,20,28,0.22)', 1.2, R * 0.1);
+    pass(fc, 0.6, R * 0.1);
+    // soft fluffy tips
+    ctx.fillStyle = withAlpha(fc, 0.4); ctx.beginPath();
+    for (const f of F) { ctx.moveTo(f[4] + R * 0.13, f[5]); ctx.arc(f[4], f[5], R * 0.13, 0, TAU); }
+    ctx.fill();
+    // the seed itself with a stubby beak below
+    brush(ctx, [0, R * 0.2, R * 0.03, R * 0.38, -R * 0.02, R * 0.55], 2.6, 0.6, INK, 0, 6);
+    form(ctx, sc, (c) => oval(c, 0, R * 0.04, R * 0.34, R * 0.3, 0.1, 0.05), { lw: 1.6, sd: R * 0.08 });
+    stroke(ctx, [-R * 0.2, -R * 0.05, -R * 0.12, -R * 0.18, R * 0.02, -R * 0.2], 1.1, lighten(sc, 0.5));
+    const blink = (an % 3.1) < 0.12;
+    for (const [ex, er] of [[-R * 0.02, R * 0.12], [R * 0.18, R * 0.11]]) {
+      ctx.fillStyle = A.c3 || '#f6fbef'; ctx.beginPath(); ctx.ellipse(ex, R * 0.03, er, blink ? er * 0.25 : er * 1.1, 0, 0, TAU); ctx.fill();
+      ink(ctx, 0.8); ctx.stroke();
+      if (!blink) eye(ctx, ex + er * 0.25, R * 0.05, Math.max(0.9, er * 0.6), A.eye || '#2a3a30');
+    }
+    ctx.restore();
+  },
+
+  // Terracotta chimney pot under a tin cowl (hopper): sooty eyes, coughs soot when it lands.
+  chimney(ctx, e, t, A) {
+    const w = e.w, h = e.h, an = e.anim || 0;
+    const P = hopPose(e);
+    const pot = A.c1 || '#b0603e', tin = A.c2 || '#4a4550';
+    const soot = 'rgba(40,34,44,';
+    // landing soot puffs (drawn behind)
+    if (P.land > 0) {
+      const k = 1 - P.land;
+      for (const s of [-1, 1]) for (let i = 0; i < 2; i++) {
+        const x = s * (w * 0.35 + k * w * (0.3 + i * 0.2)), y = -h * (0.05 + i * 0.08) - k * h * 0.1, r = w * (0.1 + 0.08 * k + i * 0.03);
+        ctx.fillStyle = soot + (0.6 * P.land) + ')'; ctx.strokeStyle = 'rgba(22,20,28,' + (0.5 * P.land) + ')'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.moveTo(x + s * r * 1.4, y - r * 0.3); ctx.arc(x + s * r * 0.75, y - r * 0.3, r * 0.65, 0, TAU); ctx.fill(); ctx.stroke();
+      }
+    }
+    const fw = Math.max(2.4, w * 0.09);
+    for (const s of [-1, 1]) {
+      const fx = s * w * 0.18 * P.sx, fy = P.air ? h * 0.04 : 0;
+      brush(ctx, [fx, -h * 0.12, fx + w * 0.02, -h * 0.05, fx + w * 0.05, fy - 1], fw, fw * 0.8, INK, 0, 5);
+    }
+    ctx.save(); ctx.translate(0, -h * 0.08); ctx.scale(P.sx, P.sy);
+    const H = h * 0.92, bw = w * 0.3, mw = w * 0.25, top = -H * 0.72;
+    // the pot: slight waist, flared base
+    const body = (c) => {
+      c.moveTo(-bw, 0);
+      c.quadraticCurveTo(-mw * 0.92, -H * 0.35, -mw, top);
+      c.lineTo(mw, top);
+      c.quadraticCurveTo(mw * 0.92, -H * 0.35, bw, 0);
+      c.quadraticCurveTo(0, H * 0.05, -bw, 0);
+      c.closePath();
+    };
+    form(ctx, pot, body, { sd: w * 0.11, lw: 2.2, hatch: [-bw, top, bw * 2, -top] });
+    // clay bands and a hairline crack
+    ctx.strokeStyle = shade(pot, 0.4); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(-bw * 0.93, -H * 0.12); ctx.quadraticCurveTo(0, -H * 0.08, bw * 0.93, -H * 0.12); ctx.stroke();
+    brush(ctx, [bw * 0.5, -H * 0.3, bw * 0.35, -H * 0.22, bw * 0.45, -H * 0.13], 1.3, 0.3);
+    stroke(ctx, [-mw * 0.7, -H * 0.62, -bw * 0.75, -H * 0.35, -bw * 0.8, -H * 0.15], 1.8, lighten(pot, 0.4));
+    // the rim collar
+    const rim = (c) => { c.moveTo(-mw * 1.2, top + H * 0.02); c.quadraticCurveTo(0, top + H * 0.06, mw * 1.2, top + H * 0.02); c.lineTo(mw * 1.14, top - H * 0.07); c.quadraticCurveTo(0, top - H * 0.04, -mw * 1.14, top - H * 0.07); c.closePath(); };
+    form(ctx, pot, rim, { lw: 1.9, sd: H * 0.03 });
+    // sooty eye smudge + yellow ember eyes
+    ctx.save(); ctx.beginPath(); body(ctx); ctx.clip();
+    ctx.fillStyle = soot + '0.75)';
+    ctx.beginPath(); ctx.ellipse(w * 0.1, -H * 0.5, w * 0.2, H * 0.09, -0.05, 0, TAU); ctx.fill();
+    ctx.fillStyle = soot + '0.35)';
+    ctx.beginPath(); ctx.ellipse(w * 0.06, -H * 0.62, w * 0.26, H * 0.08, 0, 0, TAU); ctx.fill();
+    ctx.restore();
+    const tele = e.state === 'tele';
+    for (const [ex, er] of [[w * 0.02, w * 0.06], [w * 0.17, w * 0.055]]) eye(ctx, ex, -H * 0.5, Math.max(1.4, er), A.eye || '#ffd36a', true, tele ? 'round' : 'angry');
+    // the cowl: a tin coolie hat on two little struts, rattling a bit
+    const rat = P.land > 0 ? Math.sin(P.land * 20) * 0.08 * P.land : Math.sin(an * 3) * 0.02;
+    const lift = P.air ? -H * 0.05 : 0;
+    ctx.save(); ctx.translate(0, top - H * 0.07 + lift); ctx.rotate(rat);
+    brush(ctx, [-mw * 0.55, 0, -mw * 0.55, -H * 0.12], 1.8, 1.4); brush(ctx, [mw * 0.55, 0, mw * 0.55, -H * 0.12], 1.8, 1.4);
+    // a little wisp of smoke escaping under the hat
+    const sm = an * 1.3 % 1;
+    ctx.fillStyle = soot + (0.4 * (1 - sm)) + ')';
+    ctx.beginPath(); ctx.arc(-mw * 1.0 - sm * w * 0.2, -H * 0.07 - sm * H * 0.2, w * (0.05 + sm * 0.07), 0, TAU); ctx.fill();
+    const cw = mw * 1.55, chh = H * 0.24;
+    const cowl = (c) => { c.moveTo(-cw, -H * 0.1); c.quadraticCurveTo(-cw * 0.4, -H * 0.13 - chh * 0.5, 0, -H * 0.12 - chh); c.quadraticCurveTo(cw * 0.4, -H * 0.13 - chh * 0.5, cw, -H * 0.1); c.quadraticCurveTo(0, -H * 0.05, -cw, -H * 0.1); c.closePath(); };
+    form(ctx, tin, cowl, { lw: 2, sd: chh * 0.3 });
+    stroke(ctx, [-cw * 0.6, -H * 0.14, -cw * 0.35, -H * 0.18 - chh * 0.3, -cw * 0.08, -H * 0.12 - chh * 0.85], 1.2, lighten(tin, 0.5));
+    ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(0, -H * 0.12 - chh, Math.max(1, w * 0.03), 0, TAU); ctx.fill();
+    ctx.restore();
+    ctx.restore();
+  },
+
+  // A tin pinwheel on a stick (spinner): four folded vanes turning with e.ang, a face on the pin.
+  pinwheel(ctx, e, t, A) {
+    const w = e.w, h = e.h, an = e.anim || 0;
+    const R = Math.min(w, h) * 0.46, cy = A.centered ? 0 : -h + R;
+    const f = e.facing || 1;
+    const rot = e.ang !== undefined ? (f < 0 ? Math.PI - e.ang : e.ang) : an * (A.spin || 1.5);
+    const stick = A.c4 || '#8a6a4a';
+    if (!A.centered) {
+      // stick planted in a little heap of stones
+      const sw = Math.sin(an * 1.3) * 1.2;
+      brush(ctx, [0, cy, sw, cy * 0.5, 0, -h * 0.06], 5.2, 6, INK, 0, 6);
+      brush(ctx, [0, cy, sw, cy * 0.5, 0, -h * 0.06], 2.8, 3.6, stick, 0, 6);
+      stroke(ctx, [-0.6, cy * 0.9, -0.8 + sw, cy * 0.5, -0.6, -h * 0.12], 0.8, lighten(stick, 0.4));
+      for (const [x, y, rx] of [[-w * 0.13, -h * 0.03, w * 0.1], [w * 0.12, -h * 0.025, w * 0.11], [0, -h * 0.045, w * 0.09]]) {
+        form(ctx, '#7d879c', (c) => oval(c, x, y, rx, h * 0.04, 0, 0.12), { lw: 1.5, sd: 1.4 });
+      }
+    }
+    ctx.save(); ctx.translate(0, cy);
+    const cols = [A.c1 || '#d9584a', A.c2 || '#e8eef8', A.c3 || '#4a7fc0', A.c2 || '#e8eef8'];
+    // vanes: each a blade sweeping out to a tip, folded back to the pin (the fold shows the darker back)
+    for (let i = 0; i < 4; i++) {
+      const a = rot + i * TAU / 4;
+      const tip = [Math.cos(a) * R, Math.sin(a) * R];
+      const b = a + 0.95, base = [Math.cos(b) * R * 0.7, Math.sin(b) * R * 0.7];
+      const fold = [Math.cos(a + 0.22) * R * 0.18, Math.sin(a + 0.22) * R * 0.18];
+      const vane = (c) => {
+        c.moveTo(0, 0);
+        c.quadraticCurveTo(Math.cos(a - 0.12) * R * 0.6, Math.sin(a - 0.12) * R * 0.6, tip[0], tip[1]);
+        c.quadraticCurveTo(Math.cos(a + 0.6) * R * 0.92, Math.sin(a + 0.6) * R * 0.92, base[0], base[1]);
+        c.quadraticCurveTo(Math.cos(b - 0.1) * R * 0.3, Math.sin(b - 0.1) * R * 0.3, 0, 0);
+        c.closePath();
+      };
+      form(ctx, cols[i], vane, { lw: 1.9, sd: R * 0.08 });
+      // the curled flap: from the tip back toward the pin
+      const flap = (c) => { c.moveTo(tip[0], tip[1]); c.quadraticCurveTo(Math.cos(a + 0.25) * R * 0.55, Math.sin(a + 0.25) * R * 0.55, fold[0], fold[1]); c.quadraticCurveTo(Math.cos(a + 0.5) * R * 0.5, Math.sin(a + 0.5) * R * 0.5, tip[0], tip[1]); c.closePath(); };
+      ctx.beginPath(); flap(ctx); ctx.fillStyle = shade(cols[i], 0.32); ctx.fill(); ink(ctx, 1); ctx.stroke();
+      // painted stripe on the paper
+      stroke(ctx, [Math.cos(a + 0.55) * R * 0.32, Math.sin(a + 0.55) * R * 0.32, Math.cos(a + 0.65) * R * 0.5, Math.sin(a + 0.65) * R * 0.5, Math.cos(a + 0.75) * R * 0.62, Math.sin(a + 0.75) * R * 0.62], 1.1, lighten(cols[i], 0.4));
+    }
+    // the pin head as a face (stays upright)
+    const hc = A.c5 || '#e9dcc0';
+    form(ctx, hc, (c) => oval(c, 0, 0, R * 0.25, R * 0.24, 0, 0.04), { lw: 1.9, sd: R * 0.07 });
+    const tele = e.state === 'tele' || (e.t !== undefined && e.t < 0.12);
+    const ec = A.eye || '#2a1e08';
+    eye(ctx, -R * 0.02, -R * 0.04, Math.max(1.5, R * 0.06), ec);
+    eye(ctx, R * 0.12, -R * 0.04, Math.max(1.4, R * 0.055), ec);
+    if (tele) { ctx.fillStyle = INK; ctx.beginPath(); ctx.ellipse(R * 0.06, R * 0.1, R * 0.05, R * 0.06, 0, 0, TAU); ctx.fill(); }
+    else stroke(ctx, [-R * 0.02, R * 0.09, R * 0.06, R * 0.13, R * 0.14, R * 0.08], 1.2);
+    ctx.fillStyle = 'rgba(217,88,74,0.35)'; ctx.beginPath(); ctx.ellipse(-R * 0.12, R * 0.06, R * 0.05, R * 0.03, 0, 0, TAU); ctx.fill();
+    ctx.restore();
+  },
+
+  // Iron shrine lantern with frosted panes (sentinel). Shut: rimed iron shutters (invulnerable).
+  // Opening/open: the shutters swing aside on a cold eye-flame.
+  lantern(ctx, e, t, A) {
+    const w = e.w, h = e.h, an = e.anim || 0;
+    const iron = A.c1 || '#5d7f92', glass = A.c2 || '#d8f6ff', rime = A.c3 || '#eefcff', ec = A.eye || '#7fe6ff';
+    const st = e.state;
+    const open = st === 'open' ? 1 : st === 'tele' ? Math.min(1, (e.t || 0) / 0.35) : (e.shut === false ? 1 : 0);
+    const ease = open * open * (3 - 2 * open);
+    // pedestal
+    form(ctx, iron, (c) => { c.moveTo(-w * 0.3, 0); c.lineTo(-w * 0.22, -h * 0.08); c.lineTo(-w * 0.1, -h * 0.1); c.lineTo(-w * 0.1, -h * 0.2); c.lineTo(w * 0.1, -h * 0.2); c.lineTo(w * 0.1, -h * 0.1); c.lineTo(w * 0.22, -h * 0.08); c.lineTo(w * 0.3, 0); c.closePath(); }, { lw: 2, sd: w * 0.05, hatch: [-w * 0.3, -h * 0.2, w * 0.6, h * 0.2] });
+    // firebox frame
+    const bx = w * 0.29, y0 = -h * 0.2, y1 = -h * 0.62;
+    const box = (c) => { c.moveTo(-bx, y0); c.lineTo(-bx * 1.04, y1); c.lineTo(bx * 1.04, y1); c.lineTo(bx, y0); c.closePath(); };
+    form(ctx, iron, box, { lw: 2.2, sd: w * 0.07 });
+    // the window: frosted glass with the cold eye-flame (lit only while open)
+    const wx = bx * 0.74, wy0 = y0 - h * 0.035, wy1 = y1 + h * 0.035, wcy = (wy0 + wy1) / 2, wh = wy0 - wy1;
+    ctx.fillStyle = open > 0 ? glass : shade(iron, 0.6);
+    ctx.fillRect(-wx, wy1, wx * 2, wh);
+    if (open > 0) {
+      ctx.save(); ctx.beginPath(); ctx.rect(-wx, wy1, wx * 2, wh); ctx.clip();
+      ctx.globalAlpha *= ease;
+      // rime feathering in the corners of the pane
+      ctx.fillStyle = withAlpha(rime, 0.75);
+      for (const [x, y, rr] of [[-wx, wy1, 0.14], [wx, wy1, 0.1], [-wx, wy0, 0.1], [wx, wy0, 0.15]]) { ctx.beginPath(); ctx.arc(x, y, w * rr, 0, TAU); ctx.fill(); }
+      // flame
+      const fl = Math.sin(an * 9) * w * 0.025, fh = wh * (0.6 + 0.3 * ease);
+      const flame = (k) => { ctx.beginPath(); ctx.moveTo(-wx * 0.7 * k, wy0); ctx.bezierCurveTo(-wx * 0.85 * k, wcy, -wx * 0.2 * k + fl, wy0 - fh * 0.8 * (0.6 + k * 0.4), fl * 1.4, wy0 - fh * (0.55 + k * 0.45)); ctx.bezierCurveTo(wx * 0.3 * k + fl, wy0 - fh * 0.75 * (0.6 + k * 0.4), wx * 0.85 * k, wcy, wx * 0.7 * k, wy0); ctx.closePath(); };
+      flame(1); ctx.fillStyle = ec; ctx.fill(); ink(ctx, 0.9); ctx.stroke();
+      flame(0.6); ctx.fillStyle = '#ffffff'; ctx.fill();
+      // the eye in the flame: a dark almond with a cold bright pupil, widening as it opens
+      const ex = fl * 0.6, ey = wy0 - wh * 0.36, ew = wx * 0.5, eh = wh * 0.13 * (0.35 + 0.65 * ease);
+      ctx.fillStyle = INK; ctx.beginPath(); ctx.moveTo(ex - ew, ey); ctx.quadraticCurveTo(ex, ey - eh * 2, ex + ew, ey); ctx.quadraticCurveTo(ex, ey + eh * 2, ex - ew, ey); ctx.fill();
+      eye(ctx, ex + ew * 0.15, ey, Math.max(1, eh * 0.75), ec, !!A.glow);
+      ctx.restore();
+    }
+    ink(ctx, 1.4); ctx.strokeRect(-wx, wy1, wx * 2, wh);
+    // shutters: two louvred iron leaves hinged at the window edges; they fold in, then swing out
+    for (const s of [-1, 1]) {
+      const hx = s * wx;
+      let x1, col;
+      if (ease < 0.5) { x1 = hx - s * wx * (1 - ease * 2) ; col = s < 0 ? iron : shade(iron, 0.1); }
+      else { x1 = hx + s * wx * (ease - 0.5) * 0.9; col = shade(iron, 0.3); }
+      if (Math.abs(x1 - hx) < 0.6) continue;
+      const sk = (ease < 0.5 ? ease : 1 - ease) * h * 0.06;
+      const sp = (c) => { c.moveTo(hx, wy1 - 0.5); c.lineTo(x1, wy1 - 0.5 - sk); c.lineTo(x1, wy0 + 0.5 + sk); c.lineTo(hx, wy0 + 0.5); c.closePath(); };
+      form(ctx, col, sp, { lw: 1.6, sd: w * 0.03 });
+      // louvre slats
+      ctx.strokeStyle = shade(col, 0.5); ctx.lineWidth = 1; ctx.beginPath();
+      for (let k = 1; k < 5; k++) { const yy = wy1 + wh * k / 5; ctx.moveTo(hx - s * 1, yy); ctx.lineTo(x1 + s * 1, yy + (k < 3 ? -sk : sk) * 0.4); }
+      ctx.stroke();
+      ctx.strokeStyle = lighten(col, 0.4); ctx.lineWidth = 0.7; ctx.beginPath();
+      for (let k = 1; k < 5; k++) { const yy = wy1 + wh * k / 5 + 1.1; ctx.moveTo(hx - s * 1.5, yy); ctx.lineTo(x1 + s * 1.5, yy + (k < 3 ? -sk : sk) * 0.4); }
+      ctx.stroke();
+      if (ease < 0.5) { // rime crusting the top of the shut leaf
+        ctx.fillStyle = rime; ctx.beginPath(); ctx.moveTo(hx, wy1); ctx.lineTo(x1, wy1 - sk);
+        ctx.quadraticCurveTo((hx + x1) * 0.5, wy1 + h * 0.05, hx, wy1 + h * 0.035); ctx.closePath(); ctx.fill();
+      }
+    }
+    if (ease < 0.1) { // a hairline of cold light at the seam when shut, and the latch
+      ctx.strokeStyle = withAlpha(ec, 0.65 + 0.3 * Math.sin(an * 3 + t)); ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(0, wy1 + 2); ctx.lineTo(0, wy0 - 2); ctx.stroke();
+      form(ctx, lighten(iron, 0.2), (c) => c.rect(-w * 0.04, wcy - h * 0.035, w * 0.08, h * 0.07), { lw: 1.2, sd: 0 });
+    }
+    // roof: upturned eaves, a ridge cap, the finial; frost along the eaves
+    const ry = y1, rw = w * 0.5;
+    const roof = (c) => {
+      c.moveTo(-rw, ry - h * 0.07);
+      c.quadraticCurveTo(-rw * 0.6, ry - h * 0.03, -rw * 0.45, ry - h * 0.1);
+      c.quadraticCurveTo(-rw * 0.2, ry - h * 0.2, -w * 0.05, ry - h * 0.24);
+      c.lineTo(w * 0.05, ry - h * 0.24);
+      c.quadraticCurveTo(rw * 0.2, ry - h * 0.2, rw * 0.45, ry - h * 0.1);
+      c.quadraticCurveTo(rw * 0.6, ry - h * 0.03, rw, ry - h * 0.07);
+      c.quadraticCurveTo(rw * 0.9, ry + h * 0.01, rw * 0.6, ry + h * 0.01);
+      c.lineTo(-rw * 0.6, ry + h * 0.01);
+      c.quadraticCurveTo(-rw * 0.9, ry + h * 0.01, -rw, ry - h * 0.07);
+      c.closePath();
+    };
+    form(ctx, iron, roof, { lw: 2.2, sd: h * 0.04, hatch: [-rw, ry - h * 0.24, rw * 2, h * 0.25] });
+    // snow on the roof
+    ctx.fillStyle = rime;
+    ctx.beginPath(); ctx.moveTo(-rw * 0.4, ry - h * 0.115); ctx.quadraticCurveTo(-rw * 0.2, ry - h * 0.2, -w * 0.05, ry - h * 0.235); ctx.lineTo(w * 0.05, ry - h * 0.235); ctx.quadraticCurveTo(rw * 0.2, ry - h * 0.2, rw * 0.4, ry - h * 0.115);
+    ctx.quadraticCurveTo(rw * 0.15, ry - h * 0.15, w * 0.02, ry - h * 0.17); ctx.quadraticCurveTo(-rw * 0.15, ry - h * 0.13, -rw * 0.4, ry - h * 0.115); ctx.fill();
+    ink(ctx, 0.8); ctx.stroke();
+    // icicles under the eaves
+    ctx.fillStyle = rime;
+    for (const [x, l] of [[-rw * 0.75, 0.07], [-rw * 0.62, 0.045], [rw * 0.66, 0.06], [rw * 0.8, 0.04]]) {
+      ctx.beginPath(); ctx.moveTo(x - 1.5, ry - h * 0.01); ctx.lineTo(x, ry + h * l); ctx.lineTo(x + 1.5, ry - h * 0.01); ctx.closePath(); ctx.fill(); ink(ctx, 0.7); ctx.stroke();
+    }
+    // finial
+    form(ctx, iron, (c) => oval(c, 0, ry - h * 0.28, w * 0.07, w * 0.07, 0, 0.05), { lw: 1.6, sd: 1.2 });
+    brush(ctx, [0, ry - h * 0.32, 0.4, ry - h * 0.36, 0, ry - h * 0.39], 2, 0.6);
   },
 };
 

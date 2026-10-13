@@ -800,7 +800,7 @@ export const NPCS = {
     },
   },
 
-  // ======================== Cogwork Bastion
+  // ======================== The Pinworks
   tinkerbot: {
     name: 'Tinkerbot Nine', verb: 'Talk', voice: 4, size: [30, 36],
     art: { body: 'golem', c1: '#b87a3a', c2: '#7a4a28', eye: '#7ef0ff', glow: true },

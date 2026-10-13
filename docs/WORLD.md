@@ -7,7 +7,7 @@ Rough geography (north is up). Spindletown sits on the surface; everything else 
                            |                               |
   [Dunes]   [ The Fray ]—[ Spindletown ]—————————————[ Hushwood ]
                |               | (well)                    |  (chasm)
-  [ Glasswing Gardens ]—[ Mossbell Hollows ]——————[ Cogwork Bastion ]
+  [ Glasswing Gardens ]—[ Mossbell Hollows ]——————[ The Pinworks ]
           |   \                |   |    \                   |
           |  [ Tallow Catacombs ]—[ Brine Cistern ]——[ Ashen Kilns ]
           |          |                  |    \             |
@@ -19,10 +19,10 @@ Rough geography (north is up). Spindletown sits on the surface; everything else 
 ## Progression tiers
 | tier | abilities on entry | areas |
 |---|---|---|
-| T0 | none | Fray, Spindletown, Mossbell Hollows (upper) → **Mother Mossbug → Sticky Sap** |
+| T0 | none | Fray, Spindletown, Mossbell Hollows (upper) → **Grandmother Burr → Sticky Sap** |
 | T1 | sap | Glasswing Gardens (**Petalmaw → Dash**) and Tallow Catacombs (**Wickwidow → Shard Toss**), in either order. Deep catacombs are dark: buy the **Glowwick Lantern** in town (180 Glints). |
 | T2 | sap, dash | Hushwood (**Sporecap → Dandelion glide**), upper Brine Cistern |
-| T3 | + glide (+ shard, lantern) | Cogwork Bastion (**Gearwright → Lodestone**) |
+| T3 | + glide (+ shard, lantern) | The Pinworks (**Treadle Colossus → Lodestone**) |
 | T4 | + magnet | Brine Cistern depths (**Gullet → Glass Shell**) |
 | T5 | + shell | Ashen Kilns (**Vitrius → Lead Heart**, Great Bead 1) |
 | T6 | + pound | Mirrored Deep (**Prism Warden → Comet Roll**, Great Bead 2) |

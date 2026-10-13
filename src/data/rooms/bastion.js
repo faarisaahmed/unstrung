@@ -1,6 +1,6 @@
-// Rooms of area 'bastion' (Cogwork Bastion). See docs/AUTHORING.md
-// A clockwork fortress built by a vanished guild to guard nothing. Copper `M` rails tempt the player
-// from the first room; after the Gearwright Colossus yields the Lodestone, they become highways.
+// Rooms of area 'bastion' (The Pinworks). See docs/AUTHORING.md
+// A pin-and-needle forge built by a vanished guild around a fallen lodestone bead. Copper `M` rails tempt the player
+// from the first room; after the Treadle Colossus yields the Lodestone, they become highways.
 const BASE = ['sap', 'dash', 'glide'];
 const MAG = [...BASE, 'magnet'];
 const LATE = [...MAG, 'shell', 'pound', 'comet'];
@@ -59,14 +59,14 @@ export default [
   {
     id: 'bastion_gatehall', area: 'bastion', name: 'Gatehall of the Guild',
     legend: {
-      m: { e: 'item', item: 'map', id: 'bastion', name: 'Cogwork Bastion' },
+      m: { e: 'item', item: 'map', id: 'bastion', name: 'The Pinworks' },
       r: { e: 'lore', id: 'bastion_1' },
       s: { e: 'spindle' },
       a: { e: 'deco', kind: 'statue' },
       z: { e: 'deco', kind: 'statue' },
       l: { e: 'deco', kind: 'lamp', hang: true },
       k: { e: 'deco', kind: 'lamp', hang: true },
-      n: { e: 'deco', kind: 'banner', color: '#b5824a' },
+      n: { e: 'deco', kind: 'banner', color: '#9a3a30' },
     },
     doors: { '1': 'bastion_entry:1', '2': 'bastion_gearloft:2', '3': 'bastion_pistonway:1' },
     tiles: [
@@ -97,7 +97,7 @@ export default [
     ],
   },
   {
-    id: 'bastion_gearloft', area: 'bastion', name: 'Gearloft',
+    id: 'bastion_gearloft', area: 'bastion', name: 'Pinloft',
     legend: {
       j: { e: 'beadling', needs: ['magnet'] },
       t: { e: 'deco', kind: 'sign', text: 'RAIL SERVICE SUSPENDED. LODESTONE REQUIRED.' },
@@ -176,8 +176,8 @@ export default [
       v: { e: 'enemy', id: 'bastion_magmite' },
       l: { e: 'deco', kind: 'lamp' },
       k: { e: 'deco', kind: 'lamp' },
-      n: { e: 'deco', kind: 'banner', color: '#b5824a' },
-      o: { e: 'deco', kind: 'banner', color: '#b5824a' },
+      n: { e: 'deco', kind: 'banner', color: '#9a3a30' },
+      o: { e: 'deco', kind: 'banner', color: '#9a3a30' },
     },
     doors: { '0': 'bastion_boilers:1', '1': 'bastion_pistonway:2', '2': 'bastion_gearloft:3', '3': 'bastion_bellworks:1', '4': 'bastion_armory:1' },
     tiles: [
@@ -282,7 +282,7 @@ export default [
     ],
   },
   {
-    id: 'bastion_bellworks', area: 'bastion', name: 'Bellworks',
+    id: 'bastion_bellworks', area: 'bastion', name: 'Needleworks',
     legend: {
       r: { e: 'lore', id: 'bastion_2' },
       h: { e: 'enemy', id: 'bastion_bellhop' },
@@ -320,7 +320,7 @@ export default [
     ],
   },
   {
-    id: 'bastion_clocktower', area: 'bastion', name: 'The Stopped Clock',
+    id: 'bastion_clocktower', area: 'bastion', name: 'The Stopped Treadle',
     deadEnd: ['1'],
     legend: {
       j: { e: 'beadling' },
@@ -394,7 +394,7 @@ export default [
     ],
   },
   {
-    id: 'bastion_boss', area: 'bastion', name: 'The Gearwright\'s Floor',
+    id: 'bastion_boss', area: 'bastion', name: 'The Treadle Floor',
     lockedDoors: ['1', '2'],
     oneWay: { '1': true, '2': true },
     legend: {
@@ -510,7 +510,7 @@ export default [
     ],
   },
   {
-    id: 'bastion_armory', area: 'bastion', name: 'Armory of Hours',
+    id: 'bastion_armory', area: 'bastion', name: 'Armory of Needles',
     legend: {
       q: { e: 'enemy', id: 'bastion_cogguard' },
       x: { e: 'enemy', id: 'bastion_lancer' },
@@ -898,7 +898,7 @@ export default [
     ],
   },
   {
-    id: 'bastion_cogworks', area: 'bastion', name: 'Cogworks',
+    id: 'bastion_cogworks', area: 'bastion', name: 'Filing Halls',
     legend: {
       p: { e: 'pot', value: 25, cache: true },
       q: { e: 'enemy', id: 'bastion_cogguard' },

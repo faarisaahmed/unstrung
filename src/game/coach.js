@@ -35,9 +35,10 @@ export function updateCoach(g, dt) {
   if (!p || p.dead || g.cutscene || g.dialogue || g.echo) return;
   // don't interrupt other banners; wait for a quiet moment
   if (g.message) return;
+  const inFight = g.bossBar && g.bossBar.boss && !g.bossBar.boss.dead;
   for (const tip of TIPS) {
     if (sv.flags[tip.id]) continue;
-    if (!tip.when(g, sv)) continue;
+    if (inFight || !tip.when(g, sv)) continue;
     sv.flags[tip.id] = 1;
     g.message = { title: tip.title, desc: tip.desc(keys(g)), t: 0, dur: 6.5, hint: true };
     break;

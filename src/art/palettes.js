@@ -30,10 +30,10 @@ export const STYLES = {
     rim: '#8b74b8', accent: '#d6b4ff', glow: '#ead8ff', decorTop: 'mushrooms', decorBottom: 'roots',
     bg: 'fungal', particles: 'spores', light: 'rgba(210,170,255,0.08)',
   },
-  bastion: {
-    sky: ['#2a1f15', '#110c08'], fog: 'rgba(230,160,90,0.08)', rock: '#120e0b', rockHi: '#2a2016',
-    rim: '#b5824a', accent: '#f0b060', glow: '#ffd08a', decorTop: 'bolts', decorBottom: 'pipes',
-    bg: 'gears', particles: 'sparks', light: 'rgba(255,190,110,0.07)',
+  bastion: { // The Pinworks: blued steel and cold iron, rust, forge-orange glow, horseshoe-magnet red
+    sky: ['#1d232e', '#0a0c11'], fog: 'rgba(140,160,190,0.075)', rock: '#0d1015', rockHi: '#232a35',
+    rim: '#9eabba', accent: '#d8473a', glow: '#ffa257', decorTop: 'pins', decorBottom: 'filings',
+    bg: 'pinworks', particles: 'sparks', light: 'rgba(255,165,95,0.07)',
   },
   cistern: {
     sky: ['#0e1d33', '#050a14'], fog: 'rgba(90,150,230,0.10)', rock: '#08101c', rockHi: '#132339',

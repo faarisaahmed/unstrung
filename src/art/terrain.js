@@ -624,6 +624,62 @@ function decorate(ctx, kind, face, p, h, style, R) {
       } else if (face === 'bottom' && h < 0.12) decorate(ctx, 'drips', face, p, h, style, R);
       return;
     }
+    case 'pins': {
+      // Pinworks floors: dressmaker pins stuck in at a lean (everything iron leans toward the
+      // lodestone), tufts of iron filings, and the odd flush nail head.
+      if (face !== 'top') return;
+      const steel = mix(style.rock, style.rim, 0.55);
+      if (h < 0.05) {
+        const heads = ['#c8402f', '#e0913f', '#6b8fb8', '#e2dccd'];
+        const ang = 0.25 + (fr(h, 1) - 0.4) * 0.7, len = 9 + fr(h, 2) * 9;
+        const tx = x + Math.sin(ang) * len, ty = y + 2 - Math.cos(ang) * len;
+        ctx.strokeStyle = dark; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(x, y + 2); ctx.lineTo(tx, ty); ctx.stroke();
+        ctx.strokeStyle = steel; ctx.lineWidth = 1.1; ctx.beginPath(); ctx.moveTo(x, y + 2); ctx.lineTo(tx, ty); ctx.stroke();
+        const hr = 2.2 + fr(h, 3) * 1.4;
+        ctx.fillStyle = mix(heads[Math.floor(fr(h, 4) * 4)], style.rock, 0.25);
+        ctx.beginPath(); ctx.arc(tx, ty, hr, 0, TAU); ctx.fill();
+        ctx.strokeStyle = dark; ctx.lineWidth = 1; ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.beginPath(); ctx.arc(tx - hr * 0.35, ty - hr * 0.35, hr * 0.32, 0, TAU); ctx.fill();
+      } else if (h < 0.16) {
+        // a little drift of filings bristling along the pull
+        const n = 4 + Math.floor(fr(h, 5) * 5);
+        ctx.lineWidth = 1;
+        for (let i = 0; i < n; i++) {
+          const fx = x + (fr(h, i + 6) - 0.5) * 12, l = 2 + fr(h, i + 20) * 4, a = 0.35 + (fr(h, i + 30) - 0.5) * 0.6;
+          ctx.strokeStyle = i % 3 ? rgba(dark, 0.9) : rgba(style.rim, 0.55);
+          ctx.beginPath(); ctx.moveTo(fx, y + 1); ctx.lineTo(fx + Math.sin(a) * l, y + 1 - Math.cos(a) * l); ctx.stroke();
+        }
+      } else if (h < 0.2) {
+        const bx = x - p.nx * 6, by = y - p.ny * 6;
+        ctx.fillStyle = steel; ctx.beginPath(); ctx.arc(bx, by, 2.4, 0, TAU); ctx.fill();
+        ctx.strokeStyle = dark; ctx.lineWidth = 1; ctx.stroke();
+        ctx.fillStyle = rgba(style.rim, 0.8); ctx.beginPath(); ctx.arc(bx - 0.7, by - 0.7, 0.8, 0, TAU); ctx.fill();
+      }
+      return;
+    }
+    case 'filings': {
+      // Pinworks ceilings: beards of iron filings clinging to the iron, and needles left dangling
+      // from scraps of red thread.
+      if (face !== 'bottom') return;
+      if (h < 0.035) {
+        const len = 10 + h * 500, ex = x + (h - 0.017) * 120, ey = y + len;
+        taper(ctx, [x, y, x + 3, y + len * 0.5, ex, ey], 1.4, 0.8, rgba(style.accent, 0.6), 0, 10);
+        // the needle, eye-up on its thread
+        const nl = 11 + fr(h, 2) * 6;
+        ctx.strokeStyle = dark; ctx.lineWidth = 2.6; ctx.beginPath(); ctx.moveTo(ex, ey - 2); ctx.lineTo(ex + 1, ey + nl); ctx.stroke();
+        ctx.strokeStyle = mix(style.rim, '#ffffff', 0.2); ctx.lineWidth = 1.1; ctx.beginPath(); ctx.moveTo(ex, ey - 2); ctx.lineTo(ex + 1, ey + nl); ctx.stroke();
+        ctx.strokeStyle = dark; ctx.lineWidth = 0.8; ctx.beginPath(); ctx.ellipse(ex, ey + 0.5, 0.6, 1.6, 0, 0, TAU); ctx.stroke();
+      } else if (h < 0.15) {
+        const n = 3 + Math.floor(fr(h, 1) * 5);
+        ctx.lineWidth = 1;
+        for (let i = 0; i < n; i++) {
+          const fx = x + (fr(h, i + 3) - 0.5) * 10, l = 2 + fr(h, i + 13) * (3 + h * 30), a = (fr(h, i + 23) - 0.3) * 0.5;
+          ctx.strokeStyle = i % 3 ? rgba(dark, 0.9) : rgba(style.rim, 0.5);
+          ctx.beginPath(); ctx.moveTo(fx, y - 1); ctx.lineTo(fx + Math.sin(a) * l, y - 1 + Math.cos(a) * l); ctx.stroke();
+        }
+      }
+      return;
+    }
     case 'side': return;
     default: return decorate(ctx, 'moss', face, p, h, style, R);
   }

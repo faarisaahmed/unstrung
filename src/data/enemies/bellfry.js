@@ -2,19 +2,19 @@
 // Palette: pale slate-blue stone, cloud white, bell bronze/gold; one strong accent per creature.
 export default [
   {
-    id: 'bellfry_clapper', name: 'Clapperkin', area: 'bellfry', hp: 46, dmg: 1, glints: 9,
+    id: 'bellfry_clapper', name: 'Pothopper', area: 'bellfry', hp: 46, dmg: 1, glints: 9,
     size: [34, 38], behavior: 'hopper', params: { interval: 1.05, vx: 190, vy: 660 },
-    art: { body: 'bell', c1: '#c9a24a', c2: '#fff1c0', eye: '#2a1e08' },
+    art: { body: 'chimney', c1: '#b0603e', c2: '#4a4550', eye: '#ffd36a' },
     weight: 2,
-    journal: 'A handbell that grew tired of waiting for a hand. It hops the rooftops ringing at nothing, and lands on whatever answers.',
+    journal: 'A chimney pot that grew tired of smoking for other people. It hops the rooftops coughing soot at nothing, and lands on whatever answers.',
     kills: 20,
   },
   {
-    id: 'bellfry_tollhusk', name: 'Tollhusk', area: 'bellfry', hp: 64, dmg: 1, glints: 14,
+    id: 'bellfry_tollhusk', name: 'Pinwheeler', area: 'bellfry', hp: 64, dmg: 1, glints: 14,
     size: [46, 50], behavior: 'spinner', params: { rate: 1.3, speed: 175, arms: 3, interval: 0.42, sight: 420, color: '#ffe7b0', projArt: 'orb' },
-    art: { body: 'bell', c1: '#5f8a7e', c2: '#ffd36a', eye: '#fff5d6' },
+    art: { body: 'pinwheel', c1: '#d9584a', c2: '#e8eef8', c3: '#4a7fc0', eye: '#2a1e08' },
     weight: 99,
-    journal: 'An old verdigris bell that rang so long it forgot how to stop. Every toll leaves its mouth as a little bead of sound, and the beads still sting.',
+    journal: 'An old tin pinwheel that spun so long in the tower winds it forgot how to stop. Every turn flings off a little bead of wind, and the beads still sting.',
     kills: 12,
   },
   {
