@@ -18,6 +18,17 @@ function groundAt(room, x, y0) {
   return room.pxH - TILE;
 }
 
+// The open space actually enclosed by walls (rooms often have thick walls inside the default arena).
+function openArena(room, A, G, x0) {
+  const yProbe = G - TILE * 4.5;
+  let l = x0, r = x0;
+  while (l > A.x && !room.rectBlocked(l - 4, yProbe, 4, 4)) l -= 4;
+  while (r < A.x + A.w && !room.rectBlocked(r, yProbe, 4, 4)) r += 4;
+  let top = G - 8;
+  while (top > A.y && !room.rectBlocked(x0 - 2, top - 4, 4, 4)) top -= 4;
+  return { x: l, y: top, w: r - l, h: G - top };
+}
+
 function glow(ctx, x, y, r, rgb, a) {
   if (a <= 0 || r <= 0) return;
   ctx.save();
@@ -175,11 +186,14 @@ export class Gearwright extends Boss {
     super(game, tx, ty, spec, { id: 'gearwright', size: [240, 260], music: 'boss_mid', air: true, glints: 150, introTime: 2.8 });
     if (this.dead) return;
     this.noPhysics = true;
-    const A = this.arena;
+    let A = this.arena;
     this.mx = A.x + A.w / 2;
     this.G = this.groundY = groundAt(game.room, this.mx, ty * TILE);
-    this.H = this.G - A.y;
-    this.S = clamp(this.H / 540, 0.78, 1.15);
+    if (!this.spec.arena) A = this.arena = openArena(game.room, A, this.G, this.mx);
+    this.mx = A.x + A.w / 2;
+    // only what fits on screen above the floor counts (the camera shows ~470px above Bead's feet)
+    this.H = Math.min(this.G - A.y, 470);
+    this.S = clamp(this.H / 520, 0.78, 1.1);
     this.baseSpeed = this.speedMul;
     this.slump = 1; this.slumpTo = 1;
     this.coreOpen = 0; this.coreTo = 0; this.coreFlare = 0;
@@ -866,9 +880,11 @@ export class AutomatonChoir extends Boss {
     super(game, tx, ty, spec, { id: 'choir', size: [200, 120], music: 'boss_mid', air: true, glints: 160, introTime: 3.0 });
     if (this.dead) return;
     this.noPhysics = true;
-    const A = this.arena;
+    let A = this.arena;
     this.mx = A.x + A.w / 2;
     this.G = this.groundY = groundAt(game.room, this.mx, ty * TILE);
+    if (!this.spec.arena) A = this.arena = openArena(game.room, A, this.G, this.mx);
+    this.mx = A.x + A.w / 2;
     this.H = this.G - A.y;
     this.alcY = this.G - Math.min(this.H * 0.6, 316);
     this.leadY = this.G - 122;

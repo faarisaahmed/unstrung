@@ -29,6 +29,17 @@ function waterSurface(room, A) {
   return best;
 }
 
+// The open space actually enclosed by walls (rooms often have thick walls inside the default arena).
+function openArena(room, A, G, x0) {
+  const yProbe = G - TILE * 4.5;
+  let l = x0, r = x0;
+  while (l > A.x && !room.rectBlocked(l - 4, yProbe, 4, 4)) l -= 4;
+  while (r < A.x + A.w && !room.rectBlocked(r, yProbe, 4, 4)) r += 4;
+  let top = G - 8;
+  while (top > A.y && !room.rectBlocked(x0 - 2, top - 4, 4, 4)) top -= 4;
+  return { x: l, y: top, w: r - l, h: G - top };
+}
+
 function glow(ctx, x, y, r, rgb, a) {
   if (a <= 0 || r <= 0) return;
   ctx.save();
@@ -172,13 +183,18 @@ export class Gullet extends Boss {
     super(game, tx, ty, spec, { id: 'gullet', size: [90, 70], music: 'boss_mid', air: true, glints: 170, introTime: 3.0 });
     if (this.dead) return;
     this.noPhysics = true;
-    const A = this.arena, room = game.room;
+    let A = this.arena;
+    const room = game.room;
     this.mx = A.x + A.w / 2;
     this.floor = groundAt(room, this.mx, ty * TILE);
     const ws = waterSurface(room, A);
     this.W = ws !== null && ws < this.floor ? ws : this.floor;
     this.groundY = this.W;
-    this.deep = Math.max(this.W, this.floor) + 160;
+    if (!this.spec.arena) A = this.arena = openArena(room, A, this.W, this.mx);
+    this.mx = A.x + A.w / 2;
+    this.wet = this.floor - this.W > 40;
+    // underwater cruising depth: inside the pool when there is one, else hidden beneath the floor
+    this.deep = this.wet ? this.W + Math.min(120, (this.floor - this.W) * 0.62) : this.floor + 160;
     this.baseSpeed = this.speedMul;
     this.hx = this.mx; this.hy = this.deep;
     this.ha = 0; this.jaw = 0; this.jawTo = 0; this.tilt = 0; this.bulge = 0;
@@ -845,6 +861,7 @@ export class BrineMatron extends Boss {
   constructor(game, tx, ty, spec) {
     super(game, tx, ty, spec, { id: 'brinematron', size: [176, 140], music: 'boss_mid', glints: 180, introTime: 2.6 });
     if (this.dead) return;
+    if (!this.spec.arena) this.arena = openArena(game.room, this.arena, this.groundY, this.cx);
     this.baseSpeed = this.speedMul;
     this.withdrawn = 1; this.withdrawTo = 1;
     this.claw = 0; this.clawTo = 0;   // -1 slammed, 0 rest, 1 raised

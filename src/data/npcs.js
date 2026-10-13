@@ -342,7 +342,7 @@ function drawTwinseer(ctx, npc, t) {
 function drawWeaverEcho(ctx, npc, t) {
   local(ctx, npc, () => {
     ctx.save(); ctx.globalAlpha = 0.55 + Math.sin(t * 1.2) * 0.12;
-    const fake = { w: npc.w, h: npc.h * 0.7, anim: t * 0.15, game: npc.game };
+    const fake = { w: npc.w * 1.5, h: npc.h, anim: t * 0.15, game: npc.game };
     PAINTERS.spider(ctx, fake, t, { c1: '#e8e0f0', c2: '#9a8aa8', eye: '#ff5a5a', glow: true });
     ctx.restore();
     // phantom threads from above, worked by her hands

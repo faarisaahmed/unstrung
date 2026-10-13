@@ -352,6 +352,7 @@ export class Game {
       if (e.queue.length) { this.startFade(() => this.loadEchoArena(), 1.5); return; }
       if (e.opts.kind === 'pantheon') {
         this.save.flags['pantheon' + e.opts.id + '_clear'] = 1;
+        this.save.flags['pantheon_' + e.opts.id] = 1;
         this.message = { title: 'Pantheon Cleared', desc: 'The echoes fall quiet.', t: 0, dur: 4 };
       }
       this.leaveEcho();
