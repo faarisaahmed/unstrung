@@ -68,7 +68,7 @@ export function grantItem(game, spec) {
       desc = k ? k.desc + '\nEquip Knots while resting at a Spindle.' : '';
       break;
     }
-    case 'notch': sv.notches++; title = 'Length of String'; desc = 'Bead\'s tail grows longer. Room for more Knots.'; break;
+    case 'notch': sv.notches++; title = 'Length of String'; desc = 'Bead\'s thread grows longer. Room for more Knots.'; break;
     case 'ore': sv.items.ore = (sv.items.ore || 0) + 1; title = 'Pale Tin'; desc = 'A rare metal. The Tinsmith can polish your shell with it.'; break;
     case 'ability': {
       sv.abilities[spec.id] = true;

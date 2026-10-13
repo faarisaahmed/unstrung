@@ -6,13 +6,13 @@
 ## 1. Pitch
 
 UNSTRUNG is a hand-drawn, ink-and-moonlight metroidvania about **Bead**: a tiny, round,
-cream-coloured creature with two big black eyes and a loose end of thread for a tail.
+cream-coloured creature with two big black eyes and a curl of red thread knotted through its bore. Bonking unravels that thread into a yarn whip.
 Bead can only roll and hop at first. Across a huge interconnected underworld, Bead gains
 the powers of the scattered beads, unlocks new routes, and fights 30+ bosses on the way
 to re-threading (or freeing) the Moon.
 
 Pillars:
-1. **Tight, hard, fair combat**: Hollow Knight–style melee ("Bonk"), pogo, spells, and focus-healing ("Mend").
+1. **Tight, hard, fair combat**: the "Bonk" lashes three strands of yarn out of Bead like a whip (side, up, and a downward pogo), plus spells and Buff-while-rolling healing.
 2. **Being a ball**: a round body, momentum on slopes, squash & stretch, ram damage at speed,
    shrinking into crawlspaces, sticking to magnetic surfaces, and comet-rolling through crystal.
 3. **A vast world locked by abilities**: 19 areas and ~350 rooms. Shortcuts, secrets,
@@ -48,7 +48,7 @@ Pillars:
   (40 Spin, ~0.8 s). Standing still doesn't heal: Bead heals by staying on the move.
   Tapping Focus casts a spell (33 Spin).
 - **Glass Marbles** (11) are a collection. Bobbin's Marble Jar trades them for rewards, the last of which is a Ring.
-- **Knots** are strung on Bead's tail and take up **string length**; Lengths of String extend the tail.
+- **Knots** are tied into Bead's thread and take up **string length**; Lengths of String lengthen it.
 - Currency is **Glints**. On death you drop them in a **Tangle** at the death spot. Touch it to recover them.
   A new death before you recover the Tangle loses them for good.
 - Bonk damage: 5 → 9 → 13 → 17 → 21 (Polish upgrades from the Tinsmith).
@@ -57,7 +57,7 @@ Pillars:
 
 | # | Ability | Source | Opens |
 |---|---|---|---|
-| 0 | Roll, Jump, Bonk, Mend | start | — |
+| 0 | Roll, Jump, Bonk (yarn whip), Buff | start | — |
 | 1 | **Sticky Sap**: wall cling & wall jump | Mother Mossbug (Hollows) | vertical shafts everywhere |
 | 2 | **Pebble Dash**: horizontal dash | Petalmaw (Gardens) | long gaps |
 | 3 | **Shard Toss**: spell projectile | Wickwidow (Catacombs) | spell-switches, ranged |

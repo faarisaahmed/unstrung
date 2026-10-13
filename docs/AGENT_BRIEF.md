@@ -1,7 +1,7 @@
 # Brief for content agents
 
 You are helping build **UNSTRUNG**, a hand-inked browser metroidvania in the style of Hollow Knight and Silksong,
-about **Bead**: a tiny cream-colored ball with two big black eyes and a red thread tail, who rolls, jumps and
+about **Bead**: a tiny cream-colored ball with two big black eyes and a curl of red thread knotted through its bore, who rolls, jumps and
 Bonks (head-butt attack). The game is plain JavaScript ES modules with no build step. The repo is
 `/Users/faaris/WORKSPACE/Games/metroidvania`. A dev server is **already running** at http://localhost:8080
 (don't start another).

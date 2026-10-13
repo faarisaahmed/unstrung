@@ -51,7 +51,7 @@ the clasp **opened**. It let go.
 
 The beads poured off the Moon and fell, and the clasp fell after them, last and smallest. It struck
 the dark at the strand's frayed end (**the Fray**), rolled, and forgot everything. It woke with two
-big black eyes and a short red tail: the last scrap of the Strand, still tied to it.
+big black eyes and a curl of red thread: the last scrap of the Strand, still knotted through it.
 
 **That is Bead.** Bead is the clasp. Bead does not know this until the Cradle.
 
@@ -117,10 +117,10 @@ the Moon's throat. *A sacrifice. The world is saved by being held.*
 
 **B — "Unstrung."** Bead carries the Void Thread into the Cradle. When Selene falls, the Hollow Thread
 rises out of the Strand: the wanting itself. Bead defeats it, and then does what it did once before,
-on purpose this time: it bites through the red thread, its own tail, the last of the Strand. Every bead
+on purpose this time: it bites through the red thread, its own curl, the last of the Strand. Every bead
 is free. The kingdoms keep their lights. Selene does not need holding: her light falls on the kingdoms
 below and is not lost, because it never was. It fell to make the world. The Moon rises over the
-kingdoms as herself, bare and small and bright. Bead rolls home, tail-less. *The true ending.*
+kingdoms as herself, bare and small and bright. Bead rolls home with no thread at all. *The true ending.*
 
 **C — "First Light."** After Bead has answered every Echo in the Hall, the First Bead (*one was never
 asked*) asks to be answered. It is the bead that would not stay on a thread; Bead is the bead that let

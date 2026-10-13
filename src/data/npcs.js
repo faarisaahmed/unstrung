@@ -390,7 +390,7 @@ export const SHOPS = {
       { key: 'bobbin_bearing', name: 'Brass Bearing', icon: 'bearing', price: 650, give: { item: 'bearing' },
         desc: 'Oiled and true. Fit it inside you and you\'ll hold far more Spin. Don\'t ask me how. I just sell them.' },
       { key: 'bobbin_notch1', name: 'Length of String', icon: 'notch', price: 400, give: { item: 'notch' },
-        desc: 'A longer tail means room for one more Knot. Everyone needs a spare.' },
+        desc: 'A longer thread means room for one more Knot. Everyone needs a spare.' },
       { key: 'bobbin_notch2', name: 'Length of String', icon: 'notch', price: 900, give: { item: 'notch' }, cond: (s) => !!s.flags.bought_bobbin_notch1,
         desc: 'My last length. My mother\'s. Wear it in good health.' },
     ],

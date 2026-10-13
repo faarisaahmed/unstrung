@@ -76,10 +76,6 @@ export class Player {
       this.attackDir = inp.down('up') ? 'up' : (inp.down('down') && !b.grounded && b.mode === 'normal') ? 'down' : 'side';
       this.hitThisSwing = false;
       g.sfx('swing');
-      const bx = this.cx, by = this.cy;
-      if (this.attackDir === 'side') g.fx.slash(bx + b.facing * 30, by, b.facing > 0 ? 0 : Math.PI, 56 * s.reach, 'rgba(255,250,235,0.9)', 0.14, this.swing % 2 ? 1 : -1);
-      else if (this.attackDir === 'up') g.fx.slash(bx, by - 30, -Math.PI / 2, 52 * s.reach, 'rgba(255,250,235,0.9)', 0.14, 1);
-      else g.fx.slash(bx, by + 30, Math.PI / 2, 52 * s.reach, 'rgba(255,250,235,0.9)', 0.14, 1);
     }
 
     // ---- movement ----

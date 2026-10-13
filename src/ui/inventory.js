@@ -64,7 +64,7 @@ export class InventoryScreen {
         const i = kn.equipped.indexOf(id);
         if (i >= 0) { kn.equipped.splice(i, 1); sfx('menuClose'); }
         else if (this.usedNotches() + KNOTS[id].cost <= this.save.notches) { kn.equipped.push(id); sfx('confirm'); }
-        else { sfx('deny'); this.flashMsg = 'Not enough string on your tail.'; this.flashT = 1.4; }
+        else { sfx('deny'); this.flashMsg = 'Not enough string on your thread.'; this.flashT = 1.4; }
         this.game.refreshStats();
       }
     } else if (this.tab === 2) {
@@ -167,8 +167,8 @@ export class InventoryScreen {
     const sv = this.save, t = this.t;
     const used = this.usedNotches();
     panel(ctx, 40, 76, 880, 64);
-    text(ctx, this.bench ? 'String Knots on your tail' : 'Knots (rest at a Spindle to restring)', 64, 108, 16, this.bench ? C.gold : C.dim);
-    // the tail as a length of string: used length in red, spare length pale
+    text(ctx, this.bench ? 'Tie Knots into your thread' : 'Knots (rest at a Spindle to restring)', 64, 108, 16, this.bench ? C.gold : C.dim);
+    // Bead's thread as a length of string: used length in red, spare length pale
     const L = 22, x0 = 600;
     for (let i = 0; i < sv.notches; i++) {
       const x = x0 + i * L, y = 108 + Math.sin(i * 1.3 + this.t * 2) * 2;

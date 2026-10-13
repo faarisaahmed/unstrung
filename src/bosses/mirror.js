@@ -4,7 +4,7 @@ import { TAU, clamp, sign, overlap } from '../core/math.js';
 import { INK, eye } from '../art/creatures.js';
 import { Projectile, registerProjectileArt } from '../entities/projectile.js';
 import { makeBead, stepBead, moveX, moveY } from '../world/movement.js';
-import { BeadArt } from '../art/bead.js';
+import { BeadArt, drawSprig, drawWhip } from '../art/bead.js';
 import { PHYS } from '../core/constants.js';
 
 // ---------------------------------------------------------------------------------------------
@@ -903,10 +903,7 @@ export class Reflection extends Boss {
   bonk(dir) {
     this.atk = { t: 0, dir, hold: dir === 'down' };
     this.sfx('swing');
-    const b = this.b, f = b.facing;
-    if (dir === 'side') this.fx.slash(this.cx + f * 30, this.cy, f > 0 ? 0 : Math.PI, 56, 'rgba(120,220,235,0.9)', 0.14);
-    else if (dir === 'down') this.fx.slash(this.cx, this.cy + 30, Math.PI / 2, 52, 'rgba(120,220,235,0.9)', 0.14);
-    else this.fx.slash(this.cx, this.cy - 30, -Math.PI / 2, 52, 'rgba(120,220,235,0.9)', 0.14);
+    this.swing = (this.swing || 0) + 1;
   }
   atkBox() {
     const a = this.atk, b = this.b;
@@ -1278,11 +1275,6 @@ export class Reflection extends Boss {
         ctx.beginPath(); ctx.arc(t.x, t.y, t.r, 0, TAU); ctx.fill();
       }
       ctx.globalAlpha = 1;
-      // cold thread tail
-      ctx.strokeStyle = '#4fd0cf'; ctx.lineWidth = 2; ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.moveTo(art.tail[0].x, art.tail[0].y);
-      for (let i = 1; i < art.tail.length; i++) { const a = art.tail[i - 1], q = art.tail[i]; ctx.quadraticCurveTo(a.x, a.y, (a.x + q.x) / 2, (a.y + q.y) / 2); }
-      ctx.stroke();
       // dark dandelion while it glides
       if (b.gliding) {
         ctx.strokeStyle = 'rgba(40,30,55,0.95)'; ctx.lineWidth = 1;
@@ -1363,7 +1355,9 @@ export class Reflection extends Boss {
         }
       }
     }
+    drawSprig(ctx, 0, -r + 1, 1, -b.vx / 520, white, '#3fb6b8');
     ctx.restore();
+    if (this.atk) drawWhip(ctx, cx, cy, r, this.atk.dir, b.facing, this.atk.hold ? Math.min(this.atk.t, 0.1) : this.atk.t, this.swing % 2 ? 1 : -1, 1, ['#3fb6b8', '#6fd6d4', '#23807f'], white);
   }
 
   drawExtra(ctx, t) {

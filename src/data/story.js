@@ -38,7 +38,7 @@ export const ENDINGS = {
       'Selene\'s light spills again, as it always has. It runs down into the deep and does not vanish.',
       'It falls on the Hollows and the Gardens and the town in the rain. It was never lost. It fell to make the world.',
       'The Moon rises over her kingdoms, bare and small and bright, as herself.',
-      'A little bead with no tail rolls home to Spindletown, and Bobbin, who has been watching the road, puts the kettle on.',
+      'A little bead with no thread rolls home to Spindletown, and Bobbin, who has been watching the road, puts the kettle on.',
     ],
   },
   C: {
@@ -119,7 +119,7 @@ export const TIPS = [
   'The Rollmasters teach for a fee. Look for them in town, in the Hushwood, and above the clouds.',
   'Sir Burl is very brave. Sir Burl is also very lost.',
   'If a door will not open, the way may lie in another kingdom. Come back later.',
-  'Knots take up string on your tail. Try different combinations before a hard fight.',
+  'Knots take up string on your thread. Try different combinations before a hard fight.',
   'Watch a boss before you strike. Every one of them tells you what it is about to do.',
   'Lore tablets glow until read. The story is scattered: gather it.',
   'There is said to be a kingdom under the floorboards. Only the smallest can reach it.',

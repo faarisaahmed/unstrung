@@ -162,7 +162,7 @@ export const LORE = {
   hushwood_4: {
     title: 'Dream, Recorded',
     pages: [
-      'the elder dreamed a very small bead with a red tail, standing at the edge of everything with its mouth open.',
+      'the elder dreamed a very small bead with a curl of red thread, standing at the edge of everything with its mouth open.',
       'it was about to say yes. or no. the dream ended before we found out which.',
     ],
   },

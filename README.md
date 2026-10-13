@@ -4,7 +4,7 @@
 One bead fell last, and smallest, and rolled.*
 
 **UNSTRUNG** is a hand-inked metroidvania about **Bead**, a tiny cream-colored ball with big black eyes and a
-loose red thread for a tail. Roll, hop and Bonk your way through a vast underground world: earn new powers,
+curl of red thread knotted through it. Roll, hop and Bonk your way through a vast underground world: earn new powers,
 open new paths, and face more than thirty bosses on the way to re-threading the Moon, or setting every bead free.
 
 ### ▶ Play in your browser: **https://faarisaahmed.github.io/unstrung/**
@@ -24,7 +24,7 @@ No install needed. It runs in any modern desktop browser, with keyboard or gamep
 - **33 bosses**, each with scripted multi-phase attacks, plus Echo rematches and four boss-rush Pantheons.
 - **160+ enemy types**, all recorded in a hunter's journal.
 - **Original survival loop**: health is Coats of lacquer, and you heal by *Buffing while you roll*. Spin is wound up by speed, not by standing still.
-- **40 Knots** strung on Bead's tail, 48 lost Beadlings, Gilded Rings, Bearings, Glass Marbles, Rollmaster techniques, and a
+- **40 Knots** tied into Bead's thread, 48 lost Beadlings, Gilded Rings, Bearings, Glass Marbles, Rollmaster techniques, and a
   completion percentage that goes past 100.
 - **Three endings.**
 - **All original music**, synthesized live from note data, with a recurring leitmotif ("Bead's Theme").
