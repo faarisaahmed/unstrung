@@ -1,0 +1,10 @@
+import puppeteer from '/Users/faaris/WORKSPACE/Games/metroidvania/node_modules/puppeteer-core/lib/esm/puppeteer/puppeteer-core.js';
+const [qs, out] = process.argv.slice(2);
+const b = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: 'new' });
+const p = await b.newPage();
+const errs = []; p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); }); p.on('pageerror', e => errs.push(e.message));
+await p.setViewport({ width: 1200, height: 800 });
+await p.goto('http://localhost:8080/scratchpad/creature_artist/sheet.html?' + qs, { waitUntil: 'load' });
+await new Promise(r => setTimeout(r, 1500));
+const c = await p.$('#c'); await c.screenshot({ path: out });
+console.log(errs.length ? errs.join('\n') : 'ok'); await b.close();

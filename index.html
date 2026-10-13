@@ -18,11 +18,11 @@
 <body>
 <!-- brush/paper filters used when pre-painting terrain and backgrounds -->
 <svg width="0" height="0" style="position:absolute">
-  <filter id="rough" x="-5%" y="-5%" width="110%" height="110%">
+  <filter id="rough" color-interpolation-filters="sRGB" x="-5%" y="-5%" width="110%" height="110%">
     <feTurbulence type="fractalNoise" baseFrequency="0.022" numOctaves="3" seed="7" result="n"/>
     <feDisplacementMap in="SourceGraphic" in2="n" scale="9" xChannelSelector="R" yChannelSelector="G"/>
   </filter>
-  <filter id="roughFine" x="-2%" y="-2%" width="104%" height="104%">
+  <filter id="roughFine" color-interpolation-filters="sRGB" x="-2%" y="-2%" width="104%" height="104%">
     <feTurbulence type="fractalNoise" baseFrequency="0.09" numOctaves="2" seed="3" result="n"/>
     <feDisplacementMap in="SourceGraphic" in2="n" scale="3.5" xChannelSelector="R" yChannelSelector="G"/>
   </filter>

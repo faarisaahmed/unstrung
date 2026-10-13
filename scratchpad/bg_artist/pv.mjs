@@ -1,0 +1,12 @@
+import puppeteer from 'puppeteer-core';
+const [out, qs = ''] = process.argv.slice(2);
+const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: 'new' });
+const page = await browser.newPage();
+page.on('console', (m) => { if (m.type() === 'error') console.log('ERR', m.text()); });
+page.on('pageerror', (e) => console.log('PAGEERR', e.message));
+await page.setViewport({ width: 1920, height: 1350 });
+await page.goto('http://localhost:8080/scratchpad/bg_artist/preview.html?' + qs, { waitUntil: 'load' });
+await page.waitForFunction('window.__done', { timeout: 120000 });
+console.log(JSON.stringify(await page.evaluate('window.__times')));
+await page.screenshot({ path: out, fullPage: true });
+await browser.close();

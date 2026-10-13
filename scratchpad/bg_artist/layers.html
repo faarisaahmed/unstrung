@@ -1,0 +1,21 @@
+<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;background:#000;color:#fff;font:12px sans-serif}canvas{display:block}</style></head><body>
+<svg width="0" height="0" style="position:absolute">
+  <filter id="rough" x="-5%" y="-5%" width="110%" height="110%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.022" numOctaves="3" seed="7" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="9" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
+<script type="module">
+const q = new URLSearchParams(location.search);
+const { getBackground, drawBackground } = await import('../../src/art/backgrounds.js?v=' + Date.now());
+const { STYLES, mix } = await import('../../src/art/palettes.js');
+const a = q.get('area'); const st = STYLES[a];
+const bg = getBackground(a, st);
+// composite at 2 cam positions + 3 raw layers (each on sky color)
+const out = document.createElement('canvas'); out.width = 1920; out.height = 540*2 + 534*2; document.body.appendChild(out);
+const o = out.getContext('2d');
+for (let i = 0; i < 2; i++) { const c = document.createElement('canvas'); c.width = 960; c.height = 540; drawBackground(c.getContext('2d'), bg, 300 + i * 2200, 500 * (1 - i) + 300, 4000, 1540, 1); o.drawImage(c, i * 960, 0); }
+for (let i = 0; i < 2; i++) { const c = document.createElement('canvas'); c.width = 960; c.height = 540; drawBackground(c.getContext('2d'), bg, 5000 + i * 3000, 1000 * i, 4000, 1540, 1); o.drawImage(c, i * 960, 540); }
+for (let d = 0; d < 3; d++) { const X=(d%2)*960, Y=1080+Math.floor(d/2)*534; o.fillStyle = mix(st.sky[0], st.sky[1], 0.5); o.fillRect(X, Y, 960, 534); o.drawImage(bg.layers[d], X, Y, 960, 534); }
+window.__done = true;
+</script></body></html>
