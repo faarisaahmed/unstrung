@@ -35,7 +35,7 @@ export class BeadArt {
       for (const t of this.tail) { t.x = t.px = ax; t.y = t.py = ay; }
       this.tailInit = true;
     }
-    const seg = (b.small ? 2.2 : 4.2) * (1 + Math.max(0, (p.save.notches || 3) - 3) * 0.07);
+    const seg = (b.small ? 2.2 : 4.2) * (1 + Math.max(0, ((p.save && p.save.notches) || 3) - 3) * 0.07);
     this.tail[0].x = ax; this.tail[0].y = ay;
     for (let i = 1; i < this.tail.length; i++) {
       const t = this.tail[i];
@@ -88,7 +88,7 @@ export class BeadArt {
     }
     ctx.stroke();
     // Knots strung on the tail as tiny beads
-    const eq = (p.save.knots && p.save.knots.equipped) || [];
+    const eq = (p.save && p.save.knots && p.save.knots.equipped) || [];
     eq.forEach((id, i) => {
       const tp = this.tail[Math.min(this.tail.length - 1, 2 + i)];
       let h = 0; for (let k = 0; k < id.length; k++) h = (h * 31 + id.charCodeAt(k)) >>> 0;
