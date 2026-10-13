@@ -232,7 +232,7 @@ export class ControlsScreen {
       ['Jump (hold for height, glide later)', 'Z  /  Space', 'A'],
       ['Bonk (↑ / ↓ to aim, ↓ in air = pogo)', 'X  /  J', 'X'],
       ['Dash (↓ + Dash: Comet Roll charge)', 'C  /  K  /  Shift', 'RB / B'],
-      ['Focus: tap = spell, hold = Mend', 'F  /  L', 'Y'],
+      ['Focus: tap = spell, hold while rolling = Buff', 'F  /  L', 'Y'],
       ['Ability: shrink / hook / ground pound', 'V  /  I', 'LB'],
       ['Interact, rest, talk', '↑', 'Up'],
       ['Map', 'Tab  /  M', 'Select'],

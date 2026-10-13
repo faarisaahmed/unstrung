@@ -2,7 +2,7 @@
 import { VIEW_W, VIEW_H } from '../core/constants.js';
 import { TAU, clamp } from '../core/math.js';
 
-export const FONT = 'Georgia, "Times New Roman", serif';
+export const FONT = '"IM Fell English", Georgia, serif';
 
 export class HUD {
   constructor(game) {
@@ -16,72 +16,81 @@ export class HUD {
     const g = this.g, sv = g.save;
     if (g.cutscene && g.cutscene.hideHud) return;
     const t = g.time;
-    // --- thread vessel: a spool ---
-    const vx = 52, vy = 50, vr = 30;
+    // --- SPIN: a lacquered spinning disc; the gold wedge is your Spin, the spiral turns faster as it fills ---
+    const vx = 52, vy = 50, vr = 29;
+    const frac = Math.max(0, Math.min(1, sv.thread / sv.maxThread));
+    this.spinAng = (this.spinAng || 0) + (0.4 + frac * 7) / 60;
     ctx.save();
-    ctx.fillStyle = 'rgba(10,10,14,0.85)';
-    ctx.beginPath(); ctx.arc(vx, vy, vr + 5, 0, TAU); ctx.fill();
-    const frac = sv.thread / sv.maxThread;
+    // ink shadow + rim
+    ctx.fillStyle = 'rgba(8,8,12,0.85)';
+    ctx.beginPath(); ctx.arc(vx + 1.5, vy + 2, vr + 6, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#1b1820';
+    ctx.beginPath(); ctx.arc(vx, vy, vr + 4, 0, TAU); ctx.fill();
+    // the filled wedge (clockwise from top)
+    if (frac > 0) {
+      const gr = ctx.createRadialGradient(vx - 6, vy - 8, 2, vx, vy, vr);
+      gr.addColorStop(0, '#fff3cf'); gr.addColorStop(0.55, '#e9b955'); gr.addColorStop(1, '#a06a22');
+      ctx.fillStyle = gr;
+      ctx.beginPath(); ctx.moveTo(vx, vy); ctx.arc(vx, vy, vr, -Math.PI / 2, -Math.PI / 2 + frac * TAU); ctx.closePath(); ctx.fill();
+    }
+    // engraved spiral that spins
     ctx.save();
     ctx.beginPath(); ctx.arc(vx, vy, vr, 0, TAU); ctx.clip();
-    const fillY = vy + vr - frac * vr * 2;
-    const grd = ctx.createLinearGradient(0, vy - vr, 0, vy + vr);
-    grd.addColorStop(0, '#fff6e2'); grd.addColorStop(1, '#d8c9a4');
-    ctx.fillStyle = grd;
-    ctx.beginPath();
-    ctx.moveTo(vx - vr, vy + vr);
-    for (let i = 0; i <= 12; i++) {
-      const px = vx - vr + (i / 12) * vr * 2;
-      ctx.lineTo(px, fillY + Math.sin(t * 3 + i * 0.8) * (frac > 0.02 && frac < 0.98 ? 2 : 0));
-    }
-    ctx.lineTo(vx + vr, vy + vr); ctx.fill();
-    // wound thread texture
-    ctx.strokeStyle = 'rgba(160,130,90,0.35)'; ctx.lineWidth = 1;
-    for (let y = vy - vr; y < vy + vr; y += 4) {
-      if (y < fillY) continue;
-      ctx.beginPath(); ctx.moveTo(vx - vr, y); ctx.lineTo(vx + vr, y + 2); ctx.stroke();
+    ctx.translate(vx, vy); ctx.rotate(this.spinAng);
+    ctx.strokeStyle = frac > 0.99 ? 'rgba(255,250,230,0.85)' : 'rgba(30,24,20,0.55)'; ctx.lineWidth = 1.4;
+    for (let arm = 0; arm < 3; arm++) {
+      ctx.beginPath();
+      for (let k = 0; k <= 30; k++) { const r = k / 30 * vr, a = arm * TAU / 3 + k * 0.16; ctx[k ? 'lineTo' : 'moveTo'](Math.cos(a) * r, Math.sin(a) * r); }
+      ctx.stroke();
     }
     ctx.restore();
-    ctx.strokeStyle = '#e8e0cc'; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.arc(vx, vy, vr, 0, TAU); ctx.stroke();
-    ctx.strokeStyle = '#16141c'; ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.arc(vx, vy, vr + 3, 0, TAU); ctx.stroke();
-    // a curl of loose thread from the spool
-    ctx.strokeStyle = '#b8323e'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(vx + vr * 0.7, vy + vr * 0.7);
-    ctx.bezierCurveTo(vx + vr + 10, vy + vr + 8, vx + vr + 18, vy + 4, vx + vr + 26, vy + 12); ctx.stroke();
-    // extra vessel fragments indicator
-    const extra = Math.floor(sv.vesselFrags / 3);
-    for (let i = 0; i < extra; i++) {
-      ctx.fillStyle = '#e8e0cc';
-      ctx.beginPath(); ctx.arc(vx - 18 + i * 14, vy + vr + 14, 4, 0, TAU); ctx.fill();
-    }
+    // hand-inked rims
+    ctx.strokeStyle = '#efe4c8'; ctx.lineWidth = 2.6;
+    ctx.beginPath(); ctx.arc(vx, vy, vr + 1, -2.9, 2.6); ctx.stroke();
+    ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(vx + 0.6, vy - 0.4, vr + 4.5, 0.4, 3.6); ctx.stroke();
+    ctx.fillStyle = '#16141c'; ctx.beginPath(); ctx.arc(vx, vy, 4, 0, TAU); ctx.fill();
+    // buff cost tick on the rim
+    const cost = this.g.stats.mendCost / sv.maxThread;
+    const ca = -Math.PI / 2 + cost * TAU;
+    ctx.strokeStyle = 'rgba(255,240,210,0.7)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(vx + Math.cos(ca) * (vr - 4), vy + Math.sin(ca) * (vr - 4)); ctx.lineTo(vx + Math.cos(ca) * (vr + 5), vy + Math.sin(ca) * (vr + 5)); ctx.stroke();
     ctx.restore();
 
-    // --- shells ---
-    if (this.lastHp !== null && sv.hp < this.lastHp) {
-      for (let i = sv.hp; i < this.lastHp; i++) this.hpAnim.push({ i, t: 0 });
-    }
+    // --- COATS: lacquer beads strung on Bead's red thread ---
+    if (this.lastHp !== null && sv.hp < this.lastHp) for (let i = sv.hp; i < this.lastHp; i++) this.hpAnim.push({ i, t: 0 });
     this.lastHp = sv.hp;
-    for (let i = 0; i < sv.maxHp; i++) {
-      const x = 104 + i * 30, y = 38;
-      drawShell(ctx, x, y, i < sv.hp, t, i);
+    const n = sv.maxHp;
+    const sx = vx + vr + 10, ex = sx + 26 * n + 10;
+    const sag = (x) => 30 + Math.sin(((x - sx) / (ex - sx)) * Math.PI) * 9 + Math.sin(t * 1.3 + x * 0.05) * 0.8;
+    ctx.strokeStyle = '#b8323e'; ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    for (let x = sx; x <= ex; x += 4) ctx[x === sx ? 'moveTo' : 'lineTo'](x, sag(x));
+    ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ex, sag(ex)); ctx.quadraticCurveTo(ex + 8, sag(ex) + 10, ex + 4 + Math.sin(t * 2) * 2, sag(ex) + 18); ctx.stroke();
+    const hues = ['#d9a441', '#c9574a', '#4f8f8a', '#8a6bb8', '#d07a3c', '#5b86c4', '#b5527a', '#7aa04a', '#c99a52', '#6a6fc0', '#c25b5b', '#4c9a7a'];
+    for (let i = 0; i < n; i++) {
+      const x = sx + 18 + i * 26, y = sag(x) + 6;
+      if (i < sv.hp) drawCoat(ctx, x, y, hues[i % hues.length], t, i);
+      else {
+        // an empty knot where the bead slipped off
+        ctx.strokeStyle = '#b8323e'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(x, y - 4, 3, 0, TAU); ctx.stroke();
+      }
     }
     for (let k = this.hpAnim.length - 1; k >= 0; k--) {
       const a = this.hpAnim[k];
       a.t += 1 / 60;
-      if (a.t > 0.5) { this.hpAnim.splice(k, 1); continue; }
-      const x = 104 + a.i * 30, y = 38;
-      ctx.globalAlpha = 1 - a.t / 0.5;
-      ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(x, y, 10 + a.t * 40, 0, TAU); ctx.stroke();
+      if (a.t > 0.7) { this.hpAnim.splice(k, 1); continue; }
+      const x = sx + 18 + a.i * 26, y = sag(x) + 6 + a.t * a.t * 300;
+      ctx.globalAlpha = 1 - a.t / 0.7;
+      drawCoat(ctx, x + a.t * 30, y, hues[a.i % hues.length], t, a.i, true);
       ctx.globalAlpha = 1;
     }
 
     // --- glints ---
     this.shownGlints += clamp(sv.glints - this.shownGlints, -Math.max(1, Math.abs(sv.glints - this.shownGlints) * 0.15), Math.max(1, Math.abs(sv.glints - this.shownGlints) * 0.15));
     if (Math.abs(sv.glints - this.shownGlints) < 1) this.shownGlints = sv.glints;
-    const gx = 104, gy = 72;
+    const gx = 104, gy = 76;
     ctx.fillStyle = '#f3e7c4';
     ctx.save(); ctx.translate(gx, gy); ctx.rotate(Math.PI / 4);
     ctx.fillRect(-5, -5, 10, 10); ctx.restore();
@@ -187,20 +196,18 @@ export function flourish(ctx, x, y, w) {
   ctx.beginPath(); ctx.moveTo(x, y - 5); ctx.lineTo(x + 5, y); ctx.lineTo(x, y + 5); ctx.lineTo(x - 5, y); ctx.fill();
 }
 
-function drawShell(ctx, x, y, full, t, i) {
+function drawCoat(ctx, x, y, hue, t, i, cracked) {
   ctx.save();
   ctx.translate(x, y);
-  // a little bead-shaped shell with a notch
-  ctx.fillStyle = full ? '#f4eedf' : 'rgba(20,20,26,0.8)';
-  ctx.strokeStyle = full ? '#16141c' : 'rgba(220,210,190,0.35)';
-  ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.arc(0, 0, 10, 0, TAU); ctx.fill(); ctx.stroke();
-  if (full) {
-    ctx.fillStyle = '#16141c';
-    ctx.beginPath(); ctx.ellipse(-3, -1, 1.8, 2.8, 0, 0, TAU); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(3, -1, 1.8, 2.8, 0, 0, TAU); ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.arc(-3, -4, 5, Math.PI * 1.1, Math.PI * 1.5); ctx.stroke();
-  }
+  // a glossy lacquered bead, hand-inked
+  const g = ctx.createRadialGradient(-3, -4, 1, 0, 0, 10);
+  g.addColorStop(0, '#fff8e6'); g.addColorStop(0.35, hue); g.addColorStop(1, '#1d1418');
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.ellipse(0, 0, 9.5, 9, 0, 0, TAU); ctx.fill();
+  ctx.strokeStyle = '#16141c'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,255,255,0.75)'; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.arc(-1, -1, 5.5, 3.6, 4.6); ctx.stroke();
+  ctx.fillStyle = '#16141c'; ctx.beginPath(); ctx.ellipse(0, -8.5, 2.2, 1.4, 0, 0, TAU); ctx.fill();
+  if (cracked) { ctx.strokeStyle = '#16141c'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(-4, -6); ctx.lineTo(0, -1); ctx.lineTo(-2, 3); ctx.lineTo(3, 7); ctx.stroke(); }
   ctx.restore();
 }

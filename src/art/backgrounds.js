@@ -21,23 +21,17 @@ export function getBackground(area, style) {
 export function drawBackground(ctx, bg, camX, camY, roomW, roomH, time) {
   const st = bg.style;
   const g = ctx.createLinearGradient(0, 0, 0, VIEW_H);
-  g.addColorStop(0, st.sky[0]); g.addColorStop(1, st.sky[1]);
+  g.addColorStop(0, mix(st.sky[0], st.sky[1], 0.25)); g.addColorStop(1, mix(st.sky[1], '#000000', 0.3));
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, VIEW_W, VIEW_H);
-  // light shafts
+  // soft, feathered light shafts (pre-painted, blurred streaks rather than hard polygons)
+  const shaft = shaftSprite(st.light);
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
-  for (let i = 0; i < 4; i++) {
-    const sx = ((i * 431 - camX * 0.08) % (VIEW_W + 400) + VIEW_W + 400) % (VIEW_W + 400) - 200;
-    const a = 0.5 + 0.5 * Math.sin(time * 0.3 + i * 1.7);
-    const grd = ctx.createLinearGradient(sx, 0, sx + 160, VIEW_H);
-    grd.addColorStop(0, st.light);
-    grd.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = grd;
-    ctx.globalAlpha = 0.4 + 0.6 * a;
-    ctx.beginPath();
-    ctx.moveTo(sx, 0); ctx.lineTo(sx + 70, 0); ctx.lineTo(sx + 260, VIEW_H); ctx.lineTo(sx + 120, VIEW_H);
-    ctx.fill();
+  for (let i = 0; i < 3; i++) {
+    const sx = ((i * 521 - camX * 0.08) % (VIEW_W + 500) + VIEW_W + 500) % (VIEW_W + 500) - 300;
+    ctx.globalAlpha = 0.45 + 0.35 * Math.sin(time * 0.25 + i * 1.9);
+    ctx.drawImage(shaft, sx, -20);
   }
   ctx.restore();
   for (let d = 0; d < 3; d++) {
@@ -51,9 +45,11 @@ export function drawBackground(ctx, bg, camX, camY, roomW, roomH, time) {
       if (x + LAYER_W < 0) continue;
       ctx.drawImage(L, Math.round(x), Math.round(oy));
     }
-    // fog between layers
+    // thin fog between layers (thicker behind the far layer)
+    ctx.globalAlpha = d === 0 ? 0.8 : 0.35;
     ctx.fillStyle = st.fog;
     ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+    ctx.globalAlpha = 1;
   }
 }
 
@@ -62,8 +58,8 @@ function paintLayer(style, depth, seed) {
   cv.width = LAYER_W; cv.height = LAYER_H;
   const ctx = cv.getContext('2d');
   const R = rng(seed);
-  const t = [0.22, 0.48, 0.75][depth];
-  const col = mix(style.sky[1], style.rock, t);
+  const haze = mix(style.sky[0], style.sky[1], 0.35);
+  const col = depth === 0 ? mix(haze, style.rock, 0.28) : depth === 1 ? mix(style.sky[1], style.rock, 0.55) : mix(style.sky[1], style.rock, 0.86);
   const hi = rgba(mix(style.sky[0], style.rim, 0.25 + depth * 0.15), 0.25 + depth * 0.1);
   const P = PAINTERS[style.bg] || PAINTERS.threadcave;
   // wrap: draw everything three times shifted so the strip tiles seamlessly
@@ -83,7 +79,41 @@ function paintLayer(style, depth, seed) {
       massEdge(ctx, R3, col, 40 + depth * 40, -1, depth);
     ctx.restore();
   }
-  return cv;
+  return painterly(cv, style, depth, seed);
+}
+
+// Turn a flat silhouette layer into something that reads as painted: torn/brushed edges,
+// dry-brush streaks of light and shade over the shapes, and depth-of-field blur on far layers.
+function painterly(cv, style, depth, seed) {
+  if (typeof document === 'undefined' || !document.getElementById('rough')) return cv;
+  const R = rng(seed + 77);
+  const W = cv.width, H = cv.height;
+  const a = document.createElement('canvas'); a.width = W; a.height = H;
+  const c = a.getContext('2d');
+  c.filter = 'url(#rough)';
+  c.drawImage(cv, 0, 0);
+  c.filter = 'none';
+  // dry-brush streaks, only on painted pixels
+  c.globalCompositeOperation = 'source-atop';
+  const n = 260;
+  for (let i = 0; i < n; i++) {
+    const x = R() * W, y = R() * H, len = 30 + R() * 160, ang = -0.25 + R() * 0.5 + (R() < 0.3 ? Math.PI / 2 : 0);
+    const light = R() < 0.45;
+    c.strokeStyle = light ? rgba(mix(style.rim, style.rock, 0.5), 0.03 + R() * 0.05) : 'rgba(0,0,0,0.14)';
+    c.lineWidth = 2 + R() * 9;
+    c.lineCap = 'round';
+    c.beginPath(); c.moveTo(x, y);
+    c.quadraticCurveTo(x + Math.cos(ang) * len * 0.5 + (R() - 0.5) * 20, y + Math.sin(ang) * len * 0.5 + (R() - 0.5) * 20, x + Math.cos(ang) * len, y + Math.sin(ang) * len);
+    c.stroke();
+  }
+  // pale rim-light along the tops of shapes, brushed on unevenly
+  c.globalCompositeOperation = 'source-over';
+  const b = document.createElement('canvas'); b.width = W; b.height = H;
+  const bc = b.getContext('2d');
+  const blur = [3.2, 1.6, 0.6][depth];
+  bc.filter = `blur(${blur}px)`;
+  bc.drawImage(a, 0, 0);
+  return b;
 }
 
 function massEdge(ctx, R, col, baseY, dir, depth) {
@@ -97,6 +127,28 @@ function massEdge(ctx, R, col, baseY, dir, depth) {
   }
   ctx.lineTo(LAYER_W, dir > 0 ? LAYER_H : 0);
   ctx.fill();
+}
+
+const shafts = new Map();
+function shaftSprite(color) {
+  if (shafts.has(color)) return shafts.get(color);
+  const w = 380, h = VIEW_H + 40;
+  const raw = document.createElement('canvas'); raw.width = w; raw.height = h;
+  const c = raw.getContext('2d');
+  const R = rng(hashStr(color));
+  for (let i = 0; i < 14; i++) {
+    const x0 = 60 + R() * 90, spread = 120 + R() * 140, wid = 6 + R() * 26;
+    const g = c.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0, color); g.addColorStop(0.7, color.replace(/[\d.]+\)$/, '0.02)')); g.addColorStop(1, 'rgba(0,0,0,0)');
+    c.fillStyle = g;
+    c.beginPath(); c.moveTo(x0, 0); c.lineTo(x0 + wid, 0); c.lineTo(x0 + spread + wid * 2, h); c.lineTo(x0 + spread, h); c.fill();
+  }
+  const out = document.createElement('canvas'); out.width = w; out.height = h;
+  const o = out.getContext('2d');
+  o.filter = 'blur(14px)';
+  o.drawImage(raw, 0, 0);
+  shafts.set(color, out);
+  return out;
 }
 
 // ---------- shape primitives ----------
@@ -235,10 +287,10 @@ const PAINTERS = {
   },
   crypt(ctx, R, d, col, hi, style) {
     for (let i = 0; i < 6; i++) arch(ctx, i * 300 + R() * 100, 120 + R() * 80, LAYER_H - 80, 200 + R() * 150, col, hi);
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 9; i++) {
       const x = R() * LAYER_W, y = 200 + R() * 600;
-      const g = ctx.createRadialGradient(x, y, 0, x, y, 30 + d * 10);
-      g.addColorStop(0, rgba(style.glow, 0.25)); g.addColorStop(1, rgba(style.glow, 0));
+      const g = ctx.createRadialGradient(x, y, 0, x, y, 18 + d * 8);
+      g.addColorStop(0, rgba(style.glow, 0.16)); g.addColorStop(1, rgba(style.glow, 0));
       ctx.fillStyle = g; ctx.fillRect(x - 50, y - 50, 100, 100);
     }
     for (let i = 0; i < 10; i++) hanging(ctx, R() * LAYER_W, 60 + R() * 220, 14 + R() * 20, col, hi, 'stal', R);

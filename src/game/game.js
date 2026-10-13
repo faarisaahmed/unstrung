@@ -12,6 +12,7 @@ import { styleFor, rgba } from '../art/palettes.js';
 import { getBackground, drawBackground } from '../art/backgrounds.js';
 import { drawDynamicTiles } from '../art/tilefx.js';
 import { drawAmbient, Ambient } from '../art/ambient.js';
+import { getForeground, drawForeground } from '../art/foreground.js';
 import { spawnEntity, spawnGlints, Projectile } from '../entities/index.js';
 import { ROOMS, AREAS, START_ROOM } from '../data/world.js';
 import { HUD } from '../ui/hud.js';
@@ -59,8 +60,8 @@ export class Game {
   refreshStats() {
     this.stats = computeStats(this.save);
     const sv = this.save;
-    sv.maxHp = 5 + Math.floor(sv.shellFrags / 4) + this.stats.extraHp;
-    sv.maxThread = 99 + Math.floor(sv.vesselFrags / 3) * 33;
+    sv.maxHp = 4 + (sv.rings || 0) + this.stats.extraHp;
+    sv.maxThread = 100 + (sv.bearings || 0) * 50;
     sv.hp = Math.min(sv.hp, sv.maxHp);
     sv.thread = Math.min(sv.thread, sv.maxThread);
   }
@@ -80,6 +81,7 @@ export class Game {
     this.room = room;
     this.style = styleFor(def.style || def.area);
     this.bg = getBackground(def.style || def.area, this.style);
+    this.fg = null;
     let t = terrainCache.get(roomId);
     if (!t || t.brokenCount !== (broken ? broken.length : 0)) {
       t = renderTerrain(room, this.style);
@@ -601,7 +603,8 @@ export class Game {
   add(e) { (this.pendingAdds = this.pendingAdds || []).push(e); return e; }
 
   // ------------------------------------------------------------------ draw
-  draw(ctx) {
+  draw(ctx, ui) {
+    ui = ui || ctx;
     const cam = this.camera, room = this.room;
     const cx = cam.viewX, cy = cam.viewY;
     drawBackground(ctx, this.bg, cx, cy, room.pxW, room.pxH, this.time);
@@ -631,6 +634,7 @@ export class Game {
     ctx.restore();
 
     drawAmbient(ctx, this.ambient, cx, cy, true);
+    if (!room.def.noForeground) drawForeground(ctx, this.fg || (this.fg = getForeground(this.style)), cx, cy, room.pxH);
     if (room.def.dark) this.drawDarkness(ctx, cx, cy);
     // vignette
     const vg = ctx.createRadialGradient(VIEW_W / 2, VIEW_H / 2, VIEW_H * 0.35, VIEW_W / 2, VIEW_H / 2, VIEW_H * 0.95);
@@ -642,10 +646,14 @@ export class Game {
       ctx.fillStyle = this.flashColor; ctx.fillRect(0, 0, VIEW_W, VIEW_H);
       ctx.globalAlpha = 1;
     }
-    this.hud.draw(ctx);
     if (this.fade > 0) {
       ctx.fillStyle = `rgba(4,4,8,${this.fade})`;
       ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+    }
+    this.hud.draw(ui);
+    if (this.fade > 0 && ui !== ctx) {
+      ui.fillStyle = `rgba(4,4,8,${this.fade * 0.85})`;
+      ui.fillRect(0, 0, VIEW_W, VIEW_H);
     }
   }
 

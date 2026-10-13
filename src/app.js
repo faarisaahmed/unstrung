@@ -146,8 +146,9 @@ export class App {
     this.scene && this.scene.update(dt);
   }
 
-  draw(ctx) {
-    this.scene && this.scene.draw(ctx);
-    if (this.overlay) this.overlay.draw(ctx);
+  draw(ctx, ui) {
+    ui = ui || ctx;
+    this.scene && this.scene.draw(ctx, ui);
+    if (this.overlay) this.overlay.draw(ui);
   }
 }

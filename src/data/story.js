@@ -103,7 +103,7 @@ export const CREDITS = [
 
 export const TIPS = [
   'Bonk downward on spikes and foes to bounce off them.',
-  'Hold Focus to Mend a Shell. Bonking foes fills your Thread.',
+  'Hold Focus while rolling to Buff a Coat back. Rolling fast and Bonking wind up your Spin.',
   'When you fall, your Glints stay behind in a Tangle. Touch it to take them back.',
   'Die again before you reach your Tangle, and those Glints are gone for good.',
   'Rest at a Spindle to heal, save, and tie on new Knots.',
@@ -119,7 +119,7 @@ export const TIPS = [
   'The Rollmasters teach for a fee. Look for them in town, in the Hushwood, and above the clouds.',
   'Sir Burl is very brave. Sir Burl is also very lost.',
   'If a door will not open, the way may lie in another kingdom. Come back later.',
-  'Knots cost notches. Try different combinations before a hard fight.',
+  'Knots take up string on your tail. Try different combinations before a hard fight.',
   'Watch a boss before you strike. Every one of them tells you what it is about to do.',
   'Lore tablets glow until read. The story is scattered: gather it.',
   'There is said to be a kingdom under the floorboards. Only the smallest can reach it.',

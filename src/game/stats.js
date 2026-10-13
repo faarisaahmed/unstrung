@@ -6,9 +6,10 @@ export function computeStats(save) {
     damage: 5 + save.polish * 4,
     attackCd: 0.38,
     reach: 1,
-    threadGain: 11,
-    mendCost: 33,
-    mendTime: 0.9,
+    threadGain: 8,        // Spin per Bonk hit
+    rollGain: 15,         // Spin per second while rolling at speed
+    mendCost: 40,         // Spin per Coat buffed back
+    mendTime: 0.8,        // seconds of rolling + Focus per Coat
     mendAmount: 1,
     spellCost: 33,
     spellMul: 1,

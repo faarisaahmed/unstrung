@@ -349,7 +349,7 @@ export class SporecapElder extends Boss {
       ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, TAU); ctx.stroke();
       ctx.globalCompositeOperation = 'source-over';
       // drowsy 'z' glyphs riding the ring
-      ctx.fillStyle = 'rgba(245,236,255,0.9)'; ctx.font = 'italic 16px Georgia, serif'; ctx.textAlign = 'center';
+      ctx.fillStyle = 'rgba(245,236,255,0.9)'; ctx.font = 'italic 16px "IM Fell English", Georgia, serif'; ctx.textAlign = 'center';
       for (let i = 0; i < 10; i++) { const a = i / 10 * TAU + r.r * 0.002; ctx.fillText('z', r.x + Math.cos(a) * (r.r - 16), r.y + Math.sin(a) * (r.r - 16) + 5); }
       ctx.restore();
     }

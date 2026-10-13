@@ -107,7 +107,7 @@ r.put(14, 7, 'n')
 r.door('left', 14, 3, '1').door('right', 14, 3, '2')
 rooms.append(r.js(legend={
     's': dict(e='spindle'),
-    't': dict(e='trigger', w=1, h=4, hint='Spindles', desc='Press ↑ to rest: heal, save, and tie Knots.\nHold F to Mend wounds with Thread (gained by Bonking foes).'),
+    't': dict(e='trigger', w=1, h=4, hint='Spindles', desc='Press ↑ to rest: heal, save, and tie Knots.\nRoll fast to wind up Spin. Hold F while rolling to Buff out scratches.'),
     'L': dict(e='lore', id='fray_3'),
     'c': dict(e='deco', kind='candle'),
     'n': dict(e='deco', kind='lamp', hang=True),

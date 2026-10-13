@@ -103,7 +103,7 @@ export class FX {
         }
         case 'text':
           ctx.fillStyle = p.color;
-          ctx.font = `${p.size}px Georgia, serif`;
+          ctx.font = `${p.size}px "IM Fell English", Georgia, serif`;
           ctx.textAlign = 'center';
           ctx.fillText(p.str, p.x, p.y);
           break;

@@ -72,7 +72,7 @@ registerMinion({
 
 registerProjectileArt('glyph', (ctx, p, t) => {
   ctx.save(); ctx.translate(p.cx, p.cy); ctx.rotate(Math.sin(t * 5 + p.age * 3) * 0.25);
-  ctx.font = 'italic bold 32px Georgia, serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = 'italic bold 32px "IM Fell English", Georgia, serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.globalCompositeOperation = 'lighter';
   ctx.fillStyle = 'rgba(127,216,255,0.25)';
   ctx.beginPath(); ctx.arc(0, 0, p.r * 1.8, 0, TAU); ctx.fill();
@@ -645,7 +645,7 @@ export class ArchivistQuill extends Boss {
       const k = Math.min(1, G.t * 4);
       ctx.save(); ctx.translate(G.x, G.y - (1 - k) * 20 + Math.sin(t * 6 + G.x) * 3);
       ctx.globalAlpha = k;
-      ctx.font = 'italic bold 32px Georgia, serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = 'italic bold 32px "IM Fell English", Georgia, serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.globalCompositeOperation = 'lighter';
       ctx.fillStyle = 'rgba(127,216,255,0.3)'; ctx.beginPath(); ctx.arc(0, 0, 22, 0, TAU); ctx.fill();
       ctx.globalCompositeOperation = 'source-over';
@@ -669,7 +669,7 @@ export class ArchivistQuill extends Boss {
         ctx.fillStyle = INKC; ctx.fill();
         ctx.strokeStyle = '#7d70d0'; ctx.lineWidth = 2.5; ctx.stroke();
         ctx.save(); ctx.clip();
-        ctx.font = 'italic 20px Georgia, serif'; ctx.fillStyle = 'rgba(184,232,255,0.22)'; ctx.textAlign = 'center';
+        ctx.font = 'italic 20px "IM Fell English", Georgia, serif'; ctx.fillStyle = 'rgba(184,232,255,0.22)'; ctx.textAlign = 'center';
         const words = ['the', 'end', 'Bead', 'rolled', 'no', 'further', 'and', 'so'];
         for (let i = 0; i < 14; i++) {
           const yy = top + ((i * 61 + t * 18) % (bot - top));

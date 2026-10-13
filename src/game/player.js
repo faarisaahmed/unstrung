@@ -53,7 +53,7 @@ export class Player {
 
     const canAct = !this.locked && this.stun <= 0 && !this.dead;
     const mi = { x: 0, y: 0, jump: false, jumpP: false, dash: false, dashP: false, dashR: false, abilityP: false };
-    if (canAct && this.mending <= 0) {
+    if (canAct) {
       mi.x = inp.axisX; mi.y = inp.axisY;
       mi.jump = inp.down('jump'); mi.jumpP = inp.pressed('jump');
       mi.dash = inp.down('dash'); mi.dashP = inp.pressed('dash'); mi.dashR = inp.released('dash');
@@ -108,25 +108,40 @@ export class Player {
     this.art.update(dt, this);
   }
 
+  // SPIN: wound up by rolling fast (and by Bonking). BUFF: hold Focus *while rolling* to polish a
+  // scratched Coat back. Standing still does nothing: Bead heals by keeping on the move.
   updateFocus(dt, inp) {
     const g = this.game, b = this.b, s = this.stats, sv = this.save;
+    const top = PHYS.runSpeed * (s.speedMul || 1);
+    const rolling = b.mode === 'normal' && b.grounded && Math.abs(b.vx) > top * 0.72;
+    const fast = b.mode === 'comet' || b.mode === 'dash' || rolling;
+    if (fast && this.mending <= 0) {
+      this.spinAcc = (this.spinAcc || 0) + s.rollGain * dt * (b.mode === 'comet' ? 2 : 1);
+      if (this.spinAcc >= 1) { const k = Math.floor(this.spinAcc); this.spinAcc -= k; sv.thread = Math.min(sv.maxThread, sv.thread + k); }
+    }
     if (inp.down('focus')) {
       this.focusHeld += dt;
-      if (this.focusHeld > 0.22 && (b.grounded || s.flags.airMend) && b.mode === 'normal' && sv.thread >= s.mendCost && sv.hp < sv.maxHp) {
+      const canBuff = (rolling || (s.flags.airMend && b.mode === 'normal')) && sv.thread >= s.mendCost && sv.hp < sv.maxHp;
+      if (this.focusHeld > 0.22 && canBuff) {
         if (this.mending <= 0) { this.mending = 1; this.mendT = 0; g.sfx('mendStart'); }
         this.mendT += dt;
-        b.vx = 0;
-        if (Math.random() < 0.5) g.fx.add({ x: this.cx + (Math.random() - 0.5) * 40, y: this.cy + 20, vx: 0, vy: -60 - Math.random() * 60, life: 0.6, size: 2, color: '#fff3d6', g: 0, front: true, glow: true });
+        // polishing sparkles stream off the spinning shell
+        if (Math.random() < 0.7) {
+          const a = Math.random() * Math.PI * 2;
+          g.fx.add({ x: this.cx + Math.cos(a) * 14, y: this.cy + Math.sin(a) * 14, vx: -b.vx * 0.3 + Math.cos(a) * 40, vy: Math.sin(a) * 40 - 30, life: 0.45, size: 2.2, color: '#fff6dc', g: 0, front: true, glow: true });
+        }
         if (this.mendT >= s.mendTime) {
           sv.thread -= s.mendCost; sv.hp = Math.min(sv.maxHp, sv.hp + s.mendAmount);
           this.mendT = 0;
           g.sfx('mend');
-          g.fx.ring(this.cx, this.cy, 6, 40, 0.4, '#fff3d6', 3);
-          this.art.impulse(1.25, 0.8);
+          g.fx.ring(this.cx, this.cy, 6, 44, 0.4, '#ffe7a8', 3);
+          this.art.impulse(1.2, 0.85);
+          this.art.shine = 0.6;
           if (sv.thread < s.mendCost || sv.hp >= sv.maxHp) this.mending = 0;
         }
-      } else if (this.mending > 0 && ((!b.grounded && !s.flags.airMend) || sv.thread < s.mendCost || sv.hp >= sv.maxHp)) {
-        this.mending = 0;
+      } else if (this.mending > 0) {
+        // stopped rolling (or ran dry): the buff fizzles
+        this.mending = 0; this.mendT = 0;
       }
     } else {
       if (this.focusHeld > 0 && this.focusHeld <= 0.22 && this.mending <= 0) this.castSpell(inp);

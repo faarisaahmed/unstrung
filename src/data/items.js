@@ -3,10 +3,13 @@ import { KNOTS } from './knots.js';
 import { ABILITY_INFO } from './abilities.js';
 
 export const ITEMS = {
-  shellFrag: { name: 'Shell Fragment', color: '#fff4d6' },
-  vesselFrag: { name: 'Spool Fragment', color: '#ffd9c8' },
+  ring: { name: 'Gilded Ring', color: '#ffe7a8' },
+  bearing: { name: 'Brass Bearing', color: '#ffd29a' },
+  marble: { name: 'Glass Marble', color: '#cfe8ff' },
+  shellFrag: { name: 'Glass Marble', color: '#cfe8ff' },
+  vesselFrag: { name: 'Glass Marble', color: '#cfe8ff' },
   knot: { name: 'Knot', color: '#ffb0b0' },
-  notch: { name: 'Knot Notch', color: '#ffe9b0' },
+  notch: { name: 'Length of String', color: '#ffe9b0' },
   ore: { name: 'Pale Tin', color: '#d9e6ff' },
   ability: { name: 'Bead Power', color: '#ffffff' },
   greatBead: { name: 'Great Bead', color: '#e8f0ff' },
@@ -36,20 +39,26 @@ export function grantItem(game, spec) {
   let title = '', desc = '';
   game.sfx('itemGet');
   switch (spec.item) {
-    case 'shellFrag': {
-      sv.shellFrags++;
-      const n = sv.shellFrags % 4;
-      title = 'Shell Fragment';
-      desc = n === 0 ? 'Four fragments joined. Bead feels sturdier. (+1 Shell)' : `${n} of 4 collected.`;
-      if (n === 0) { game.refreshStats(); sv.hp = sv.maxHp; }
+    case 'ring': {
+      sv.rings = (sv.rings || 0) + 1;
+      title = 'Gilded Ring';
+      desc = 'A ring of gold leaf settles around Bead like a halo.\nOne more Coat of lacquer. (+1 Coat)';
+      game.refreshStats(); sv.hp = sv.maxHp;
+      game.message = { title, desc, t: 0, dur: 4, lock: true };
+      game.sfx('abilityGet');
+      return;
+    }
+    case 'bearing': {
+      sv.bearings = (sv.bearings || 0) + 1;
+      title = 'Brass Bearing';
+      desc = 'Bead spins truer than ever. (+50 Spin capacity)';
+      game.refreshStats();
       break;
     }
-    case 'vesselFrag': {
-      sv.vesselFrags++;
-      const n = sv.vesselFrags % 3;
-      title = 'Spool Fragment';
-      desc = n === 0 ? 'A new spool is wound! (+33 Thread)' : `${n} of 3 collected.`;
-      if (n === 0) game.refreshStats();
+    case 'marble': case 'shellFrag': case 'vesselFrag': {
+      sv.marbles = (sv.marbles || 0) + 1;
+      title = 'Glass Marble';
+      desc = `A perfect little world, swirled inside. (${sv.marbles} of 11)\nMother Bobbin collects these in her Marble Jar.`;
       break;
     }
     case 'knot': {
@@ -59,7 +68,7 @@ export function grantItem(game, spec) {
       desc = k ? k.desc + '\nEquip Knots while resting at a Spindle.' : '';
       break;
     }
-    case 'notch': sv.notches++; title = 'Knot Notch'; desc = 'You can tie more Knots at once.'; break;
+    case 'notch': sv.notches++; title = 'Length of String'; desc = 'Bead\'s tail grows longer. Room for more Knots.'; break;
     case 'ore': sv.items.ore = (sv.items.ore || 0) + 1; title = 'Pale Tin'; desc = 'A rare metal. The Tinsmith can polish your shell with it.'; break;
     case 'ability': {
       sv.abilities[spec.id] = true;

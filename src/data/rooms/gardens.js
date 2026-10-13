@@ -755,7 +755,7 @@ export default [
     legend: {
       x: {
         e: "item",
-        item: "shellFrag",
+        item: "marble",
         needs: [
           "dash"
         ]

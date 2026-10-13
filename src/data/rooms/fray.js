@@ -171,7 +171,7 @@ export default [
     name: "Spindle Nook",
     legend: {
       s: { e: "spindle" },
-      t: { e: "trigger", w: 1, h: 4, hint: "Spindles", desc: "Press ↑ to rest: heal, save, and tie Knots.\nHold F to Mend wounds with Thread (gained by Bonking foes)." },
+      t: { e: "trigger", w: 1, h: 4, hint: "Spindles", desc: "Press ↑ to rest: heal, save, and tie Knots.\nRoll fast to wind up Spin. Hold F while rolling to Buff out scratches." },
       L: { e: "lore", id: "fray_3" },
       c: { e: "deco", kind: "candle" },
       n: { e: "deco", kind: "lamp", hang: true },

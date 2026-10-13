@@ -96,7 +96,26 @@ export function drawItemIcon(ctx, item, x, y, s = 1, t = 0) {
   ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
   ctx.strokeStyle = '#16141c'; ctx.lineWidth = 2;
   switch (item) {
-    case 'shellFrag':
+    case 'ring':
+      ctx.strokeStyle = '#16141c'; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(0, 0, 9, 0, TAU); ctx.stroke();
+      ctx.strokeStyle = '#f1cf72'; ctx.lineWidth = 3.5; ctx.beginPath(); ctx.arc(0, 0, 9, 0, TAU); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,240,0.9)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(0, 0, 9, 3.6, 4.6); ctx.stroke();
+      break;
+    case 'bearing':
+      ctx.fillStyle = '#c99a52'; ctx.beginPath(); ctx.arc(0, 0, 10, 0, TAU); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#16141c'; ctx.beginPath(); ctx.arc(0, 0, 5, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#efe0c0';
+      for (let k = 0; k < 6; k++) { const a = k * TAU / 6 + t; ctx.beginPath(); ctx.arc(Math.cos(a) * 7.3, Math.sin(a) * 7.3, 1.8, 0, TAU); ctx.fill(); }
+      break;
+    case 'marble': case 'shellFrag': case 'vesselFrag': {
+      const g = ctx.createRadialGradient(-3, -3, 1, 0, 0, 9);
+      g.addColorStop(0, '#ffffff'); g.addColorStop(0.5, 'rgba(160,210,255,0.85)'); g.addColorStop(1, 'rgba(60,90,160,0.9)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, 9, 0, TAU); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = 'rgba(230,80,90,0.85)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(-6, 3); ctx.bezierCurveTo(-2, -6, 2, 6, 6, -3); ctx.stroke();
+      break;
+    }
+    case 'shellFragOld':
       ctx.fillStyle = '#f4eedf';
       ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, 9, -Math.PI / 2, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
       ctx.globalAlpha = 0.3; ctx.beginPath(); ctx.arc(0, 0, 9, 0, TAU); ctx.stroke(); ctx.globalAlpha = 1;

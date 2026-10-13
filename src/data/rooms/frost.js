@@ -293,7 +293,7 @@ export default [
       v: { e: 'lever', flag: 'frost_niche_gate' },
       L: { e: 'lore', id: 'frost_2' },
       c: { e: 'deco', kind: 'candle' },
-      k: { e: 'item', item: 'shellFrag' },
+      k: { e: 'item', item: 'ring' },
       p: { e: 'enemy', id: 'frost_pilgrim', facing: -1 },
       n: { e: 'enemy', id: 'frost_snail' },
       m: { e: 'enemy', id: 'frost_moth' },

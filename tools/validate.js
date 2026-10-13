@@ -30,6 +30,10 @@ const worldOnly = args.includes('--world');
 const staticOnly = args.includes('--static');
 const abOverride = opt('--ab');
 
+const NPC_GRANTS = {
+  bobbin: [{ item: 'ability', id: 'lantern' }],
+  gossamer: [{ item: 'key', id: 'ferryPass' }],
+};
 const ENTITY_TYPES = new Set(['enemy', 'boss', 'spindle', 'lever', 'gate', 'lore', 'npc', 'item', 'beadling', 'tangle', 'pot', 'ferry', 'deco', 'trigger', 'statue', 'pantheon']);
 
 let errors = 0, warnings = 0;
@@ -495,6 +499,8 @@ function worldSim() {
         if (s.e === 'item') grants.push(s);
         if (s.e === 'boss' && BOSS_INFO[s.id]) { grants.push(...BOSS_INFO[s.id].reward); if (!flags.has('boss_' + s.id)) { flags.add('boss_' + s.id); changed = true; log.push(`  defeat ${s.id} in ${rid}`); } }
         if (s.grants) grants.push(...s.grants);
+        // things bought from shopkeepers (assume the player can afford them)
+        if (s.e === 'npc' && NPC_GRANTS[s.id]) grants.push(...NPC_GRANTS[s.id]);
         if (s.e === 'lever' && !flags.has(s.flag)) { flags.add(s.flag); changed = true; }
         if (s.e === 'trigger' && s.flag && !flags.has(s.flag)) { flags.add(s.flag); changed = true; }
         for (const gr of grants) {

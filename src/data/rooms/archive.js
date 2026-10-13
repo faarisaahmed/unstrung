@@ -527,7 +527,7 @@ export default [
     id: 'archive_vault', area: 'archive', name: "The Long Undershelf",
     req: ['sap', 'dash', 'shard', 'glide', 'lantern', 'magnet', 'shell', 'pound', 'comet', 'shrink'],
     legend: {
-      v: { e: 'item', item: 'vesselFrag', needs: ['shrink'] },
+      v: { e: 'item', item: 'marble', needs: ['shrink'] },
       k: { e: 'enemy', id: 'archive_mimic' },
       x: { e: 'enemy', id: 'archive_blotling' },
       u: { e: 'enemy', id: 'archive_marginworm' },

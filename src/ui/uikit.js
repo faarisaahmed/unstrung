@@ -2,7 +2,7 @@
 import { VIEW_W, VIEW_H } from '../core/constants.js';
 import { TAU } from '../core/math.js';
 
-export const FONT = 'Georgia, "Times New Roman", serif';
+export const FONT = '"IM Fell English", Georgia, serif';
 export const C = {
   text: '#efe8d6', dim: 'rgba(220,210,190,0.55)', faint: 'rgba(220,210,190,0.25)',
   gold: '#e8c98a', red: '#c4515a', ink: '#16141c', panel: 'rgba(8,8,13,0.86)',

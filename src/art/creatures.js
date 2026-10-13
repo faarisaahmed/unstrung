@@ -6,7 +6,12 @@ import { TAU } from '../core/math.js';
 export const INK = '#16141c';
 
 function ink(ctx, lw = 2) { ctx.strokeStyle = INK; ctx.lineWidth = lw; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; }
-function fillInk(ctx, fill, lw = 2) { ctx.fillStyle = fill; ctx.fill(); ink(ctx, lw); ctx.stroke(); }
+function fillInk(ctx, fill, lw = 2) {
+  ctx.fillStyle = fill; ctx.fill();
+  ink(ctx, lw * 1.1); ctx.stroke();
+  // a faint, slightly offset second pass: the wobble of a hand retracing its line
+  ctx.save(); ctx.translate(0.7, 0.5); ctx.globalAlpha *= 0.3; ink(ctx, lw * 0.6); ctx.stroke(); ctx.restore();
+}
 
 export function eye(ctx, x, y, r, color = '#fff', glow = false, shape = 'round') {
   if (glow) {

@@ -193,7 +193,7 @@ export default [
     id: 'hollows_westgate', area: 'hollows', name: "West Bellgate",
     req: ['sap'],
     legend: {
-      a: { e: 'item', item: 'shellFrag' },
+      a: { e: 'item', item: 'marble' },
       b: { e: 'enemy', id: 'hollows_tollshield', facing: 1 },
       c: { e: 'enemy', id: 'hollows_chimelet' },
       d: { e: 'deco', kind: 'banner', color: '#a6c46a' },
@@ -398,7 +398,7 @@ export default [
     req: ['sap', 'dash', 'glide', 'shard', 'lantern', 'magnet', 'shell', 'pound'],
     deadEnd: ['1'],
     legend: {
-      a: { e: 'item', item: 'shellFrag', needs: ['pound'] },
+      a: { e: 'item', item: 'marble', needs: ['pound'] },
       b: { e: 'deco', kind: 'bones' },
       c: { e: 'enemy', id: 'hollows_burrowworm' },
     },
@@ -1002,7 +1002,7 @@ export default [
     req: ['sap', 'dash'],
     deadEnd: ['1'],
     legend: {
-      a: { e: 'item', item: 'vesselFrag', needs: ['dash'] },
+      a: { e: 'item', item: 'marble', needs: ['dash'] },
       b: { e: 'enemy', id: 'hollows_broodsac' },
       c: { e: 'enemy', id: 'hollows_mossgrub' },
       d: { e: 'enemy', id: 'hollows_chimelet' },

@@ -668,7 +668,7 @@ export default [
     area: 'bellfry',
     name: 'Hanging Belfry',
     legend: {
-      f: { e: 'item', item: 'shellFrag' },
+      f: { e: 'item', item: 'ring' },
       x: { e: 'enemy', id: 'bellfry_knellwisp' },
       q: { e: 'enemy', id: 'bellfry_gutterguard', facing: -1 },
     },

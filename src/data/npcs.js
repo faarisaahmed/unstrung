@@ -380,23 +380,19 @@ export const SHOPS = {
       { key: 'bobbin_glintmagnet', name: 'Glint Magnet', icon: 'knot', price: 120, give: { item: 'knot', id: 'glintmagnet' },
         desc: 'Loose Glints come rolling to you. Like family at supper time.' },
       { key: 'bobbin_threadcatcher', name: 'Thread Catcher', icon: 'knot', price: 150, give: { item: 'knot', id: 'threadcatcher' },
-        desc: 'Catch a little more Thread with every Bonk. Waste not.' },
+        desc: 'Every Bonk winds up a little more Spin. Waste not.' },
       { key: 'bobbin_swiftknot', name: 'Swift Knot', icon: 'knot', price: 200, give: { item: 'knot', id: 'swiftknot' },
         desc: 'Roll faster. Not in my shop, though.' },
       { key: 'bobbin_longthread', name: 'Long Thread', icon: 'knot', price: 380, give: { item: 'knot', id: 'longthread' },
         desc: 'Your Bonk reaches further. Good manners for a head-butter: keep them at a distance.' },
       { key: 'bobbin_stoneshell', name: 'Stone Shell', icon: 'knot', price: 450, give: { item: 'knot', id: 'stoneshell' },
-        desc: 'One more Shell to hide in. I\'d give you ten if I had them.' },
-      { key: 'bobbin_shell1', name: 'Shell Fragment', icon: 'shellFrag', price: 300, give: { item: 'shellFrag' },
-        desc: 'A curl of old shell. Found it in a teacup. Don\'t ask whose.' },
-      { key: 'bobbin_shell2', name: 'Shell Fragment', icon: 'shellFrag', price: 650, give: { item: 'shellFrag' }, cond: (s) => !!s.flags.bought_bobbin_shell1,
-        desc: 'Another. Pricier, because I\'ve grown attached to you and want you to have it, and because I can.' },
-      { key: 'bobbin_vessel', name: 'Spool Fragment', icon: 'vesselFrag', price: 550, give: { item: 'vesselFrag' },
-        desc: 'A sliver of spool. Gather three and you\'ll hold more Thread than you know what to do with.' },
-      { key: 'bobbin_notch1', name: 'Knot Notch', icon: 'notch', price: 400, give: { item: 'notch' },
-        desc: 'Room for one more Knot. Everyone needs a spare.' },
-      { key: 'bobbin_notch2', name: 'Knot Notch', icon: 'notch', price: 900, give: { item: 'notch' }, cond: (s) => !!s.flags.bought_bobbin_notch1,
-        desc: 'My last one. My mother\'s. Wear it in good health.' },
+        desc: 'One more Coat of lacquer. I\'d paint you ten if I had the pots.' },
+      { key: 'bobbin_bearing', name: 'Brass Bearing', icon: 'bearing', price: 650, give: { item: 'bearing' },
+        desc: 'Oiled and true. Fit it inside you and you\'ll hold far more Spin. Don\'t ask me how. I just sell them.' },
+      { key: 'bobbin_notch1', name: 'Length of String', icon: 'notch', price: 400, give: { item: 'notch' },
+        desc: 'A longer tail means room for one more Knot. Everyone needs a spare.' },
+      { key: 'bobbin_notch2', name: 'Length of String', icon: 'notch', price: 900, give: { item: 'notch' }, cond: (s) => !!s.flags.bought_bobbin_notch1,
+        desc: 'My last length. My mother\'s. Wear it in good health.' },
     ],
   },
   gossamer: {
@@ -463,10 +459,35 @@ function trioPages(s) {
   return null;
 }
 
+// Bobbin's Marble Jar: Glass Marbles found around the world, traded in for rewards
+const MARBLE_TIERS = [
+  { n: 3, give: { item: 'glints', value: 400 }, say: 'Three marbles! Clink, clink, clink. Here, a little something.' },
+  { n: 6, give: { item: 'glints', value: 900 }, say: 'Six! The jar\'s half full. Or half empty. I prefer full.' },
+  { n: 9, give: { item: 'glints', value: 1600 }, say: 'Nine. You must be looking under every rock. I approve.' },
+  { n: 11, give: { item: 'ring' }, say: 'Eleven. The jar is full. I\'ve been saving this ring for whoever filled it. It\'s gilded. It\'s yours.' },
+];
+function marbleJar(g) {
+  const s = g.save, have = s.marbles || 0;
+  const out = [];
+  for (const t of MARBLE_TIERS) {
+    if (have >= t.n && !s.flags['marbletier_' + t.n]) {
+      s.flags['marbletier_' + t.n] = 1;
+      out.push(t.say);
+      setTimeout(() => grantItem(g, t.give), 50);
+      break;
+    }
+  }
+  if (!out.length) {
+    const nxt = MARBLE_TIERS.find((t) => have < t.n);
+    out.push(nxt ? `${have} marble${have === 1 ? '' : 's'} in the jar. Bring me ${nxt.n - have} more and we\'ll talk.` : 'The jar is full. I just like to look at it, now.');
+  }
+  return out;
+}
+
 // Beadmother reward tiers
 const BEAD_TIERS = [
   { n: 5, give: { item: 'glints', value: 200 }, say: ['Five! Five little lights, home and grumbling about the jars.', 'Here, for your trouble. Don\'t spend it on sweets. Spend some of it on sweets.'] },
-  { n: 10, give: { item: 'shellFrag' }, say: ['Ten. They sing at night now. Not well.', 'This was in my mending basket. I think it wants to be yours.'] },
+  { n: 10, give: { item: 'glints', value: 600 }, say: ['Ten. They sing at night now. Not well.', 'This was in my mending basket. Glints, rolled up in a sock. Take them.'] },
   { n: 20, give: { item: 'knot', id: 'mothersblessing' }, say: ['Twenty! Hold still, now.', 'I tied this the way my mother tied it for me. Stand quiet a while, and it will mend you.'] },
   { n: 30, give: { item: 'knot', id: 'thickshell' }, say: ['Thirty. You\'re growing a thick shell, going where you\'ve been.', 'Here is a thicker one. I worry, you see. It\'s what I\'m for.'] },
   { n: 40, give: { item: 'glints', value: 1000 }, say: ['Forty. I\'ve run out of clever things to give.', 'Have money. Money is always clever.'] },
@@ -492,14 +513,14 @@ export const NPCS = {
         'Oh! Oh, you\'re awake. You fell such a long way. Everything did.',
         'I\'m only a thread. A little loose one. But I kept a little light, and you looked like you needed some.',
         'If something tries to hurt you, Bonk it. Press X and put your whole head into it. You have a very good head for it.',
-        'Hurt? Hold F to Mend. It costs Thread, and you earn Thread by Bonking things. Everything down here is a bit like that.',
+        'Scuffed? Hold F while you roll to Buff yourself bright again. It burns Spin, and you build Spin by rolling fast. So keep moving. Always keep moving.',
         'Go right. Keep rolling. The way out is up, and up is always further than it looks.',
       ];
       if (ended(s)) return ['You came back down! Nobody comes back down.', 'You look... finished. Like the end of a seam. In a good way.'];
       if (s.greatBeads >= 1) return ['You\'re carrying something heavy and bright.', 'You remind me of someone. Someone at the very end of the thread. ...No. Never mind. Keep rolling.'];
       if (beat(s, 'gnarlknot')) return ['The knot came undone! I felt it all through the cloth.', 'Up and right now. There\'s a town. It rains there, and nobody minds.'];
       return [pick([
-        'Bonk with X. Hold F to Mend. Bonk down on spikes to bounce. That\'s nearly everything I know.',
+        'Bonk with X. Roll fast to wind up Spin. Hold F while rolling to Buff. That\'s nearly everything I know.',
         'Thin floors let you drop through. Hold down and jump.',
         'Cracked walls are only pretending. Bonk them until they admit it.',
       ])];
@@ -514,6 +535,7 @@ export const NPCS = {
       const s = g.save;
       const choices = [
         { label: 'Shop', fn: () => g.app.openShop(SHOPS.bobbin) },
+        { label: 'Marble Jar', fn: () => next(npc, marbleJar(g)) },
         { label: 'Talk', fn: () => next(npc, bobbinChat(s)) },
         { label: 'Leave' },
       ];

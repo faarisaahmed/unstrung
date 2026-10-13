@@ -152,7 +152,7 @@ export default [
   {
     id: 'cistern_overflow', area: 'cistern', name: 'Overflow Tank',
     legend: {
-      a: { e: 'item', item: 'shellFrag' },
+      a: { e: 'item', item: 'marble' },
       b: { e: 'enemy', id: 'cistern_glassfin', under: '~' },
       c: { e: 'enemy', id: 'cistern_barnacle' },
       d: { e: 'pot', value: 5 },

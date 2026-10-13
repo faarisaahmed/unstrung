@@ -276,7 +276,7 @@ export default [
       l: { e: 'lore', id: 'warrens_2' },
       p: { e: 'enemy', id: 'warrens_spitter' },
       q: { e: 'enemy', id: 'warrens_broodsac' },
-      v: { e: 'item', item: 'vesselFrag' },
+      v: { e: 'item', item: 'marble' },
       w: { e: 'enemy', id: 'warrens_wasp' },
     },
     doors: { '1': 'warrens_entry:2', '2': 'warrens_seep:1', '3': 'warrens_archive:1' },

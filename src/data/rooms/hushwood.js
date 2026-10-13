@@ -444,7 +444,7 @@ export default [
   {
     id: 'hushwood_sporewell', area: 'hushwood', name: 'The Sporewell',
     legend: {
-      a: { e: 'item', item: 'shellFrag' },
+      a: { e: 'item', item: 'marble' },
       b: { e: 'enemy', id: 'hushwood_puffbud' },
       c: { e: 'enemy', id: 'hushwood_sporemote' },
       d: { e: 'enemy', id: 'hushwood_hushmoth' },

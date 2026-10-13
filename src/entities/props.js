@@ -30,7 +30,7 @@ class Interactable extends Entity {
     ctx.globalAlpha = this.promptA;
     const x = this.cx, y = this.y - 26 + Math.sin(this.game.time * 3) * 2;
     ctx.fillStyle = 'rgba(8,8,12,0.7)';
-    ctx.font = '13px Georgia, serif';
+    ctx.font = '13px "IM Fell English", Georgia, serif';
     const w = ctx.measureText(this.prompt).width + 26;
     ctx.fillRect(x - w / 2, y - 12, w, 22);
     ctx.fillStyle = '#efe6cf'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -290,7 +290,7 @@ export class Beadling extends Entity {
     eye(ctx, bx - 2.5, by - 1, 1.3, INK); eye(ctx, bx + 2.5, by - 1, 1.3, INK);
     ctx.globalAlpha = 1;
     if (!this.freed && Math.sin(t * 2 + this.x) > 0.95) {
-      ctx.fillStyle = '#efe6cf'; ctx.font = '11px Georgia'; ctx.textAlign = 'center'; ctx.fillText('!', x + 12, y - 38);
+      ctx.fillStyle = '#efe6cf'; ctx.font = '11px \"IM Fell English\", Georgia'; ctx.textAlign = 'center'; ctx.fillText('!', x + 12, y - 38);
     }
   }
 }
@@ -452,7 +452,7 @@ export class Deco extends Entity {
       if (s.text) {
         const p = this.player;
         if (Math.abs(p.cx - x) < 60 && Math.abs(p.cy - y) < 60) {
-          ctx.font = '14px Georgia'; ctx.textAlign = 'center'; ctx.fillStyle = '#efe6cf';
+          ctx.font = '14px \"IM Fell English\", Georgia'; ctx.textAlign = 'center'; ctx.fillStyle = '#efe6cf';
           ctx.fillText(s.text, x, y - 52);
         }
       }
@@ -488,7 +488,7 @@ export class Deco extends Entity {
       }
       if (s.sign) {
         ctx.fillStyle = '#4a3a2a'; ctx.fillRect(x0 + w / 2 - 34, y0 + h - 70, 68, 18); ctx.strokeRect(x0 + w / 2 - 34, y0 + h - 70, 68, 18);
-        ctx.fillStyle = '#efd9a8'; ctx.font = '11px Georgia'; ctx.textAlign = 'center'; ctx.fillText(s.sign, x0 + w / 2, y0 + h - 57);
+        ctx.fillStyle = '#efd9a8'; ctx.font = '11px \"IM Fell English\", Georgia'; ctx.textAlign = 'center'; ctx.fillText(s.sign, x0 + w / 2, y0 + h - 57);
       }
     } else if (s.kind === 'lamppost') {
       ctx.strokeStyle = INK; ctx.lineWidth = 4;
@@ -577,7 +577,7 @@ export class Statue extends Interactable {
     ctx.beginPath(); ctx.ellipse(x + 4.5, y - 58, 2.6, 4.5, 0, 0, Math.PI * 2); ctx.fill();
     if (beat) { ctx.fillStyle = '#e8c98a'; ctx.beginPath(); ctx.arc(x, y - 92, 4 + Math.sin(t * 2) * 0.6, 0, Math.PI * 2); ctx.fill(); }
     if (on && Math.abs(this.player.cx - x) < 90) {
-      ctx.font = '12px Georgia'; ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(239,230,207,0.8)';
+      ctx.font = '12px \"IM Fell English\", Georgia'; ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(239,230,207,0.8)';
       ctx.fillText(info.name || this.boss, x, y - 104);
     }
     this.drawPrompt(ctx);
@@ -612,7 +612,7 @@ export class PantheonDoor extends Interactable {
     const glow = this.unlocked ? 0.5 + Math.sin(t * 2) * 0.2 : 0.1;
     ctx.strokeStyle = cleared ? `rgba(232,201,138,${glow + 0.3})` : `rgba(230,220,255,${glow})`; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(x - 22, y); ctx.lineTo(x - 22, y - 86); ctx.quadraticCurveTo(x, y - 116, x + 22, y - 86); ctx.lineTo(x + 22, y); ctx.stroke();
-    ctx.font = '20px Georgia'; ctx.textAlign = 'center'; ctx.fillStyle = `rgba(239,230,207,${0.4 + glow})`;
+    ctx.font = '20px \"IM Fell English\", Georgia'; ctx.textAlign = 'center'; ctx.fillStyle = `rgba(239,230,207,${0.4 + glow})`;
     ctx.fillText(['', 'I', 'II', 'III', 'IV'][this.id] || '', x, y - 56);
     this.drawPrompt(ctx);
   }

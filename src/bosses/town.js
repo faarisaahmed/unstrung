@@ -547,7 +547,7 @@ export class RollmasterTrio extends Boss {
       ctx.beginPath(); ctx.ellipse(this.marker.x, this.groundY - 2, 40 + Math.sin(t * 20) * 4 * k, 8, 0, 0, TAU); ctx.fill();
       ctx.strokeStyle = this.marker.lock ? 'rgba(233,255,122,0.9)' : 'rgba(170,240,210,0.6)'; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.ellipse(this.marker.x, this.groundY - 2, 46, 10, 0, 0, TAU); ctx.stroke();
-      if (this.marker.lock) { ctx.fillStyle = '#e9ff7a'; ctx.font = 'bold 22px Georgia, serif'; ctx.textAlign = 'center'; ctx.fillText('!', this.marker.x, this.groundY - 30); }
+      if (this.marker.lock) { ctx.fillStyle = '#e9ff7a'; ctx.font = 'bold 22px "IM Fell English", Georgia, serif'; ctx.textAlign = 'center'; ctx.fillText('!', this.marker.x, this.groundY - 30); }
     }
     if (this.twister) {
       const m = this.twister.m, h = this.twister.h, gy = this.groundY;

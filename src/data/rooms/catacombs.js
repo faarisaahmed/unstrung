@@ -639,7 +639,7 @@ export default [
     id: 'catacombs_reliquary', area: 'catacombs', name: "Reliquary of Spent Flames",
     legend: {
       L: { e: 'deco', kind: 'lamp', hang: true },
-      S: { e: 'item', item: 'shellFrag' },
+      S: { e: 'item', item: 'marble' },
       c: { e: 'deco', kind: 'candle' },
       d: { e: 'enemy', id: 'catacombs_dripling' },
       m: { e: 'enemy', id: 'catacombs_snuffwing' },

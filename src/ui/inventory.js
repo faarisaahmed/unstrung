@@ -60,11 +60,11 @@ export class InventoryScreen {
         const id = KNOT_ORDER[s[1]];
         const kn = this.save.knots;
         if (!kn.owned.includes(id)) { sfx('deny'); return; }
-        if (!this.bench) { sfx('deny'); this.flashMsg = 'Knots can only be tied at a Spindle.'; this.flashT = 1.6; return; }
+        if (!this.bench) { sfx('deny'); this.flashMsg = 'Knots can only be restrung at a Spindle.'; this.flashT = 1.6; return; }
         const i = kn.equipped.indexOf(id);
         if (i >= 0) { kn.equipped.splice(i, 1); sfx('menuClose'); }
         else if (this.usedNotches() + KNOTS[id].cost <= this.save.notches) { kn.equipped.push(id); sfx('confirm'); }
-        else { sfx('deny'); this.flashMsg = 'Not enough notches.'; this.flashT = 1.4; }
+        else { sfx('deny'); this.flashMsg = 'Not enough string on your tail.'; this.flashT = 1.4; }
         this.game.refreshStats();
       }
     } else if (this.tab === 2) {
@@ -129,10 +129,10 @@ export class InventoryScreen {
       if (have) { ctx.fillStyle = 'rgba(160,190,255,0.6)'; ctx.beginPath(); ctx.arc(x - 3, y - 3, 3.5, 0, TAU); ctx.fill(); }
     });
     const rows = [
-      ['Shells', `${sv.hp} / ${sv.maxHp}`],
-      ['Shell fragments', `${sv.shellFrags % 4} / 4`],
-      ['Thread', `${sv.thread} / ${sv.maxThread}`],
-      ['Spool fragments', `${sv.vesselFrags % 3} / 3`],
+      ['Coats', `${sv.hp} / ${sv.maxHp}`],
+      ['Gilded Rings', `${sv.rings || 0} / 6`],
+      ['Spin', `${Math.floor(sv.thread)} / ${sv.maxThread}`],
+      ['Bearings · Marbles', `${sv.bearings || 0}/3 · ${sv.marbles || 0}/11`],
       ['Polish', `${sv.polish} / 4`],
       ['Pale Tin', `${sv.items.ore || 0}`],
       ['Beadlings freed', `${sv.beadlings} / 48`],
@@ -167,12 +167,15 @@ export class InventoryScreen {
     const sv = this.save, t = this.t;
     const used = this.usedNotches();
     panel(ctx, 40, 76, 880, 64);
-    text(ctx, this.bench ? 'Tie Knots' : 'Knots (rest at a Spindle to change)', 64, 108, 16, this.bench ? C.gold : C.dim);
+    text(ctx, this.bench ? 'String Knots on your tail' : 'Knots (rest at a Spindle to restring)', 64, 108, 16, this.bench ? C.gold : C.dim);
+    // the tail as a length of string: used length in red, spare length pale
+    const L = 22, x0 = 600;
     for (let i = 0; i < sv.notches; i++) {
-      const x = 600 + i * 26, y = 108;
-      ctx.fillStyle = i < used ? '#e8c98a' : 'rgba(40,40,50,0.9)'; ctx.strokeStyle = 'rgba(230,220,200,0.6)'; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.arc(x, y, 8, 0, TAU); ctx.fill(); ctx.stroke();
+      const x = x0 + i * L, y = 108 + Math.sin(i * 1.3 + this.t * 2) * 2;
+      ctx.strokeStyle = i < used ? '#c4404c' : 'rgba(230,220,200,0.35)'; ctx.lineWidth = i < used ? 3 : 2;
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x + L / 2, y + (i % 2 ? 5 : -5), x + L, 108 + Math.sin((i + 1) * 1.3 + this.t * 2) * 2); ctx.stroke();
     }
+    text(ctx, `${used} / ${sv.notches}`, x0 + sv.notches * L + 14, 108, 13, C.dim);
     // equipped row
     sv.knots.equipped.forEach((id, i) => drawKnotIcon(ctx, id, 380 + i * 34, 108, true, t, 0.6));
     panel(ctx, 40, 150, 560, 350);
@@ -191,7 +194,7 @@ export class InventoryScreen {
     if (sv.knots.owned.includes(id)) {
       drawKnotIcon(ctx, id, 765, 210, true, t, 1.6);
       text(ctx, k.name, 765, 270, 19, C.text, 'center');
-      text(ctx, `Cost: ${k.cost} notch${k.cost > 1 ? 'es' : ''}`, 765, 296, 14, C.gold, 'center');
+      text(ctx, `Takes ${k.cost} length${k.cost > 1 ? 's' : ''} of string`, 765, 296, 14, C.gold, 'center');
       paragraph(ctx, k.desc, 635, 320, 260, 15, C.dim);
       if (sv.knots.equipped.includes(id)) text(ctx, 'Tied', 765, 470, 14, C.gold, 'center');
     } else {
@@ -313,7 +316,7 @@ export function drawAbilityIcon(ctx, id, x, y, owned, t) {
   ctx.beginPath(); ctx.arc(0, 0, 26, 0, TAU); ctx.fill();
   ctx.strokeStyle = owned ? 'rgba(232,201,138,0.8)' : 'rgba(220,210,190,0.15)'; ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.arc(0, 0, 26, 0, TAU); ctx.stroke();
-  if (!owned) { ctx.fillStyle = 'rgba(220,210,190,0.25)'; ctx.font = '18px Georgia'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('?', 0, 1); ctx.restore(); return; }
+  if (!owned) { ctx.fillStyle = 'rgba(220,210,190,0.25)'; ctx.font = '18px \"IM Fell English\", Georgia'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('?', 0, 1); ctx.restore(); return; }
   const ink = '#16141c', pale = '#f4eedf';
   ctx.lineWidth = 2; ctx.strokeStyle = pale; ctx.fillStyle = pale;
   const ball = (bx, by, r = 7) => { ctx.fillStyle = pale; ctx.strokeStyle = ink; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(bx, by, r, 0, TAU); ctx.fill(); ctx.stroke(); };

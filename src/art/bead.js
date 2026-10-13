@@ -26,6 +26,7 @@ export class BeadArt {
     this.blinkT -= dt;
     if (this.blinkT <= 0) { this.blink = 0.12; this.blinkT = 2 + Math.random() * 3; }
     if (this.blink > 0) this.blink -= dt;
+    if (this.shine > 0) this.shine -= dt;
 
     // thread tail verlet
     const cx = b.x + b.w / 2, cy = b.y + b.h / 2;
@@ -34,7 +35,7 @@ export class BeadArt {
       for (const t of this.tail) { t.x = t.px = ax; t.y = t.py = ay; }
       this.tailInit = true;
     }
-    const seg = b.small ? 2.2 : 4.2;
+    const seg = (b.small ? 2.2 : 4.2) * (1 + Math.max(0, (p.save.notches || 3) - 3) * 0.07);
     this.tail[0].x = ax; this.tail[0].y = ay;
     for (let i = 1; i < this.tail.length; i++) {
       const t = this.tail[i];
@@ -86,6 +87,15 @@ export class BeadArt {
       ctx.quadraticCurveTo(a.x, a.y, (a.x + t.x) / 2, (a.y + t.y) / 2);
     }
     ctx.stroke();
+    // Knots strung on the tail as tiny beads
+    const eq = (p.save.knots && p.save.knots.equipped) || [];
+    eq.forEach((id, i) => {
+      const tp = this.tail[Math.min(this.tail.length - 1, 2 + i)];
+      let h = 0; for (let k = 0; k < id.length; k++) h = (h * 31 + id.charCodeAt(k)) >>> 0;
+      ctx.fillStyle = `hsl(${h % 360}, 50%, 62%)`; ctx.strokeStyle = INK; ctx.lineWidth = 1.2;
+      const r = b.small ? 1.6 : 2.8;
+      ctx.beginPath(); ctx.arc(tp.x, tp.y, r, 0, TAU); ctx.fill(); ctx.stroke();
+    });
 
     // dandelion parachute while gliding
     if (b.gliding) drawDandelion(ctx, cx, cy - r, time);
@@ -112,14 +122,24 @@ export class BeadArt {
       ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, r * (1.8 + k), 0, TAU); ctx.fill();
     }
 
-    // body
-    const g = ctx.createRadialGradient(-r * 0.35, -r * 0.4, r * 0.1, 0, 0, r);
+    // body: flat cream paint with a painted shadow crescent and pen hatching (no airbrushed gradients)
     const flash = p.hurtFlash > 0;
-    g.addColorStop(0, flash ? '#ffffff' : '#fffaf0');
-    g.addColorStop(0.7, flash ? '#ffffff' : '#ece4cf');
-    g.addColorStop(1, flash ? '#ffd0d0' : '#c9bfa6');
-    ctx.fillStyle = g;
+    ctx.fillStyle = flash ? '#ffffff' : '#f1e9d6';
     ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); ctx.fill();
+    if (!flash) {
+      ctx.save();
+      ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); ctx.clip();
+      ctx.fillStyle = '#cdbf9f';
+      ctx.beginPath(); ctx.arc(0, 0, r, -0.2, Math.PI * 0.95); ctx.arc(-r * 0.22, -r * 0.3, r * 1.02, Math.PI * 0.9, -0.15, true); ctx.fill();
+      ctx.strokeStyle = 'rgba(110,90,70,0.45)'; ctx.lineWidth = 0.8;
+      for (let k = 0; k < 5; k++) {
+        const hx = r * 0.15 + k * r * 0.14, hy = r * 0.35 + k * r * 0.06;
+        ctx.beginPath(); ctx.moveTo(hx - r * 0.2, hy + r * 0.2); ctx.lineTo(hx + r * 0.05, hy - r * 0.05); ctx.stroke();
+      }
+      ctx.fillStyle = 'rgba(255,253,245,0.95)';
+      ctx.beginPath(); ctx.ellipse(-r * 0.38, -r * 0.42, r * 0.22, r * 0.12, -0.6, 0, TAU); ctx.fill();
+      ctx.restore();
+    }
 
     // rolling seam (clipped to body)
     ctx.save();
@@ -138,9 +158,17 @@ export class BeadArt {
       ctx.beginPath(); ctx.arc(0, 0, r + 2.5, -2.4, -0.6); ctx.stroke();
     }
 
-    // outline
-    ctx.strokeStyle = INK; ctx.lineWidth = b.small ? 1.3 : 2;
-    ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); ctx.stroke();
+    // outline: a pressured brush line (thicker on the shadow side) plus a faint offset retrace
+    ctx.strokeStyle = INK; ctx.lineCap = 'round';
+    const lw = b.small ? 1.2 : 1.9;
+    for (let k = 0; k < 16; k++) {
+      const a0 = (k / 16) * TAU, a1 = ((k + 1.08) / 16) * TAU;
+      ctx.lineWidth = lw * (0.75 + 0.6 * Math.max(0, Math.sin(a0 + 0.6)));
+      ctx.beginPath(); ctx.arc(0, 0, r, a0, a1); ctx.stroke();
+    }
+    ctx.globalAlpha *= 0.35; ctx.lineWidth = 0.8;
+    ctx.beginPath(); ctx.arc(0.8, 0.5, r + 0.6, -2.6, 1.4); ctx.stroke();
+    ctx.globalAlpha /= 0.35;
 
     // face (doesn't roll)
     const f = b.facing;
@@ -158,8 +186,14 @@ export class BeadArt {
         ctx.fillStyle = INK;
       }
     }
-    // tiny blush when mending
-    if (p.mending > 0) {
+    // buffing: a bright polish highlight sweeps around the shell
+    if (p.mending > 0 || this.shine > 0) {
+      const k = p.mending > 0 ? 1 : this.shine / 0.6;
+      ctx.strokeStyle = `rgba(255,248,225,${0.85 * k})`; ctx.lineWidth = 2.2;
+      const a0 = time * 9;
+      ctx.beginPath(); ctx.arc(0, 0, r - 2.5, a0, a0 + 1.2); ctx.stroke();
+    }
+    if (false) {
       ctx.fillStyle = 'rgba(230,120,130,0.5)';
       for (const s of [-1, 1]) { ctx.beginPath(); ctx.ellipse(ex + s * r * 0.55, ey + er * 1.6, er * 0.7, er * 0.35, 0, 0, TAU); ctx.fill(); }
     }

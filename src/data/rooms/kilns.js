@@ -728,7 +728,7 @@ export default [
   {
     id: 'kilns_bellows', area: 'kilns', name: "Great Bellows",
     legend: {
-      k: { e: 'item', item: 'shellFrag' },
+      k: { e: 'item', item: 'marble' },
       w: { e: 'enemy', id: 'kilns_emberwisp' },
       j: { e: 'enemy', id: 'kilns_bellowsjelly' },
     },

@@ -621,7 +621,7 @@ export default [
     deadEnd: ['1'],
     legend: {
       e: { e: 'gate', flag: 'bastion_gauntlet_open', h: 2 },
-      i: { e: 'item', item: 'shellFrag' },
+      i: { e: 'item', item: 'marble' },
       v: { e: 'lever', flag: 'bastion_gauntlet_open' },
       w: { e: 'enemy', id: 'bastion_magmite' },
       x: { e: 'enemy', id: 'bastion_magmite' },

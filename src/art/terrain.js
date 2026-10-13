@@ -182,24 +182,63 @@ export function renderTerrain(room, style) {
   }
   ctx.restore();
 
-  // --- ink rim ---
+  // --- pen hatching just inside the rock faces (hand-inked shading) ---
+  ctx.save();
+  tracePath(ctx, loops, frame);
+  ctx.clip('evenodd');
+  ctx.lineCap = 'round';
+  for (const pts of loops) {
+    for (let i = 0; i < pts.length; i += 2) {
+      const p = pts[i];
+      const h = hash2(p.x | 0, p.y | 0, seed + 11);
+      if (h > 0.55) continue;
+      // stroke points inward (opposite the outward normal), slanted, of varied length
+      const len = 5 + h * 16;
+      const ang = Math.atan2(-p.ny, -p.nx) + 0.55;
+      const ox = p.x - p.nx * (2 + h * 3), oy = p.y - p.ny * (2 + h * 3);
+      ctx.strokeStyle = rgba(style.rim, 0.10 + h * 0.22);
+      ctx.lineWidth = 0.8 + h;
+      ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ox + Math.cos(ang) * len, oy + Math.sin(ang) * len); ctx.stroke();
+      if (p.ny > 0.5 && h < 0.25) { // cross-hatch the undersides (deepest shadow)
+        ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ox + Math.cos(ang - 1.1) * len * 0.8, oy + Math.sin(ang - 1.1) * len * 0.8); ctx.stroke();
+      }
+    }
+  }
+  // scattered pebbles and fossils drawn as little ink rings
+  const pebbles = Math.floor((W * H) / 14000);
+  for (let i = 0; i < pebbles; i++) {
+    const x = R() * W, y = R() * H;
+    if (room.shapeAt(Math.floor(x / TILE), Math.floor(y / TILE)) !== 1) continue;
+    ctx.strokeStyle = rgba(style.rim, 0.10 + R() * 0.12); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.ellipse(x, y, 2 + R() * 6, 1.5 + R() * 4, R() * 3, 0, Math.PI * 2); ctx.stroke();
+  }
+  ctx.restore();
+
+  // --- brushed ink rim: varying pressure, dry-brush gaps, heavier on top surfaces ---
   ctx.lineJoin = 'round'; ctx.lineCap = 'round';
   tracePath(ctx, loops);
-  ctx.strokeStyle = rgba(style.rim, 0.35);
-  ctx.lineWidth = 5; ctx.stroke();
-  tracePath(ctx, loops);
-  ctx.strokeStyle = rgba(style.rim, 0.95);
-  ctx.lineWidth = 1.8; ctx.stroke();
-  // brighter highlight on top-facing edges
-  ctx.strokeStyle = rgba(style.accent, 0.55);
-  ctx.lineWidth = 2.2;
+  ctx.strokeStyle = rgba(style.rim, 0.22);
+  ctx.lineWidth = 6; ctx.stroke();
+  for (const pts of loops) {
+    for (let i = 0; i < pts.length; i++) {
+      const p = pts[i], q = pts[(i + 1) % pts.length];
+      const n = noise2(p.x * 0.03, p.y * 0.03, seed + 5);
+      if (n < 0.16) continue; // dry-brush gap
+      const top = p.ny < -0.6;
+      ctx.strokeStyle = rgba(top ? style.accent : style.rim, top ? 0.9 : 0.75 + n * 0.25);
+      ctx.lineWidth = (top ? 1.6 : 1.0) + n * (top ? 2.2 : 1.6);
+      ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke();
+    }
+  }
+  // a second, offset faint pass: the slightly-off retrace of a hand-drawn line
+  ctx.strokeStyle = rgba(style.rim, 0.28); ctx.lineWidth = 0.9;
   for (const pts of loops) {
     ctx.beginPath();
-    let drawing = false;
-    for (const p of pts) {
-      if (p.ny < -0.6) {
-        if (!drawing) { ctx.moveTo(p.x, p.y); drawing = true; } else ctx.lineTo(p.x, p.y);
-      } else drawing = false;
+    for (let i = 0; i < pts.length; i += 1) {
+      const p = pts[i];
+      const j = (noise2(p.x * 0.05, p.y * 0.05, seed + 9) - 0.5) * 3;
+      const x = p.x + p.nx * (1.5 + j), y = p.y + p.ny * (1.5 + j);
+      i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
     }
     ctx.stroke();
   }
@@ -226,7 +265,21 @@ export function renderTerrain(room, style) {
       else if (ch === '^') drawSpikes(ctx, x, y, room, tx, ty, style, R);
     }
   }
-  return { canvas: cv, loops };
+  // brush-roughen the whole painting once (displaces edges so nothing is machine-smooth)
+  const out = roughen(cv, 'url(#roughFine)');
+  return { canvas: out, loops };
+}
+
+export function roughen(cv, filter) {
+  try {
+    if (typeof document === 'undefined' || !document.getElementById('roughFine')) return cv;
+    const o = document.createElement('canvas');
+    o.width = cv.width; o.height = cv.height;
+    const c = o.getContext('2d');
+    c.filter = filter;
+    c.drawImage(cv, 0, 0);
+    return o;
+  } catch { return cv; }
 }
 
 function decorate(ctx, kind, face, p, h, style, R) {

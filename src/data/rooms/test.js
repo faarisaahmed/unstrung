@@ -9,7 +9,7 @@ export default [
       f: { e: 'enemy', id: 'fray_threadfly' },
       p: { e: 'pot' },
       j: { e: 'beadling' },
-      i: { e: 'item', item: 'shellFrag' },
+      i: { e: 'item', item: 'marble' },
     },
     doors: { 1: 'test_b:1' },
     tiles: [
