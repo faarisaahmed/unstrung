@@ -1150,6 +1150,8 @@ export class Reflection extends Boss {
     this.neutral();
     for (let t = 0; t < 2.5; t += 1 / 60) {
       this.inp.x = wdir;
+      const far = wdir < 0 ? this.b.x - ar.x : ar.x + ar.w - this.b.x - this.b.w;
+      if (far > 200 && this.b.dashCd <= 0 && this.b.grounded && this.dirTo() !== wdir) this.press('dash');
       if (this.b.wall === wdir || (wdir < 0 ? this.b.x - ar.x < 6 : ar.x + ar.w - this.b.x - this.b.w < 6)) break;
       yield;
     }

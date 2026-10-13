@@ -53,7 +53,7 @@ const FR = {
 const frHarp = (pat16, pat8) => (c, len) => arp(c.h, len === 16 ? pat16 : pat8);
 const frPad = (c, len) => ext(c.p, len);
 const frBass = (c, len) => ext(c.b, len);
-const frIntro = 'Dm Bbmaj7 Gm6 Asus:8,A:8';
+const frIntro = 'Dm Bbmaj7 Dm Asus:8,A:8';
 const frA = 'Dm Bbmaj7 Gm A Dm F/C Gm/Bb Asus:8,A:8';
 const frB = 'Bbmaj7 C Am7 Dm Gm7 C7 Fmaj7 Gm6:8,A:8';
 const SPARSE = '0 . 1 . 2 . . . 3 . . . 4 . . .';
@@ -89,7 +89,7 @@ const fray = {
     B: {
       harp: comp(FR, frB, frHarp(FLOW_B, HALF)),
       piano: M('F4:4 Bb4:4 D5:2 C5:2 Bb4:4 | C5:6 D5:2 E5:4 G5:4 | G5:4 E5:4 C5:2 D5:2 E5:4 | F5:4 D5:4 A4:8 |'
-        + ' D5:4 G5:4 Bb5:2 A5:2 G5:4 | A5:4 G5:4 E5:4 C5:4 | F5:6 E5:2 C5:8 | Bb4:4 D5:4 C#5:4 E5:4'),
+        + ' D5:4 G5:4 Bb5:2 A5:2 G5:4 | G5:4 E5:4 C5:4 E5:4 | F5:6 E5:2 C5:8 | Bb4:4 D5:4 C#5:4 E5:4'),
       celesta: M('.:12 D6:4 | .:12 C6:4 | .:12 A5:4 | .:8 A5:4 D6:4 | .:16 | .:12 C6:4 | .:8 A5:4 C6:4 | .:16'),
       strings: comp(FR, frB, frPad),
       bass: comp(FR, frB, frBass),
@@ -252,7 +252,7 @@ const hollows = {
       bass: comp(HO, hoB, hoBass),
       bell: M('C5:4 F5:4 A5:2 G5:2 F5:4 | G5:8 E5:8 | A4:4 D5:4 F5:2 E5:2 D5:4 | C5:8 A4:8 |'
         + ' C5:4 F5:4 A5:2 G5:2 F5:4 | G5:4 E5:4 C5:8 | A4:4 D5:4 F5:2 E5:2 D5:4 | G#4:8 B4:8 |'
-        + ' E5:4 A5:4 C6:2 B5:2 A5:4 | C6:4 A5:4 F5:8 | F5:4 E5:4 D5:8 | E5:4 D5:4 B4:4 G#4:4'),
+        + ' E5:4 A5:4 C6:2 B5:2 A5:4 | C6:4 A5:4 F5:8 | F5:4 D5:4 A4:8 | E5:4 D5:4 B4:4 G#4:4'),
       cello: M('A3:16 | G3:16 | F3:16 | E3:16 | A3:8 C4:8 | G3:8 C4:8 | D4:8 C4:8 | B3:16 |'
         + ' C4:16 | A3:16 | A3:8 F3:8 | G#3:8 B3:4 D4:4'),
       pad: comp(HO, hoB, hoPad),
@@ -459,7 +459,7 @@ const huA2 = 'Dmaj7 Amaj7 Bm7 F#m/C# Dmaj7 E C#sus:6,C#:6 C#7';
 const huB = 'Dmaj7 F#m/C# Bm7 E Dmaj7 F#m/C# Bm7 C#7';
 const huMel1 = 'C#5:4 B4:2 A4:6 | A4:4 B4:2 C#5:6 | E5:6 C#5:6 | G#4:8 .:4 |'
   + ' C#5:4 B4:2 A4:6 | A4:4 B4:2 F#5:6 | D5:4 C#5:2 B4:6 | B4:6 G#4:6';
-const huMel2 = 'F#5:4 E5:2 C#5:6 | E5:4 C#5:2 A4:6 | D5:4 B4:2 F#4:6 | G#4:4 A4:2 C#5:6 |'
+const huMel2 = 'F#5:4 E5:2 C#5:6 | E5:4 C#5:2 A4:6 | D5:4 B4:2 F#4:6 | A4:4 B4:2 C#5:6 |'
   + ' F#5:6 A5:6 | G#5:4 F#5:2 E5:6 | F#5:6 E#5:6 | B4:6 G#4:6';
 
 const hushwood = {
