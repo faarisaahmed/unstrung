@@ -23,11 +23,12 @@ No install needed. It runs in any modern desktop browser, with keyboard or gamep
   the Comet Roll, double jump, shrinking, grappling, and three spells.
 - **33 bosses**, each with scripted multi-phase attacks, plus Echo rematches and four boss-rush Pantheons.
 - **160+ enemy types**, all recorded in a hunter's journal.
-- **40 Knots** (charms), 48 lost Beadlings to rescue, shell and spool fragments, Rollmaster techniques, and a
+- **Original survival loop**: health is Coats of lacquer, and you heal by *Buffing while you roll*. Spin is wound up by speed, not by standing still.
+- **40 Knots** strung on Bead's tail, 48 lost Beadlings, Gilded Rings, Bearings, Glass Marbles, Rollmaster techniques, and a
   completion percentage that goes past 100.
 - **Three endings.**
 - **All original music**, synthesized live from note data, with a recurring leitmotif ("Bead's Theme").
-- **Hard but fair**: Hollow Knight-style combat, with pogo, Mend healing, a Tangle to recover after death,
+- **Hard but fair**: tight Bonk combat with pogo bounces, a Tangle to recover after death,
   and an optional *Brittle* one-life mode.
 
 ## Controls
@@ -37,14 +38,14 @@ No install needed. It runs in any modern desktop browser, with keyboard or gamep
 | Jump (hold: higher; later: glide) | Z / Space | A |
 | Bonk (↑/↓ aim, ↓ in air = pogo) | X / J | X |
 | Dash (↓ + Dash = Comet Roll) | C / K / Shift | RB |
-| Focus (tap: spell, hold: Mend) | F / L | Y |
+| Focus (tap: spell, hold while rolling: Buff) | F / L | Y |
 | Ability (shrink / hook / ground-pound) | V / I | LB |
 | Interact / rest / talk | ↑ | Up |
 | Map · Inventory · Pause | Tab · E · Esc | Select · RT · Start |
 
 ## How it's made
 Plain JavaScript ES modules and the HTML5 canvas, with no engine, no build step and no image or audio files:
-- **Art** is drawn procedurally in an ink style. Room terrain is traced from tile grids into wobbly, outlined,
+- **Art** is drawn procedurally, then run through a WebGL hand-drawn pass: line boil, ink pooling and paper grain. Room terrain is traced from tile grids into wobbly, outlined,
   textured silhouettes, and creatures and bosses are parametric vector drawings.
 - **Music and SFX** come from a Web Audio synth: Karplus-Strong harps, FM bells and pianos, string and choir
   pads, drums, and a cavern reverb, all driven by a step sequencer.

@@ -28,7 +28,7 @@ Pillars:
 | Jump (hold for height, glide when unlocked) | Z / Space | A |
 | Bonk (attack; ↑/↓ for directional, ↓ in air = pogo) | X / J | X |
 | Dash (hold on ground/wall to charge Comet Roll) | C / K / Shift | RB / B |
-| Focus: tap = spell, hold = Mend (heal) | A / L | Y |
+| Focus: tap = spell, hold *while rolling* = Buff (heal) | F / L | Y |
 | Ability: shrink (ground), grapple (air, near hook), ground-pound (air) | V / I | LB |
 | Map | Tab / M | Select |
 | Inventory | E / Q | RT |
@@ -40,9 +40,15 @@ Pillars:
 - Bead: 24×24 px hitbox (shrunk: 12×12).
 - Max single jump: clears **4 tiles** up. Max gap on flat ground (no dash): **5 tiles**.
 - Dash ≈ 4 tiles. Double jump adds ≈ 3.5 tiles. Wall slide and wall jump work on any wall except ice.
-- Health is **Shells** (masks). Start with 5, max 9 (4 Shell Fragments = 1 Shell).
-- Resource is **Thread**: 99 max at start, +33 per Spool Vessel (each made from 3 fragments), up to +66.
-  Hitting an enemy gives 11. Mend costs 33 to restore 1 Shell over 0.9 s. Spells cost 33.
+- Health is **Coats** of lacquer, shown as glossy beads strung on Bead's red thread. Start with 4, max 10.
+  Each **Gilded Ring** (6 in the world, found whole, never in pieces) adds a Coat.
+- The resource is **Spin**. Bead winds it up by **rolling fast** (and a little by Bonking). Max 100,
+  +50 per **Brass Bearing** (3 in the world).
+- **Buffing** (healing): hold Focus *while rolling at speed* and Bead polishes a scratched Coat back
+  (40 Spin, ~0.8 s). Standing still doesn't heal: Bead heals by staying on the move.
+  Tapping Focus casts a spell (33 Spin).
+- **Glass Marbles** (11) are a collection. Bobbin's Marble Jar trades them for rewards, the last of which is a Ring.
+- **Knots** are strung on Bead's tail and take up **string length**; Lengths of String extend the tail.
 - Currency is **Glints**. On death you drop them in a **Tangle** at the death spot. Touch it to recover them.
   A new death before you recover the Tangle loses them for good.
 - Bonk damage: 5 → 9 → 13 → 17 → 21 (Polish upgrades from the Tinsmith).
@@ -105,8 +111,8 @@ Full lore: [LORE.md](LORE.md).
 ## 7. Completion (100%+, ~60 h)
 
 - 12 abilities + 3 spells (+ spell upgrades)
-- 16 Shell Fragments (4 Shells), 6 Vessel Fragments (2 Vessels)
-- 40 Knots (charms) and 8 Knot notches
+- 6 Gilded Rings, 3 Brass Bearings, 11 Glass Marbles
+- 40 Knots and 8 Lengths of String
 - 4 Polish upgrades
 - 3 Rollmaster techniques
 - 48 lost **Beadlings** to rescue (Beadmother rewards)
