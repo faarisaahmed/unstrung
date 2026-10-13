@@ -29,6 +29,12 @@ export class Room {
       }
       this.grid.push(row);
     }
+    // markers sitting inside a liquid inherit it (unless `under` was given explicitly)
+    for (const m of this.markers) {
+      if (m.spec && m.spec.under) continue;
+      const nb = [[1, 0], [-1, 0], [0, -1], [0, 1]].map(([dx, dy]) => (this.grid[m.ty + dy] || [])[m.tx + dx]);
+      for (const liq of ['~', '!']) if (nb.filter((c) => c === liq).length >= 3) { this.grid[m.ty][m.tx] = liq; break; }
+    }
     this.pxW = this.w * TILE;
     this.pxH = this.h * TILE;
     this.dynamicSolids = []; // [{x,y,w,h,oneway?,active}]
