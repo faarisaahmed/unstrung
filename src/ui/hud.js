@@ -128,7 +128,7 @@ export class HUD {
       ctx.globalAlpha = k;
       const lines = m.desc ? m.desc.split('\n') : [];
       const bh = 44 + lines.length * 20;
-      const by = VIEW_H - 70 - bh;
+      const by = g.areaTitle ? 230 : 120;
       const grd = ctx.createLinearGradient(0, by, 0, by + bh);
       grd.addColorStop(0, 'rgba(6,6,10,0)'); grd.addColorStop(0.25, 'rgba(6,6,10,0.7)'); grd.addColorStop(0.75, 'rgba(6,6,10,0.7)'); grd.addColorStop(1, 'rgba(6,6,10,0)');
       ctx.fillStyle = grd; ctx.fillRect(VIEW_W / 2 - 330, by, 660, bh);
