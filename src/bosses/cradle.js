@@ -3,7 +3,7 @@ import { Boss } from './boss.js';
 import { Entity } from '../entities/base.js';
 import { Projectile, registerProjectileArt } from '../entities/projectile.js';
 import { TILE, VIEW_W, VIEW_H } from '../core/constants.js';
-import { TAU, clamp, overlap } from '../core/math.js';
+import { TAU, clamp } from '../core/math.js';
 import { INK, eye } from '../art/creatures.js';
 import { Strand, Overlay, glow, lerp, ease, segDist, rayEnd, clipLine } from './loom.js';
 

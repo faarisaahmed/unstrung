@@ -61,6 +61,8 @@ export class Boss extends Entity {
     this.lastAttack = null;
     this.flagKey = 'boss_' + cfg.id;
     this.defeated = !this.echo && !!game.save.flags[this.flagKey];
+    // Selene returns for anyone carrying the Void Thread who hasn't seen the true ending yet
+    if (cfg.id === 'selene' && game.save.items.voidThread && !game.save.endings.B) this.defeated = false;
     if (this.defeated) { this.dead = true; return; }
     // arena = the room interior unless overridden
     const room = game.room;

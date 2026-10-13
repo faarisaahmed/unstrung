@@ -2,7 +2,7 @@
 // Also exports small shared helpers (line hazards, backdrops, overlays) used by cradle.js and unwoven.js.
 import { Boss, registerMinion } from './boss.js';
 import { Entity } from '../entities/base.js';
-import { TILE, VIEW_W, VIEW_H } from '../core/constants.js';
+import { TILE } from '../core/constants.js';
 import { TAU, clamp } from '../core/math.js';
 import { INK, eye } from '../art/creatures.js';
 
