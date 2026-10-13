@@ -250,11 +250,20 @@ function mask(ctx, x, y, r, A, f = 1) {
     c.bezierCurveTo(x + r * 0.95, y + r * 0.55, x + r * 0.45, y + r * 0.95, x + r * 0.05, y + r * 1.12);
     c.bezierCurveTo(x - r * 0.4, y + r * 0.95, x - r * 0.95, y + r * 0.55, x - r * 0.98, y - r * 0.05);
   }, { lw: Math.max(1.6, r * 0.16), sd: r * 0.22, dk: 0.3 });
-  // brow crease
-  stroke(ctx, [x - r * 0.15, y - r * 0.92, x + r * 0.05, y - r * 1.0, x + r * 0.25, y - r * 0.9], Math.max(0.8, r * 0.07), shade(pale, 0.45));
-  for (const s of [-1, 1]) socket(ctx, x + s * r * 0.4 + f, y - r * 0.08, r * 0.27, r * 0.4, s * r * 0.1);
-  if (A.eye && A.eye !== INK) {
-    for (const s of [-1, 1]) eye(ctx, x + s * r * 0.38 + f, y - r * 0.02, r * 0.11, A.eye, true);
+  // a stitched patch: seam with cross-stitches, and mismatched button eyes (the Strand's sewn creatures)
+  ctx.strokeStyle = INK; ctx.lineWidth = Math.max(0.8, r * 0.07);
+  ctx.beginPath(); ctx.moveTo(x + r * 0.06, y - r * 1.15); ctx.quadraticCurveTo(x - r * 0.1, y - r * 0.2, x + r * 0.04, y + r * 1.0); ctx.stroke();
+  for (let k = 0; k < 4; k++) {
+    const yy = y - r * 0.8 + k * r * 0.5;
+    ctx.beginPath(); ctx.moveTo(x - r * 0.16, yy - r * 0.06); ctx.lineTo(x + r * 0.18, yy + r * 0.06); ctx.stroke();
+  }
+  for (const s of [-1, 1]) {
+    const bx = x + s * r * 0.46 + f, by = y - r * 0.08, br = r * (s < 0 ? 0.27 : 0.23);
+    ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(bx, by, br, 0, Math.PI * 2); ctx.fill();
+    const col = A.eye && A.eye !== INK ? A.eye : 'rgba(230,220,200,0.55)';
+    ctx.fillStyle = col;
+    for (const [ox, oy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { ctx.beginPath(); ctx.arc(bx + ox * br * 0.32, by + oy * br * 0.32, Math.max(0.6, br * 0.14), 0, Math.PI * 2); ctx.fill(); }
+    if (A.eye && A.eye !== INK) eye(ctx, bx, by, r * 0.08, A.eye, true);
   }
 }
 
@@ -657,21 +666,54 @@ export const PAINTERS = {
       }
       ctx.restore();
     }
-    // horns + mask
+    // head: a stitched cloth face with button eyes, under a dented thimble helm (the sewn folk of the Strand)
     const hy = -h * 0.8;
-    if (A.horns !== 0) {
-      const hc = A.c3 || '#efe8d8';
-      for (const s of [-1, 1]) {
-        const bx = s < 0 ? -w * 0.07 : w * 0.1;
-        form(ctx, hc, (c) => {
-          c.moveTo(bx - w * 0.06, hy - h * 0.08);
-          c.bezierCurveTo(bx + s * w * 0.0 - w * 0.12, hy - h * 0.28, bx + s * w * 0.12 - w * 0.02, hy - h * 0.34, bx + s * w * 0.04, hy - h * 0.44);
-          c.bezierCurveTo(bx + s * w * 0.02, hy - h * 0.3, bx + w * 0.04, hy - h * 0.22, bx + w * 0.06, hy - h * 0.1);
-          c.closePath();
-        }, { lw: 1.6, sd: 1.6 });
-      }
+    const hr = Math.min(w, h) * 0.21;
+    const hx = w * 0.02;
+    const cloth = A.c3 || '#e6dcc4';
+    form(ctx, cloth, (c) => {
+      c.moveTo(hx - hr, hy + hr * 0.1);
+      c.bezierCurveTo(hx - hr * 1.05, hy - hr * 0.9, hx + hr * 1.05, hy - hr * 0.95, hx + hr, hy + hr * 0.05);
+      c.bezierCurveTo(hx + hr * 0.9, hy + hr * 0.95, hx - hr * 0.85, hy + hr * 1.0, hx - hr, hy + hr * 0.1);
+      c.closePath();
+    }, { lw: 1.8, sd: 1.5 });
+    // seam down the middle with cross-stitches
+    ctx.strokeStyle = INK; ctx.lineWidth = 0.9;
+    ctx.beginPath(); ctx.moveTo(hx + hr * 0.05, hy - hr * 0.55); ctx.quadraticCurveTo(hx - hr * 0.08, hy + hr * 0.2, hx + hr * 0.02, hy + hr * 0.9); ctx.stroke();
+    for (let k = 0; k < 4; k++) {
+      const yy = hy - hr * 0.35 + k * hr * 0.32;
+      ctx.beginPath(); ctx.moveTo(hx - hr * 0.12, yy - 1.2); ctx.lineTo(hx + hr * 0.12, yy + 1.2); ctx.stroke();
     }
-    mask(ctx, w * 0.02, hy, Math.min(w, h) * 0.2, A);
+    // button eyes (four-hole buttons); a glowing light shows through the holes when A.eye is set
+    for (const sx of [-1, 1]) {
+      const bx = hx + sx * hr * 0.45, by = hy + hr * 0.05, br = hr * 0.27;
+      ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(bx, by, br, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.22)'; ctx.lineWidth = 0.8; ctx.beginPath(); ctx.arc(bx, by, br * 0.72, 3.4, 5.2); ctx.stroke();
+      for (const [ox, oy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+        const col = A.eye && A.eye !== INK ? A.eye : 'rgba(230,220,200,0.55)';
+        ctx.fillStyle = col; ctx.beginPath(); ctx.arc(bx + ox * br * 0.3, by + oy * br * 0.3, Math.max(0.7, br * 0.13), 0, Math.PI * 2); ctx.fill();
+      }
+      if (A.glow && A.eye) eye(ctx, bx, by, br * 0.3, A.eye, true);
+    }
+    // thimble helm (skipped with horns: 0)
+    if (A.horns !== 0) {
+      const tc = A.c2 || '#9a8f7c';
+      form(ctx, tc, (c) => {
+        c.moveTo(hx - hr * 1.08, hy - hr * 0.35);
+        c.lineTo(hx - hr * 0.8, hy - hr * 1.55);
+        c.quadraticCurveTo(hx, hy - hr * 1.85, hx + hr * 0.8, hy - hr * 1.55);
+        c.lineTo(hx + hr * 1.08, hy - hr * 0.35);
+        c.quadraticCurveTo(hx, hy - hr * 0.55, hx - hr * 1.08, hy - hr * 0.35);
+        c.closePath();
+      }, { lw: 1.8, sd: 1.6 });
+      ctx.fillStyle = 'rgba(20,18,26,0.55)';
+      for (let rr = 0; rr < 3; rr++) for (let k = 0; k < 5 - rr; k++) {
+        const dx = hx + (k - (4 - rr) / 2) * hr * 0.32, dy = hy - hr * (0.62 + rr * 0.3);
+        ctx.beginPath(); ctx.arc(dx, dy, hr * 0.06, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.strokeStyle = INK; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.moveTo(hx - hr * 1.1, hy - hr * 0.36); ctx.quadraticCurveTo(hx, hy - hr * 0.56, hx + hr * 1.1, hy - hr * 0.36); ctx.stroke();
+    }
     ctx.restore();
   },
 
