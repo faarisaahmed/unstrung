@@ -521,7 +521,7 @@ function worldSim() {
 }
 
 // ------------------------------------------------------------------ main
-let defs = Object.values(ROOMS);
+let defs = Object.values(ROOMS).filter((d) => onlyRoom || !d.id.startsWith('test_'));
 if (onlyArea) defs = defs.filter((d) => d.area === onlyArea);
 if (onlyRoom) defs = defs.filter((d) => d.id === onlyRoom);
 const t0 = Date.now();
