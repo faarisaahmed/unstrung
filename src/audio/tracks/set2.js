@@ -504,7 +504,7 @@ const frost = (() => {
         choir: holds(['E4+G4+B4', 'D4+F#4+A4', 'C4+E4+G4', 'B3+D4+F#4', 'A3+C4+E4', 'B3+E4+G4', 'A3+C4+E4', 'A3+D#4+F#4']),
         sub: holds(['C2', 'B1', 'A1', 'G1', 'F1', 'E1', 'F1', 'B1']),
         cel: J([spark('G6', 'E6'), spark('F#6', 'D6'), spark('E6', 'C6'), spark('D6', 'B5'),
-          spark('E6', 'C6'), spark('F#6', 'B5'), spark('E6', 'A5'), spark('D#6', 'B5')]),
+          spark('E6', 'A5'), spark('F#6', 'B5'), spark('E6', 'A5'), spark('D#6', 'B5')]),
       },
       // A': the hook in celesta and low violins together, with the choir breathing beneath
       A2: {

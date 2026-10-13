@@ -734,57 +734,75 @@ export class Selene extends Boss {
   }
 
   drawHand(ctx, h, t, white) {
-    const col = white ? '#fff' : '#e6ecff';
     // wrist threads trailing back to the moon
-    if (this.mode !== 'dying' || true) {
-      ctx.strokeStyle = white ? '#fff' : `rgba(${SILVER},0.35)`; ctx.lineWidth = 1.2;
-      for (let i = 0; i < 4; i++) {
-        const a = Math.atan2(h.y - this.cy, h.x - this.cx) + (i - 1.5) * 0.12;
-        const sx = this.cx + Math.cos(a) * this.R * 0.95, sy = this.cy + Math.sin(a) * this.R * 0.95;
-        ctx.beginPath(); ctx.moveTo(sx, sy);
-        ctx.quadraticCurveTo((sx + h.x) / 2 + Math.sin(t * 2 + i) * 20, (sy + h.y) / 2 + 30, h.x, h.y);
-        ctx.stroke();
-      }
+    ctx.strokeStyle = white ? '#fff' : `rgba(${SILVER},0.32)`; ctx.lineWidth = 1.2;
+    for (let i = 0; i < 5; i++) {
+      const a = Math.atan2(h.y - this.cy, h.x - this.cx) + (i - 2) * 0.1;
+      const sx = this.cx + Math.cos(a) * this.R * 0.96, sy = this.cy + Math.sin(a) * this.R * 0.96;
+      ctx.beginPath(); ctx.moveTo(sx, sy);
+      ctx.quadraticCurveTo((sx + h.x) / 2 + Math.sin(t * 2 + i) * 18, (sy + h.y) / 2 + 36, h.x, h.y);
+      ctx.stroke();
     }
     ctx.save();
     ctx.translate(h.x, h.y);
     ctx.rotate(h.rot - Math.PI / 2);
-    if (!white) glow(ctx, 0, 10, 70, SILVER, 0.18 + 0.5 * h.glow + (h.rest ? 0.1 : 0));
+    ctx.scale(h.s, 1);
+    if (!white) glow(ctx, 0, 24, 80, SILVER, 0.16 + 0.5 * h.glow + (h.rest ? 0.12 : 0));
     const open = h.open;
+    // finger polylines: base on the knuckle arc, two joints, tip
     const fingers = [];
     for (let i = 0; i < 5; i++) {
       const thumb = i === 0;
-      const sp = (i - 2) * (0.22 + 0.18 * open) + (thumb ? -0.5 * h.s : 0);
-      const L = thumb ? 34 : 48 + (i === 2 ? 8 : 0);
-      const bx = (i - 2) * 9, by = 22;
-      const curl = (1 - open) * 0.9 + Math.sin(t * 2 + i) * 0.05;
-      const ex = bx + Math.sin(sp) * L, ey = by + Math.cos(sp) * L * (1 - curl * 0.45);
-      fingers.push([bx, by, bx + Math.sin(sp) * L * 0.6 + curl * 8, by + Math.cos(sp) * L * 0.6, ex, ey]);
-    }
-    const unr = this.unravel;
-    for (const pass of white ? [0] : [0, 1]) {
-      ctx.strokeStyle = white ? '#fff' : pass === 0 ? INK : col;
-      ctx.lineWidth = pass === 0 ? 6 : 2.2;
-      ctx.lineCap = 'round';
-      // palm: woven loops
-      for (let k = 0; k < 3; k++) {
-        ctx.beginPath(); ctx.ellipse(0, 4, 24 - k * 4, 26 - k * 3, k * 0.4 + Math.sin(t + k) * 0.05, 0, TAU); ctx.stroke();
-        if (pass === 0) break;
+      const base = thumb ? { x: -20, y: 6 } : { x: -14 + (i - 1) * 9.5, y: 26 - Math.abs(i - 2.5) * 2 };
+      const sp = thumb ? -0.9 - 0.4 * open : (i - 2.5) * (0.1 + 0.16 * open);
+      const L = thumb ? 34 : [0, 52, 60, 56, 44][i];
+      const curl = (1 - open) * 0.8 + Math.sin(t * 1.7 + i) * 0.06;
+      let x = base.x, y = base.y, a = Math.PI / 2 - sp;
+      const pts = [{ x, y }];
+      for (let j = 0; j < 3; j++) {
+        const seg = L / 3;
+        x += Math.cos(a) * seg; y += Math.sin(a) * seg; pts.push({ x, y });
+        a += curl * 0.55 * (thumb ? -1 : 1);
       }
-      for (const f of fingers) { ctx.beginPath(); ctx.moveTo(f[0], f[1]); ctx.quadraticCurveTo(f[2], f[3], f[4], f[5]); ctx.stroke(); }
+      fingers.push(pts);
+    }
+    const strands = white ? [[0, 6]] : [[0, 6.5], [1, 0]];
+    for (const [pass] of strands) {
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      if (pass === 0) { ctx.strokeStyle = white ? '#fff' : INK; ctx.lineWidth = 6; }
+      // palm: loose loops of thread
+      const loops = pass === 0 ? 1 : 3;
+      for (let k = 0; k < loops; k++) {
+        if (pass) { ctx.strokeStyle = k ? `rgba(${SILVER},0.55)` : '#eef2ff'; ctx.lineWidth = k ? 1 : 2; }
+        ctx.beginPath();
+        ctx.moveTo(-6, -22 + k * 3);
+        ctx.bezierCurveTo(-30 + k * 3, -16, -28 + k * 2, 22, -12, 28 - k);
+        ctx.quadraticCurveTo(6, 32 + k, 22 - k * 2, 24);
+        ctx.bezierCurveTo(30 - k, 8, 18, -18 + k * 2, -6, -22 + k * 3);
+        ctx.stroke();
+      }
+      for (const f of fingers) {
+        const twin = pass ? [-1.6, 1.6] : [0];
+        for (const o of twin) {
+          if (pass) { ctx.strokeStyle = o < 0 ? '#eef2ff' : `rgba(${SILVER},0.6)`; ctx.lineWidth = o < 0 ? 1.8 : 1; }
+          ctx.beginPath();
+          f.forEach((q, i) => {
+            const w = o * (1 - i / f.length) + Math.sin(i * 2 + t * 3) * 0.6 * (pass ? 1 : 0);
+            i ? ctx.lineTo(q.x + w, q.y) : ctx.moveTo(q.x + w, q.y);
+          });
+          ctx.stroke();
+        }
+      }
     }
     if (!white) {
-      // fingertips
-      ctx.fillStyle = '#ffffff';
-      for (const f of fingers) { ctx.beginPath(); ctx.arc(f[4], f[5], 2.4, 0, TAU); ctx.fill(); }
-      // fraying loose threads in phase 3
-      if (unr) {
-        ctx.strokeStyle = `rgba(${SILVER},0.5)`; ctx.lineWidth = 1;
-        for (let i = 0; i < 6; i++) { ctx.beginPath(); ctx.moveTo(-20 + i * 8, -18); ctx.quadraticCurveTo(-24 + i * 9 + Math.sin(t * 4 + i) * 8, -40, -20 + i * 8 + Math.sin(t * 3 + i) * 14, -60); ctx.stroke(); }
+      for (const f of fingers) { const q = f[f.length - 1]; glow(ctx, q.x, q.y, 8, SILVER, 0.6); ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(q.x, q.y, 2.2, 0, TAU); ctx.fill(); }
+      if (this.unravel) {
+        ctx.strokeStyle = `rgba(${SILVER},0.45)`; ctx.lineWidth = 1;
+        for (let i = 0; i < 7; i++) { ctx.beginPath(); ctx.moveTo(-18 + i * 6, -18); ctx.quadraticCurveTo(-22 + i * 7 + Math.sin(t * 4 + i) * 8, -44, -18 + i * 6 + Math.sin(t * 3 + i) * 16, -66); ctx.stroke(); }
       }
       if (h.crescent) {
-        ctx.save(); ctx.translate(0, 40);
-        glow(ctx, 0, 0, 50, '255,250,230', 0.6);
+        ctx.save(); ctx.translate(0, 46);
+        glow(ctx, 0, 0, 56, '255,250,230', 0.65);
         ctx.fillStyle = '#f4f6ff'; ctx.strokeStyle = INK; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.arc(0, 0, 18, -1.9, 1.9); ctx.arc(-8, 0, 15, 1.45, -1.45, true); ctx.closePath(); ctx.fill(); ctx.stroke();
         ctx.restore();
@@ -798,115 +816,147 @@ export class Selene extends Boss {
     const lum = this.lum;
     ctx.save();
     if (!white) {
-      glow(ctx, cx, cy, R * 2.6, '200,215,255', 0.2 * lum * (1 - this.shadow * 0.6));
-      glow(ctx, cx, cy, R * 1.5, '235,240,255', 0.25 * lum * (1 - this.shadow * 0.7));
-      // orbiting beads of the broken necklace
+      glow(ctx, cx, cy, R * 2.7, '200,215,255', 0.2 * lum * (1 - this.shadow * 0.6));
+      glow(ctx, cx, cy, R * 1.5, '235,240,255', 0.22 * lum * (1 - this.shadow * 0.7));
+      // a faint ring of the old strand around her
+      ctx.strokeStyle = `rgba(${SILVER},${0.18 * lum})`; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.ellipse(cx, cy, R + 46, (R + 46) * 0.55, Math.sin(t * 0.3) * 0.1, 0, TAU); ctx.stroke();
       for (const b of this.beads) {
         const x = cx + Math.cos(b.a) * b.r, y = cy + Math.sin(b.a) * b.r * 0.55;
+        glow(ctx, x, y, b.s * 2.4, '255,245,225', 0.3);
         ctx.fillStyle = '#efe8d6'; ctx.strokeStyle = INK; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.arc(x, y, b.s, 0, TAU); ctx.fill(); ctx.stroke();
-        ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(x, y, b.s * 0.3, 0, TAU); ctx.fill();
+        ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(x, y, b.s * 0.28, 0, TAU); ctx.fill();
       }
+      this.drawNecklace(ctx, t);
     }
-    // hands behind? no: in front, but the far one first
-    // the moon
     ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU);
     if (white) { ctx.fillStyle = '#fff'; ctx.fill(); }
     else {
-      const g = ctx.createRadialGradient(cx - R * 0.3, cy - R * 0.3, R * 0.1, cx, cy, R);
-      g.addColorStop(0, `rgba(250,251,255,${0.6 + 0.4 * lum})`); g.addColorStop(0.7, `rgba(222,227,242,${0.5 + 0.5 * lum})`); g.addColorStop(1, '#a9b0cc');
+      const g = ctx.createRadialGradient(cx - R * 0.35, cy - R * 0.35, R * 0.1, cx, cy, R * 1.02);
+      g.addColorStop(0, `rgba(252,252,255,${0.65 + 0.35 * lum})`); g.addColorStop(0.65, `rgba(224,229,244,${0.55 + 0.45 * lum})`); g.addColorStop(1, '#9ea6c4');
       ctx.fillStyle = g; ctx.fill();
-      ctx.strokeStyle = INK; ctx.lineWidth = 4; ctx.stroke();
       ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, R - 2, 0, TAU); ctx.clip();
       // maria and craters
-      ctx.fillStyle = 'rgba(140,148,182,0.28)';
-      for (const [a, d, r] of [[0.6, 0.55, 34], [2.2, 0.6, 26], [3.6, 0.45, 40], [5.0, 0.7, 20], [4.2, 0.2, 14], [1.4, 0.85, 16]]) {
+      ctx.fillStyle = 'rgba(140,148,182,0.24)';
+      for (const [a, d, r] of [[0.6, 0.62, 30], [2.25, 0.66, 24], [3.7, 0.6, 34], [5.1, 0.72, 18], [1.5, 0.86, 14], [4.6, 0.82, 12]]) {
         ctx.beginPath(); ctx.ellipse(cx + Math.cos(a) * d * R, cy + Math.sin(a) * d * R, r, r * 0.8, a, 0, TAU); ctx.fill();
       }
-      ctx.strokeStyle = 'rgba(120,128,160,0.35)'; ctx.lineWidth = 1.5;
-      for (const [a, d, r] of [[0.3, 0.75, 9], [2.8, 0.78, 7], [5.6, 0.5, 6]]) { ctx.beginPath(); ctx.arc(cx + Math.cos(a) * d * R, cy + Math.sin(a) * d * R, r, 0, TAU); ctx.stroke(); }
-      // eclipse shadow
-      if (this.shadow > 0.01) {
-        const sx = cx + (1 - this.shadow) * R * 2.1;
-        ctx.fillStyle = 'rgba(8,8,20,0.88)';
-        ctx.beginPath(); ctx.arc(sx, cy - (1 - this.shadow) * 20, R * 1.02, 0, TAU); ctx.fill();
+      ctx.strokeStyle = 'rgba(110,118,150,0.32)'; ctx.lineWidth = 1.4;
+      for (const [a, d, r] of [[0.25, 0.8, 8], [2.9, 0.8, 7], [5.6, 0.62, 6], [4.0, 0.88, 5]]) { ctx.beginPath(); ctx.arc(cx + Math.cos(a) * d * R, cy + Math.sin(a) * d * R, r, 0, TAU); ctx.stroke(); }
+      // ink hatching on the shadowed limb
+      ctx.strokeStyle = 'rgba(60,64,96,0.16)'; ctx.lineWidth = 1;
+      for (let i = -12; i <= 12; i++) {
+        const x0 = cx + R * 0.35 + i * 9;
+        ctx.beginPath(); ctx.moveTo(x0, cy + R); ctx.lineTo(x0 + R * 0.7, cy - R * 0.2); ctx.stroke();
       }
       ctx.restore();
+      // eclipse shadow
+      if (this.shadow > 0.01) {
+        ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, R - 1, 0, TAU); ctx.clip();
+        const sx = cx + (1 - this.shadow) * R * 2.1;
+        ctx.fillStyle = 'rgba(8,8,20,0.9)';
+        ctx.beginPath(); ctx.arc(sx, cy - (1 - this.shadow) * 20, R * 1.02, 0, TAU); ctx.fill();
+        ctx.restore();
+      }
+      ctx.strokeStyle = INK; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.stroke();
       this.drawFace(ctx, t);
     }
     ctx.restore();
-    // hands
     for (const h of this.hands) this.drawHand(ctx, h, t, white);
+  }
+
+  // The broken necklace hangs beneath her: two strands, and a gap where the last bead belongs.
+  drawNecklace(ctx, t) {
+    if (this.beads.length) return;
+    const cx = this.cx, cy = this.cy, R = this.R;
+    for (const s of [-1, 1]) {
+      const x0 = cx + s * R * 0.78, y0 = cy + R * 0.62;
+      const ex = cx + s * 16 + Math.sin(t * 1.4 + s) * 4, ey = cy + R + 34 + (s > 0 ? -8 : 6);
+      const mx = cx + s * R * 0.42, my = cy + R + 42;
+      ctx.strokeStyle = '#b8323e'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(x0, y0); ctx.quadraticCurveTo(mx, my, ex, ey);
+      ctx.quadraticCurveTo(ex - s * 2, ey + 14, ex + Math.sin(t * 2 + s) * 5, ey + 24); ctx.stroke();
+      for (let i = 1; i <= 5; i++) {
+        const k = i / 6.2;
+        const x = (1 - k) * (1 - k) * x0 + 2 * (1 - k) * k * mx + k * k * ex;
+        const y = (1 - k) * (1 - k) * y0 + 2 * (1 - k) * k * my + k * k * ey;
+        ctx.fillStyle = '#efe8d6'; ctx.strokeStyle = INK; ctx.lineWidth = 1.8;
+        ctx.beginPath(); ctx.arc(x, y, 6.5, 0, TAU); ctx.fill(); ctx.stroke();
+      }
+    }
+    // the missing bead
+    ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.setLineDash([3, 4]); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(cx, cy + R + 40, 9, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
   }
 
   drawFace(ctx, t) {
     const cx = this.cx, cy = this.cy, R = this.R;
     const eo = this.eyeOpen;
-    const lit = 1 - this.shadow * 0.6;
-    // eyes
+    // soft cheek shadow
+    glow(ctx, cx, cy + R * 0.25, R * 0.5, '255,255,255', 0.08);
+    // brows
+    ctx.strokeStyle = 'rgba(40,40,62,0.45)'; ctx.lineWidth = 1.6;
+    for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(cx + s * R * 0.14, cy - R * 0.3); ctx.quadraticCurveTo(cx + s * R * 0.34, cy - R * 0.4, cx + s * R * 0.56, cy - R * 0.26); ctx.stroke(); }
     for (const s of [-1, 1]) {
-      const ex = cx + s * R * 0.36, ey = cy - 8;
+      const ex = cx + s * R * 0.35, ey = cy - R * 0.08;
       if (eo < 0.15) {
+        // closed: long downward lids with thread lashes
         ctx.strokeStyle = INK; ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.arc(ex, ey - 8, 20, 0.2 * Math.PI, 0.8 * Math.PI); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(ex - 24, ey - 2); ctx.quadraticCurveTo(ex, ey + 12, ex + 24, ey - 2); ctx.stroke();
+        ctx.lineWidth = 1.2;
+        for (let k = -2; k <= 2; k++) { const x = ex + k * 9; const y = ey + 5 - Math.abs(k) * 1.5; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + k * 1.5, y + 7); ctx.stroke(); }
       } else {
+        // almond eye under a heavy lid
         ctx.fillStyle = INK;
-        ctx.beginPath(); ctx.ellipse(ex, ey, 20, 6 + 14 * eo, s * 0.12, 0, TAU); ctx.fill();
-        eye(ctx, ex, ey, 4 + 2 * eo, '#ffffff', true);
-        // heavy lid
-        ctx.strokeStyle = INK; ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.arc(ex, ey + 10, 24, 1.15 * Math.PI, 1.85 * Math.PI); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(ex - 25, ey);
+        ctx.quadraticCurveTo(ex, ey - 16 * eo, ex + 25, ey);
+        ctx.quadraticCurveTo(ex, ey + 10 * eo, ex - 25, ey);
+        ctx.fill();
+        eye(ctx, ex + s * 2, ey - 1, 3 + 2 * eo, '#ffffff', true);
+        ctx.strokeStyle = INK; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.moveTo(ex - 28, ey - 3); ctx.quadraticCurveTo(ex, ey - 22 * eo - 2, ex + 28, ey - 3); ctx.stroke();
       }
       // tears of thread
       if (this.weep > 0 || this.crack) {
-        ctx.strokeStyle = `rgba(250,252,255,${0.5 + 0.5 * this.weep})`; ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.moveTo(ex + s * 6, ey + 12);
-        ctx.quadraticCurveTo(ex + s * 10 + Math.sin(t * 2 + s) * 4, ey + 50, ex + s * 6 + Math.sin(t * 1.5 + s) * 6, ey + 70 + this.weep * 30);
+        ctx.strokeStyle = `rgba(250,252,255,${0.55 + 0.45 * this.weep})`; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(ex + s * 8, ey + 8);
+        ctx.quadraticCurveTo(ex + s * 12 + Math.sin(t * 2 + s) * 4, ey + 46, ex + s * 8 + Math.sin(t * 1.5 + s) * 6, ey + 66 + this.weep * 34);
         ctx.stroke();
       }
     }
+    // nose
+    ctx.strokeStyle = 'rgba(40,40,62,0.5)'; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(cx - 2, cy - R * 0.12); ctx.quadraticCurveTo(cx + 6, cy + R * 0.1, cx - 4, cy + R * 0.16); ctx.stroke();
     // forehead eye (beams)
     if (this.third > 0) {
-      const fy = cy - R * 0.35;
-      glow(ctx, cx, fy, 60, '240,244,255', 0.8 * this.third);
-      ctx.fillStyle = INK; ctx.beginPath(); ctx.ellipse(cx, fy, 10, 16 * this.third, 0, 0, TAU); ctx.fill();
-      eye(ctx, cx, fy, 4, '#ffffff', true);
+      const fy = cy - R * 0.5;
+      glow(ctx, cx, fy, 64, '240,244,255', 0.85 * this.third);
+      ctx.fillStyle = INK; ctx.beginPath(); ctx.ellipse(cx, fy, 8, 15 * this.third, 0, 0, TAU); ctx.fill();
+      eye(ctx, cx, fy, 3.5, '#ffffff', true);
     } else {
-      ctx.strokeStyle = 'rgba(40,40,60,0.5)'; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(cx, cy - R * 0.35 - 12); ctx.lineTo(cx, cy - R * 0.35 + 12); ctx.stroke();
+      ctx.strokeStyle = 'rgba(40,40,62,0.55)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(cx, cy - R * 0.5 - 11); ctx.quadraticCurveTo(cx + 3, cy - R * 0.5, cx, cy - R * 0.5 + 11); ctx.stroke();
     }
     // mouth
-    ctx.strokeStyle = INK; ctx.lineWidth = 2.5;
+    ctx.strokeStyle = INK; ctx.lineWidth = 2.4;
     ctx.beginPath();
-    if (this.third > 0 || this.pulling) { ctx.ellipse(cx, cy + R * 0.38, 12, 9 + (this.pulling ? 6 : 0), 0, 0, TAU); ctx.fillStyle = '#20202e'; ctx.fill(); }
-    else { ctx.moveTo(cx - 18, cy + R * 0.4); ctx.quadraticCurveTo(cx, cy + R * 0.34, cx + 18, cy + R * 0.4); }
+    if (this.third > 0 || this.pulling) {
+      ctx.ellipse(cx, cy + R * 0.36, 10, 6 + (this.pulling ? 7 : 0), 0, 0, TAU); ctx.fillStyle = '#1a1a28'; ctx.fill();
+    } else { ctx.moveTo(cx - 15, cy + R * 0.38); ctx.quadraticCurveTo(cx, cy + R * 0.33, cx + 15, cy + R * 0.38); }
     ctx.stroke();
-    // the necklace across her chin, snapped
-    ctx.strokeStyle = 'rgba(184,50,62,0.9)'; ctx.lineWidth = 2;
-    const ny = cy + R * 0.58;
-    ctx.beginPath(); ctx.moveTo(cx - R * 0.8, ny - 20); ctx.quadraticCurveTo(cx - R * 0.4, ny + 14, cx - 8, ny + 6); ctx.quadraticCurveTo(cx - 4, ny + 26 + Math.sin(t * 2) * 4, cx - 10, ny + 46); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cx + R * 0.8, ny - 20); ctx.quadraticCurveTo(cx + R * 0.4, ny + 14, cx + 8, ny + 6); ctx.quadraticCurveTo(cx + 12, ny + 22 + Math.sin(t * 2 + 1) * 4, cx + 6, ny + 34); ctx.stroke();
-    // the gap where the last bead should sit
-    ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.setLineDash([3, 4]); ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.arc(cx, ny + 8, 9, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
-    if (this.beads.length === 0) {
-      for (const k of [-0.62, -0.42, -0.24, 0.24, 0.42, 0.62]) {
-        const x = cx + k * R, y = ny + (Math.abs(k) < 0.3 ? 2 : -6 - (Math.abs(k) - 0.4) * 50);
-        ctx.fillStyle = '#efe8d6'; ctx.strokeStyle = INK; ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.arc(x, y, 7, 0, TAU); ctx.fill(); ctx.stroke();
-      }
-    }
     // cracks
     if (this.crack) {
       ctx.strokeStyle = INK; ctx.lineWidth = this.crack > 1 ? 4 : 2.5;
-      ctx.beginPath(); ctx.moveTo(cx + 20, cy - R); ctx.lineTo(cx + 8, cy - R * 0.62); ctx.lineTo(cx + 26, cy - R * 0.4); ctx.lineTo(cx + 4, cy - R * 0.12); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx + 26, cy - R); ctx.lineTo(cx + 14, cy - R * 0.66); ctx.lineTo(cx + 30, cy - R * 0.44); ctx.lineTo(cx + 12, cy - R * 0.2); ctx.stroke();
       if (this.crack > 1) {
-        ctx.beginPath(); ctx.moveTo(cx + 4, cy - R * 0.12); ctx.lineTo(cx + 18, cy + R * 0.15); ctx.lineTo(cx - 6, cy + R * 0.3); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(cx + 26, cy - R * 0.4); ctx.lineTo(cx + R * 0.6, cy - R * 0.5); ctx.stroke();
-        glow(ctx, cx + 12, cy - R * 0.4, 30, VOID, 0.3 + 0.2 * Math.sin(t * 5));
+        ctx.beginPath(); ctx.moveTo(cx + 12, cy - R * 0.2); ctx.lineTo(cx + 22, cy + R * 0.1); ctx.lineTo(cx + 4, cy + R * 0.26); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx + 30, cy - R * 0.44); ctx.lineTo(cx + R * 0.66, cy - R * 0.56); ctx.stroke();
+        glow(ctx, cx + 18, cy - R * 0.44, 34, VOID, 0.3 + 0.2 * Math.sin(t * 5));
       }
     }
-    void lit;
   }
 }
 

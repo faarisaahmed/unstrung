@@ -359,6 +359,8 @@ function analyzeRoom(def, ab, entries, openFlags = new Set(), items = new Set())
       } else if (kind === 'hang') {
         for (const h of [6, 14, 60]) for (const d1 of [-1, 0, 1]) for (const ex of (h === 60 ? extrasFor(ab, false) : [null])) run(nb, jumpScript(0, 0, h, d1, ex, ab), 200);
         run(nb, (f) => Object.assign({}, NOIN, { y: 1, jumpP: f === 0, jump: f === 0 }), 150);
+        // chain directly to the next hook ring while hanging
+        for (const d of [-1, 0, 1]) run(nb, (f) => Object.assign({}, NOIN, { x: f === 0 ? d : 0, abilityP: f === 1 }), 120);
       } else if (kind === 'mag') {
         const dirsMove = nb.magnet === 'ceil' ? [{ x: -1 }, { x: 1 }] : [{ y: -1 }, { y: 1 }];
         for (const mv of dirsMove) {
