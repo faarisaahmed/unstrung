@@ -230,6 +230,8 @@ export class Boss extends Entity {
     if (this.echo) {
       g.save.echoes[this.id] = Math.max(g.save.echoes[this.id] || 0, 1);
       if (this.spec.onWin) this.spec.onWin(g);
+      if (this.onFinish) this.onFinish();
+      g.camera.lockRect = null;
       if (g.onEchoWin) g.onEchoWin(this);
       return;
     }
@@ -251,6 +253,7 @@ export class Boss extends Entity {
       }
     }
     if (this.onFinish) this.onFinish();
+    g.camera.lockRect = null;
     g.writeSave && g.writeSave();
   }
 
