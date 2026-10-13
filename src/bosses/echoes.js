@@ -678,7 +678,7 @@ export class FirstBead extends Boss {
       ctx.globalCompositeOperation = 'lighter';
       for (let i = 0; i < 3; i++) {
         const a = t * 0.4 + i * 2.1;
-        ctx.strokeStyle = ['rgba(255,170,220,0.22)', 'rgba(150,230,255,0.2)', 'rgba(255,230,160,0.2)'][i]; ctx.lineWidth = 9;
+        ctx.strokeStyle = ['rgba(255,170,220,0.13)', 'rgba(150,230,255,0.12)', 'rgba(255,230,160,0.12)'][i]; ctx.lineWidth = 8;
         ctx.beginPath(); ctx.ellipse(cx + Math.cos(a) * 8, cy + Math.sin(a) * 6, R * 0.8, R * 0.45, a * 0.5, 0, Math.PI); ctx.stroke();
       }
       ctx.globalCompositeOperation = 'source-over';
@@ -734,11 +734,11 @@ export class FirstBead extends Boss {
       ctx.restore();
     };
     const R = this.R;
-    ctx.save(); ctx.translate(0, -R * 0.55);
-    draw(R * 1.25, R * 0.3, -0.18 + Math.sin(t * 0.7) * 0.05, '#ffe6a6', 3);
+    ctx.save(); ctx.translate(0, -R * 1.12 + Math.sin(t * 1.3) * 2);
+    draw(R * 0.72, R * 0.17, -0.12 + Math.sin(t * 0.7) * 0.05, '#ffe6a6', 3.5);
     ctx.restore();
     if (this.halo2) draw(R * 1.55, R * 0.42, 0.9 + t * 0.3, 'rgba(255,250,235,0.9)', 2);
-    if (!back) glow(ctx, cx, cy - R * 0.55 - R * 0.05, R * 1.3, '255,230,166', 0.12);
+    if (!back) glow(ctx, cx, cy - R * 1.12, R * 0.9, '255,230,166', 0.22);
   }
 }
 

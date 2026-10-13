@@ -111,7 +111,7 @@ class Copy extends Entity {
 // =================================================================================================
 export class Unraveller extends Boss {
   constructor(game, tx, ty, spec) {
-    super(game, tx, ty, spec, { id: 'unraveller', size: [84, 176], music: 'boss_unraveller', air: true, glints: 500, introTime: 3.0 });
+    super(game, tx, ty, spec, { id: 'unraveller', size: [90, 200], music: 'boss_unraveller', air: true, glints: 500, introTime: 3.0 });
     if (this.dead) return;
     this.noPhysics = true;
     this.G = this.groundY;
@@ -155,6 +155,7 @@ export class Unraveller extends Boss {
     // the tether: thread pulled out of Bead
     const T = this.tether;
     if (!T) return;
+    this.arm = Math.max(this.arm, 0.5);
     const p = this.player, sv = this.game.save;
     T.t -= dt;
     const d = Math.hypot(p.cx - this.cx, p.cy - this.cy);
@@ -178,8 +179,9 @@ export class Unraveller extends Boss {
     this.sfx('tangleHit');
   }
   onHurt() { if (this.tether) this.tether.hits++; }
-  handX() { return this.cx + this.facing * 52; }
-  handY() { return this.cy - 10; }
+  // where the leading hand is, matching drawFigure()
+  handX() { const r = this.arm, f = this.facing; return this.cx + f * (30 + 30 + 34 * r + 12 + 32 * r); }
+  handY() { const r = this.arm; return this.y + this.hunch * 34 + 60 + 64 - 110 * r + 44 - 76 * r; }
 
   introUpdate(dt, t) {
     this.alpha = Math.min(1, t / 1.8);
@@ -280,12 +282,13 @@ export class Unraveller extends Boss {
       this.arm = 1; this.tele = 0.45; this.eyeFlash = 1;
       const reach = 230;
       const x = this.facing > 0 ? this.cx : this.cx - reach;
-      this.cutWarn = { x, y: this.cy - 10, w: reach, t: 0 };
+      const cy0 = this.y + this.h - 60;
+      this.cutWarn = { x, y: cy0, w: reach, t: 0 };
       this.sfx('charge');
       yield P >= 3 ? 0.42 : 0.5;
       this.cutWarn = null;
-      this.zone(x, this.cy - 40, reach, 60, 0.16);
-      this.fx.slash(this.cx + this.facing * reach * 0.5, this.cy - 10, this.facing > 0 ? 0 : Math.PI, reach, `rgba(${VIO},0.9)`, 0.22);
+      this.zone(x, cy0 - 50, reach, 104, 0.16);
+      this.fx.slash(this.cx + this.facing * reach * 0.5, cy0, this.facing > 0 ? 0 : Math.PI, reach, `rgba(${VIO},0.9)`, 0.22);
       this.sfx('slash'); this.shake(4, 0.15);
       this.arm = 0;
       yield 0.45;
@@ -494,7 +497,7 @@ export class Unraveller extends Boss {
       const bx = this.cx - vx, by = this.cy - vy;
       d.fillStyle = `rgba(4,2,8,${D * 0.55})`; d.fillRect(0, 0, VIEW_W, VIEW_H);
       const g0 = d.createRadialGradient(bx, by, 0, bx, by, 520);
-      g0.addColorStop(0, `rgba(4,2,8,${D * 0.6})`); g0.addColorStop(1, 'rgba(4,2,8,0)');
+      g0.addColorStop(0, `rgba(4,2,8,${D * 0.85})`); g0.addColorStop(0.5, `rgba(4,2,8,${D * 0.5})`); g0.addColorStop(1, 'rgba(4,2,8,0)');
       d.fillStyle = g0; d.fillRect(0, 0, VIEW_W, VIEW_H);
       d.globalCompositeOperation = 'destination-out';
       const lr = this.game.save.abilities.lantern ? 230 : 170;
@@ -510,11 +513,11 @@ export class Unraveller extends Boss {
       for (const f of figs) {
         const a = (f === this ? this.blinkK * Math.max(this.alpha, this.mode === 'fight' ? 1 : 0) : f.alpha);
         if (a <= 0.02) continue;
-        const hx = f.cx, hy = f.y + 30 + (f === this ? this.hunch * 30 : 0);
+        const hx = f.cx + (f.facing || 1) * 3, hy = f.y + 30 + (f === this ? this.hunch * 34 : 0);
         glow(ctx, hx, hy, 34, VIO, 0.45 * a + (f === this ? this.eyeFlash * 0.5 : (f.tele || 0) * 0.5));
         ctx.globalAlpha = a;
         ctx.fillStyle = '#fff';
-        for (const s of [-1, 1]) { ctx.beginPath(); ctx.arc(hx + s * 7 + (f.facing || 1) * 2, hy, 2.4, 0, TAU); ctx.fill(); }
+        for (const s of [-1, 1]) { ctx.beginPath(); ctx.arc(hx + s * 7, hy, 2.4, 0, TAU); ctx.fill(); }
         ctx.globalAlpha = 1;
       }
     }
@@ -546,7 +549,7 @@ export class Unraveller extends Boss {
       const c = this.cutWarn;
       ctx.save(); ctx.globalCompositeOperation = 'lighter';
       ctx.fillStyle = `rgba(${VIO},${0.12 + 0.1 * Math.sin(t * 35)})`;
-      ctx.fillRect(c.x, c.y - 30, c.w, 60);
+      ctx.fillRect(c.x, c.y - 50, c.w, 104);
       ctx.restore();
     }
   }
@@ -563,86 +566,92 @@ export class Unraveller extends Boss {
   drawFigure(ctx, cx, by, t, white, o = {}) {
     const f = o.facing || 1;
     const H = this.h, hunch = o.hunch || 0, br = o.bristle || 0;
-    const top = by - H + hunch * 30;
+    const top = by - H + hunch * 34;
     const col = white ? '#fff' : VOIDC;
+    // it never quite holds still: thin slices of it slip sideways
+    const slip = (y) => (white ? 0 : Math.sin(Math.floor(t * 7) * 12.9898 + Math.floor(y / 14) * 78.233) > 0.93 ? Math.sin(t * 50 + y) * 7 : 0);
     // halo of loose ends behind
     if (!white && !o.ghost) {
-      glow(ctx, cx, top + 40, 120, VIO, 0.12 + 0.12 * br);
-      ctx.strokeStyle = 'rgba(7,4,12,0.85)'; ctx.lineWidth = 1.4;
-      for (let i = 0; i < 22; i++) {
-        const ang = (i / 22) * TAU + Math.sin(t * 0.5 + i) * 0.08;
-        const L = 50 + ((i * 37) % 30) + br * 60 + Math.sin(t * 3 + i) * 6;
-        const x0 = cx + Math.cos(ang) * 24, y0 = top + 36 + Math.sin(ang) * 24;
+      glow(ctx, cx, top + 44, 140, VIO, 0.14 + 0.14 * br);
+      ctx.strokeStyle = 'rgba(7,4,12,0.85)'; ctx.lineWidth = 1.5;
+      for (let i = 0; i < 26; i++) {
+        const ang = (i / 26) * TAU + Math.sin(t * 0.5 + i) * 0.08;
+        const L = 56 + ((i * 37) % 34) + br * 70 + Math.sin(t * 3 + i) * 6;
+        const x0 = cx + Math.cos(ang) * 28, y0 = top + 44 + Math.sin(ang) * 28;
         ctx.beginPath(); ctx.moveTo(x0, y0);
-        ctx.quadraticCurveTo(x0 + Math.cos(ang + 0.4) * L * 0.6, y0 + Math.sin(ang + 0.4) * L * 0.6, cx + Math.cos(ang) * (24 + L), top + 36 + Math.sin(ang) * (24 + L) + 6);
+        ctx.quadraticCurveTo(x0 + Math.cos(ang + 0.4) * L * 0.6, y0 + Math.sin(ang + 0.4) * L * 0.6, cx + Math.cos(ang) * (28 + L), top + 44 + Math.sin(ang) * (28 + L) + 6);
         ctx.stroke();
       }
     }
-    // cloak of hanging threads
-    const n = 26;
-    const w0 = 30, w1 = 46 + hunch * 14;
+    // hanging threads below the cloak hem
+    const hemY = top + H * 0.55;
+    const n = 30;
+    const hw = 40 + hunch * 12;
     ctx.lineCap = 'round';
     for (let i = 0; i < n; i++) {
       const k = i / (n - 1);
-      const x0 = cx + (k - 0.5) * w0 * 2;
-      const len = H - 50 - hunch * 30 - ((i * 13) % 7) * 4 - (br ? 0 : 0);
-      const x1 = cx + (k - 0.5) * w1 * 2 + Math.sin(t * 2.2 + i * 0.8) * 7 + (br ? (k - 0.5) * 60 * br : 0);
-      const y1 = top + 46 + len - br * 20;
-      ctx.strokeStyle = col; ctx.lineWidth = white ? 4 : (i % 3 === 0 ? 3.2 : 2.2);
-      ctx.beginPath(); ctx.moveTo(x0, top + 46);
-      ctx.bezierCurveTo(x0, top + 46 + len * 0.4, x1 - Math.sin(t * 1.7 + i) * 6, top + 46 + len * 0.7, x1, y1);
+      const x0 = cx + (k - 0.5) * hw * 2;
+      const len = (by - hemY) - 4 - ((i * 13) % 9) * 5;
+      const sway = Math.sin(t * 2.2 + i * 0.8) * 8;
+      const x1 = x0 + (k - 0.5) * 30 + sway + (k - 0.5) * 70 * br;
+      const y1 = hemY + len - br * 24;
+      ctx.strokeStyle = col; ctx.lineWidth = white ? 4 : (i % 3 === 0 ? 3 : 2);
+      ctx.beginPath(); ctx.moveTo(x0, hemY - 4);
+      ctx.bezierCurveTo(x0, hemY + len * 0.35, x1 - sway * 0.7, hemY + len * 0.7, x1, y1);
       ctx.stroke();
-      if (!white && i % 4 === 1) {
-        ctx.strokeStyle = `rgba(${VIO},0.35)`; ctx.lineWidth = 1;
-        ctx.stroke();
-      }
+      if (!white && i % 4 === 1) { ctx.strokeStyle = `rgba(${VIO},0.4)`; ctx.lineWidth = 1; ctx.stroke(); }
     }
+    // the cloak: a tall hood falling to a ragged hem
+    ctx.beginPath();
+    const tipX = cx - f * 16 + Math.sin(t * 1.3) * 4, tipY = top - 18;
+    ctx.moveTo(tipX, tipY);
+    ctx.quadraticCurveTo(cx + 34 + slip(top), top + 6, cx + 30, top + 40);
+    ctx.quadraticCurveTo(cx + 52 + slip(top + 60), top + 70, cx + hw + 4, hemY);
+    for (let i = 0; i <= 10; i++) {
+      const x = cx + hw + 4 - (i / 10) * (hw * 2 + 8);
+      const y = hemY + (i % 2 ? 14 : 0) + Math.sin(t * 3 + i) * 3;
+      ctx.lineTo(x + slip(y), y);
+    }
+    ctx.quadraticCurveTo(cx - 52 + slip(top + 60), top + 70, cx - 30, top + 40);
+    ctx.quadraticCurveTo(cx - 34 + slip(top), top + 6, tipX, tipY);
+    ctx.closePath();
+    ctx.fillStyle = col; ctx.fill();
     if (!white) {
-      // fibres drifting off the hem
-      ctx.strokeStyle = 'rgba(7,4,12,0.7)'; ctx.lineWidth = 1;
-      for (let i = 0; i < 6; i++) {
-        const ph = (t * 0.6 + i / 6) % 1;
-        const x = cx + Math.sin(i * 2.3) * 40 + Math.sin(t + i) * 10;
-        const y = by - 6 + ph * 30;
-        ctx.globalAlpha *= 1;
-        ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x + 6, y + 6, x + Math.sin(t * 3 + i) * 8, y + 14); ctx.stroke();
+      ctx.strokeStyle = `rgba(${VIO},0.45)`; ctx.lineWidth = 1.2; ctx.stroke();
+      // threads woven down the cloak, coming loose
+      ctx.strokeStyle = 'rgba(160,100,210,0.28)'; ctx.lineWidth = 1;
+      for (let i = -4; i <= 4; i++) {
+        ctx.beginPath(); ctx.moveTo(cx + i * 4, top + 40);
+        ctx.quadraticCurveTo(cx + i * 9 + slip(top + 80 + i), top + 90, cx + i * 10, hemY + 4);
+        ctx.stroke();
       }
     }
     // arms: long sleeves of thread ending in loose fingers
     for (const s of [-1, 1]) {
       const raised = s === f ? (o.arm || 0) : 0;
-      const sx = cx + s * 22, sy = top + 54;
-      const ex = sx + s * (26 + 30 * raised), ey = sy + 60 - 100 * raised;
-      const hx = ex + s * (10 + 30 * raised), hy = ey + 40 - 70 * raised;
-      ctx.strokeStyle = col; ctx.lineWidth = white ? 6 : 5;
+      const sx = cx + s * 30, sy = top + 60;
+      const ex = sx + s * (30 + 34 * raised), ey = sy + 64 - 110 * raised;
+      const hx = ex + s * (12 + 32 * raised), hy = ey + 44 - 76 * raised;
+      ctx.strokeStyle = col; ctx.lineWidth = white ? 7 : 6;
       ctx.beginPath(); ctx.moveTo(sx, sy); ctx.quadraticCurveTo(ex, ey, hx, hy); ctx.stroke();
-      ctx.lineWidth = white ? 3 : 1.6;
+      ctx.lineWidth = white ? 3 : 1.8;
       for (let k = 0; k < 5; k++) {
         const ang = Math.atan2(hy - ey, hx - ex) + (k - 2) * 0.3;
-        const L = 22 + k % 2 * 8 + Math.sin(t * 6 + k + s) * 3;
+        const L = 26 + (k % 2) * 10 + Math.sin(t * 6 + k + s) * 3;
         ctx.beginPath(); ctx.moveTo(hx, hy); ctx.quadraticCurveTo(hx + Math.cos(ang + 0.3) * L * 0.6, hy + Math.sin(ang + 0.3) * L * 0.6, hx + Math.cos(ang) * L, hy + Math.sin(ang) * L); ctx.stroke();
       }
-      if (!white && raised) glow(ctx, hx, hy, 30, VIO, 0.5 * raised);
+      if (!white && raised) glow(ctx, hx, hy, 34, VIO, 0.55 * raised);
     }
-    // hood
-    const hx = cx, hy = top + 30;
-    ctx.beginPath();
-    ctx.moveTo(hx, hy - 40);
-    ctx.bezierCurveTo(hx + 34, hy - 36, hx + 36, hy + 10, hx + 26, hy + 30);
-    ctx.lineTo(hx - 26, hy + 30);
-    ctx.bezierCurveTo(hx - 36, hy + 10, hx - 34, hy - 36, hx, hy - 40);
-    ctx.fillStyle = col; ctx.fill();
+    // the void face: an emptier black, rimmed with violet
     if (!white) {
-      // hood threads
-      ctx.strokeStyle = `rgba(${VIO},0.3)`; ctx.lineWidth = 1;
-      for (let i = -3; i <= 3; i++) { ctx.beginPath(); ctx.moveTo(hx + i * 3, hy - 38); ctx.quadraticCurveTo(hx + i * 9, hy - 10, hx + i * 8, hy + 30); ctx.stroke(); }
-      // the void face: an emptier black, rimmed with violet
-      ctx.beginPath(); ctx.ellipse(hx + f * 2, hy, 15, 21, 0, 0, TAU);
+      const fx = cx + f * 3, fy = top + 30;
+      ctx.beginPath(); ctx.ellipse(fx, fy, 15, 22, 0, 0, TAU);
       ctx.fillStyle = '#000'; ctx.fill();
-      ctx.strokeStyle = `rgba(${VIO},0.9)`; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.strokeStyle = `rgba(${VIO},0.95)`; ctx.lineWidth = 1.6; ctx.stroke();
+      glow(ctx, fx, fy, 26, VIO, 0.18);
       if (o.ghost || o.copy) {
         ctx.fillStyle = '#fff';
-        for (const s of [-1, 1]) { ctx.beginPath(); ctx.arc(hx + s * 7 + f * 2, hy, 2, 0, TAU); ctx.fill(); }
+        for (const s of [-1, 1]) { ctx.beginPath(); ctx.arc(fx + s * 7, fy, 2, 0, TAU); ctx.fill(); }
       }
     }
   }

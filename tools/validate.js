@@ -27,6 +27,7 @@ const quiet = args.includes('--quiet');
 const onlyArea = opt('--area');
 const onlyRoom = opt('--room');
 const worldOnly = args.includes('--world');
+const staticOnly = args.includes('--static');
 const abOverride = opt('--ab');
 
 const ENTITY_TYPES = new Set(['enemy', 'boss', 'spindle', 'lever', 'gate', 'lore', 'npc', 'item', 'beadling', 'tangle', 'pot', 'ferry', 'deco', 'trigger', 'statue', 'pantheon']);
@@ -529,10 +530,12 @@ for (const e of LOAD_ERRORS) err('FILE FAILED TO LOAD: ' + e);
 if (!worldOnly) {
   console.log(`== Static checks (${defs.length} rooms) ==`);
   for (const d of defs) staticCheck(d);
-  console.log('\n== Reachability ==');
-  for (const d of defs) roomReport(d);
+  if (!staticOnly) {
+    console.log('\n== Reachability ==');
+    for (const d of defs) roomReport(d);
+  }
 }
-if (!onlyArea && !onlyRoom) {
+if (!onlyArea && !onlyRoom && !staticOnly) {
   worldSim();
   const { pos, issues } = computeLayout(ROOMS, START_ROOM);
   const mism = issues.filter((i) => i.type === 'mismatch');

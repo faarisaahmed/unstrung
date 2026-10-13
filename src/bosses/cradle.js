@@ -421,7 +421,7 @@ export class Selene extends Boss {
       const warn = P >= 3 ? 0.5 : 0.62;
       this.sfx('rustle');
       yield* this.frames(warn, (k) => {
-        if (k < 0.7) h.tx = clamp(this.player.cx, this.arena.x + 60, this.arena.x + this.arena.w - 60);
+        if (k < 0.55) h.tx = clamp(this.player.cx, this.arena.x + 60, this.arena.x + this.arena.w - 60);
         h.ty = hy; h.rot = Math.PI / 2;
         h.slamWarn = k;
       });
@@ -430,7 +430,7 @@ export class Selene extends Boss {
       const y0 = h.y, x = h.tx;
       yield* this.frames(0.12, (k) => { h.x = x; h.y = lerp(y0, this.G - 34, k * k); });
       this.shake(9, 0.35); this.sfx('slam');
-      this.zone(x - 90, this.G - 46, 180, 46, 0.12);
+      this.zone(x - 75, this.G - 46, 150, 46, 0.12);
       this.fx.burst(x, this.G, 18, { color: '#e8eeff', speed: 340, angle: -Math.PI / 2, spread: 2.6, size: 3, life: 0.6, glow: true });
       this.fx.ring(x, this.G - 10, 10, 120, 0.4, 'rgba(225,232,255,0.8)', 4);
       if (P >= 2) { this.shockwave(x, -1, 430, 30, { color: 'rgba(225,232,255,0.9)' }); this.shockwave(x, 1, 430, 30, { color: 'rgba(225,232,255,0.9)' }); }
