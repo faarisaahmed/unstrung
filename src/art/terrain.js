@@ -433,7 +433,7 @@ function decorate(ctx, kind, face, p, h, style, R) {
       }
       const sway = (h - 0.1) * 30;
       const P = [x, y - 1, x + 7, y + len * 0.3, x - 6, y + len * 0.65, x + sway, y + len];
-      taper(ctx, P, kind === 'vines' ? 2.6 : 4 + h * 10, 0.3, col, 0, 12);
+      taper(ctx, P, kind === 'vines' ? 3.4 : 4 + h * 10, kind === 'vines' ? 0.8 : 0.3, kind === 'vines' ? dark : col, 0, 12);
       // lit edge
       taper(ctx, P.map((v, i) => (i % 2 ? v : v - 1)), 0.9, 0.05, rgba(style.rim, 0.45), 0, 10);
       if (kind === 'roots') {

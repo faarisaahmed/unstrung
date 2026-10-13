@@ -891,7 +891,7 @@ export const PAINTERS = {
     ctx.save(); ctx.translate(0, bob);
     // tail feathers
     form(ctx, A.c2 || A.c1, (c) => { c.moveTo(-w * 0.2, h * 0.05); c.lineTo(-w * 0.48, h * 0.12); c.lineTo(-w * 0.42, h * 0.2); c.lineTo(-w * 0.5, h * 0.26); c.lineTo(-w * 0.18, h * 0.2); c.closePath(); }, { lw: 1.5, sd: 1.5 });
-    wings(ctx, -w * 0.05, -h * 0.05, w * 0.8, h * 0.9, flap, A.c2 || A.c1, 1, 'bird');
+    wings(ctx, -w * 0.02, -h * 0.08, w * 0.68, h * 0.78, flap, A.c2 || A.c1, 1, 'bird');
     const bodyP = (c) => oval(c, 0, 0, w * 0.3, h * 0.31, 0.2, 0.04);
     form(ctx, A.c1, bodyP, { sd: h * 0.12, lw: 2 });
     // chest feather scallops
