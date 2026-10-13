@@ -837,7 +837,7 @@ export class StingerCourt extends Boss {
     super(game, tx, ty, spec, { id: 'stingercourt', size: [44, 62], music: 'boss_optional', air: true, glints: 340 });
     this.noPhysics = true;
     const A = this.arena;
-    this.perchY = A.y + 110;
+    this.perchY = Math.max(A.y + 90, this.groundY - 380);
     this.knights = COURT.map((d, i) => ({
       ...d, i,
       perch: { x: A.x + A.w * (0.3 + i * 0.2), y: this.perchY },

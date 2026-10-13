@@ -323,9 +323,9 @@ export class Selene extends Boss {
       for (const x of xs) {
         this.fire(x, topY, this.rand(-20, 20), 760, {
           art: 'sl_star', r: 11, life: 3, color: '#fff4c8',
-          onDie: P >= 2 ? (q) => {
+          onDie: P >= 2 && xs.indexOf(x) % 2 === 0 ? (q) => {
             if (q.cy < this.G - 40 || this.mode !== 'fight') return;
-            for (const s of [-1, 1]) this.fire(q.cx, this.G - 9, s * 250, 0, { art: 'orb', r: 6, life: 0.9, color: '#fff1c0' });
+            for (const s of [-1, 1]) this.fire(q.cx, this.G - 9, s * 250, 0, { art: 'orb', r: 6, life: 0.65, color: '#fff1c0' });
           } : null,
         });
       }
@@ -607,8 +607,8 @@ export class Selene extends Boss {
       const tx = Math.floor((A.x + A.w / 2) / TILE);
       const ty = Math.floor(clamp(this.cy, A.y + 120, this.G - 160) / TILE);
       const h = new HollowThread(g, tx, ty, { fromSelene: true });
-      if (!h.dead) { g.add(h); h.startFight(); }
       g.cutscene = null;
+      if (!h.dead) { g.add(h); h.startFight(); }
       this.dead = true;
     }
   }
@@ -754,7 +754,7 @@ export class Selene extends Boss {
     for (let i = 0; i < 5; i++) {
       const thumb = i === 0;
       const base = thumb ? { x: -20, y: 6 } : { x: -14 + (i - 1) * 9.5, y: 26 - Math.abs(i - 2.5) * 2 };
-      const sp = thumb ? -0.9 - 0.4 * open : (i - 2.5) * (0.1 + 0.16 * open);
+      const sp = thumb ? -1.0 - 0.5 * open : (i - 2.5) * (0.16 + 0.24 * open);
       const L = thumb ? 34 : [0, 52, 60, 56, 44][i];
       const curl = (1 - open) * 0.8 + Math.sin(t * 1.7 + i) * 0.06;
       let x = base.x, y = base.y, a = Math.PI / 2 - sp;
@@ -775,10 +775,10 @@ export class Selene extends Boss {
       for (let k = 0; k < loops; k++) {
         if (pass) { ctx.strokeStyle = k ? `rgba(${SILVER},0.55)` : '#eef2ff'; ctx.lineWidth = k ? 1 : 2; }
         ctx.beginPath();
-        ctx.moveTo(-6, -22 + k * 3);
-        ctx.bezierCurveTo(-30 + k * 3, -16, -28 + k * 2, 22, -12, 28 - k);
-        ctx.quadraticCurveTo(6, 32 + k, 22 - k * 2, 24);
-        ctx.bezierCurveTo(30 - k, 8, 18, -18 + k * 2, -6, -22 + k * 3);
+        ctx.moveTo(-10 + k * 2, -24 + k * 2);
+        ctx.bezierCurveTo(-18 + k * 2, -8, -28 + k * 2, 8, -22 + k, 26 - k);
+        ctx.quadraticCurveTo(0, 30 - k * 2, 24 - k * 2, 24 + k);
+        ctx.bezierCurveTo(26 - k, 6, 14 - k, -10, 10 - k * 2, -24 + k * 2);
         ctx.stroke();
       }
       for (const f of fingers) {
