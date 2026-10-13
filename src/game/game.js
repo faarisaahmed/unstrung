@@ -621,7 +621,10 @@ export class Game {
     drawDynamicTiles(ctx, room, cx, cy, this.time, this.style, this.player);
     this.fx.draw(ctx, false);
     const sorted = this.entities.filter((e) => e.layer !== 'back' && e.layer !== 'front' && !this.hiddenBySecret(e)).sort((a, b) => (a.z || 0) - (b.z || 0));
-    for (const e of sorted) e.draw(ctx, this.time);
+    for (const e of sorted) {
+      try { e.draw(ctx, this.time); }
+      catch (err) { if (!e.__drawErr) { e.__drawErr = 1; console.error('draw failed', e.constructor.name, err); } ctx.restore && 0; }
+    }
     if (!this.player.dead) this.player.draw(ctx, this.time);
     for (const e of this.entities) if (e.layer === 'front') e.draw(ctx, this.time);
     this.fx.draw(ctx, true);

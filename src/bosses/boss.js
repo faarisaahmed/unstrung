@@ -147,7 +147,7 @@ export class Boss extends Entity {
 
   // Override: return a generator. Default picks from this.attackList weights, avoiding repeats.
   chooseAttack() {
-    const list = (this.attackList ? this.attackList() : []).filter((a) => !a.cond || a.cond());
+    const list = (this.attackList ? this.attackList() : []).filter((a) => (!a.cond || a.cond()) && (a.w ?? 1) > 0);
     if (!list.length) return null;
     let pool = list.filter((a) => a.name !== this.lastAttack || list.length === 1);
     const total = pool.reduce((s, a) => s + (a.w ?? 1), 0);
@@ -314,6 +314,7 @@ export class Boss extends Entity {
   // coroutine: ballistic leap landing at target center-x after `time` seconds, apex `height` above
   *leapTo(tx, height = 200, time = 0.8) {
     tx = clamp(tx, this.arena.x + this.w / 2, this.arena.x + this.arena.w - this.w / 2);
+    const prevNoPhys = this.noPhysics, prevGrav = this.gravity;
     this.gravity = 0;
     const x0 = this.cx, y0 = this.y;
     const T = time / this.speedMul;
@@ -331,8 +332,8 @@ export class Boss extends Entity {
       yield;
     }
     this.y = this.groundY - this.h;
-    this.noPhysics = false;
-    this.gravity = this.cfg.gravity ?? 2200;
+    this.noPhysics = !!prevNoPhys;
+    this.gravity = prevGrav || (this.cfg.gravity ?? 2200);
     this.vx = 0; this.vy = 0;
   }
   // coroutine: dash horizontally until wall or distance

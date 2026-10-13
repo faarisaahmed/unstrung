@@ -111,7 +111,7 @@ const kilns = (() => {
     'F#5 - - - - - - - E5 - D5 - A4 - - -',
     'A4 - - - C5 - - - E5 - - - A5 - - -',
     'G5 - - - - - E5 - - - C5 - D5 - E5 -',
-    'F#5 - - - - - D#5 - - - B4 - C5 - D#5 -',
+    'F#5 - - - - - D#5 - - - B4 - - - D#5 -',
     'B4 - - - - - D#5 - F#5 - - - A5 - - -',
   ]);
   const melB = J([
@@ -336,7 +336,7 @@ const archive = (() => {
   const csF = ['Ab4 - - - - - - - G4 - - - Bb4 - Ab4 G4', 'F4 - - - - - - - E4 - - - F4 - - -'];
   const episodeP = ['F5 . Db5 . Bb4 . Db5 . G5 . Eb5 . Bb4 . Eb5 .', 'Eb5 . C5 . Ab4 . C5 . E5 . C5 . G4 . Bb4 .'];
   const episodeH = ['Bb2 . . . F3 . . . Eb3 . . . Bb2 . . .', 'Ab2 . . . Eb3 . . . C3 . . . G2 . . .'];
-  const orgA = J([H('F2+C3', 32), H('C2+G2', 32), H('F2+C3', 32), H('Bb1+F2', 8), H('Eb2+Bb2', 8), H('Ab1+Eb2', 8), H('C2+G2', 8)]);
+  const orgA = J([H('F2'), H('F2'), H('C2'), H('C2'), H('F2'), H('F2'), H('Bb1+F2', 8) + ' ' + H('Eb2+Bb2', 8), H('Ab1+Eb2', 8) + ' ' + H('C2+G2', 8)]);
   const clock = 'r . . . r? . . . r . . . r? . . .';
   return {
     bpm: 92,
@@ -349,8 +349,8 @@ const archive = (() => {
     },
     pat: {
       intro: {
-        org: H('F2+C3', 32),
-        harp: J(['F2 . . . . . . . C3 . . . . . . .', 'F2 . . . . . . . E2 . . . C3 . . .']),
+        org: J([H('F2+C3'), H('F2+C3')]),
+        harp: J(['F2 . . . . . . . C3 . . . . . . .', 'F2 . . . . . . . C3 . . . G2 . . .']),
         tick: clock,
       },
       A: {
@@ -424,8 +424,8 @@ const warrens = (() => {
     pat: {
       intro: {
         buzz: J([O.Cm, O.Cm, O.Cm, O.Cm]),
-        bass: H('C#2', 64),
-        str: J([R(), R(), H('C#4+D4', 32)]),
+        bass: J([H('C#2'), H('C#2'), H('C#2'), H('C#2')]),
+        str: J([R(), R(), H('C#4+D4'), H('C#4+D4')]),
         tick: 'r . r? r? . r . . r . . r r? . r .',
       },
       A: { buzz: plA, bass: bassA, str: strA, lead: leadA, tick: 'k+r . r r? . r . r? r . k r r? . r .' },
@@ -538,7 +538,7 @@ const boss_mid = (() => {
     'C6 - - - Ab5 - - - Eb5 - - - F5 - - -',
     'D6 - - - - - - - Bb5 - - - F5 - - -',
     'G5 - - - - - - - Eb5 - F5 - G5 - - -',
-    'C6 - - - D6 - - - Eb6 - - - - - - -',
+    'C6 - - - - - - - Eb6 - - - D6 - - -',
     'C6 - - - Ab5 - - - F5 - - - Ab5 - - -',
     'G5 - - - - - - - B5 - - - D6 - - -',
   ]);

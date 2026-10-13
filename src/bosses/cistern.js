@@ -90,7 +90,8 @@ registerProjectileArt('gl_spout', (ctx, p, t) => {
 registerProjectileArt('gl_wave', (ctx, p, t) => {
   const r = p.rect();
   const d = Math.sign(p.vx) || 1;
-  const x0 = r.x, x1 = r.x + r.w, y1 = r.y + r.h, top = r.y - 4;
+  const x0 = r.x, x1 = r.x + r.w;
+  const y1 = p.o.surf !== undefined ? p.o.surf + 4 : r.y + r.h, top = y1 - 4 - (p.o.crest || r.h);
   const front = d > 0 ? x1 : x0, back = d > 0 ? x0 : x1;
   ctx.save();
   ctx.beginPath();
@@ -370,6 +371,11 @@ export class Gullet extends Boss {
     this.fx.ring(x, this.W, 6, 50 * scale + 20, 0.35, 'rgba(210,245,255,0.8)', 3);
     this.sfx('splash');
   }
+  // a wave racing along the surface; in a flooded arena it also reaches a tile below the surface
+  wave(x, dir, speed, crest) {
+    const below = this.wet ? 36 : 0, H = crest + below;
+    return this.fire(x, this.W - crest + H / 2, dir * speed, 0, { art: 'gl_wave', r: 0, box: { w: 46, h: H, oy: -H / 2 }, life: 3.5, pierce: true, surf: this.W, crest });
+  }
   ripple(x, life = 0.7, size = 1) { this.ripples.push({ x, life, max: life, size }); }
 
   // ---------- movement helpers ----------
@@ -548,7 +554,7 @@ export class Gullet extends Boss {
       this.zone(hit - 70, this.W - 50, 140, 50, 0.12);
       this.splash(hit, 900, 1.6); this.shake(9, 0.35); this.sfx('slam');
       const sp = 360 + 50 * this.phase, wh = this.phase >= 3 ? 26 : 22;
-      for (const d of [-1, 1]) this.fire(hit + d * 50, this.W - wh, d * sp, 0, { art: 'gl_wave', r: wh, life: 3.5, pierce: true, noScale: false });
+      for (const d of [-1, 1]) this.wave(hit + d * 50, d, sp, wh * 2);
       yield 0.35;
       t = 0;
       while (t < 0.3) { t += this.dt; this.tail.rise = 1 - t / 0.3; yield; }
@@ -595,7 +601,7 @@ export class Gullet extends Boss {
     yield* this.headTo(tx, this.W - 6, 1250);
     this.jawTo = 0;
     this.shake(8, 0.3); this.sfx('slam');
-    for (const d of [-1, 1]) this.fire(tx + d * 40, this.W - 22, d * 380, 0, { art: 'gl_wave', r: 22, life: 3.5, pierce: true });
+    for (const d of [-1, 1]) this.wave(tx + d * 40, d, 380, 44);
     yield* this.headTo(tx + 10, this.deep, 900);
     yield 0.5;
   }
